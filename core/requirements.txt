@@ -1,0 +1,24 @@
+# LangChain 최신 버전
+langchain>=0.3,<0.4
+langchain-core>=0.3,<0.4
+langchain-community>=0.3,<0.4
+langchain-text-splitters>=0.3,<0.4
+langchain-experimental>=0.3,<0.4
+
+# OpenAI, Gemini, Claude 관련 LangChain 플러그인
+langchain-openai>=0.2,<0.3
+langchain-google-genai>=2,<3  # Google Gemini 지원
+langchain-anthropic>=0.2,<0.3  # Claude 지원
+
+# Pydantic (LangChain v0.3에서 Pydantic v2 필수)
+pydantic>=2,<3
+
+# 기타 필수 패키지
+numpy  # 행렬 연산, 벡터 임베딩 처리
+pandas  # 데이터 분석, CSV 처리
+requests  # API 호출
+tqdm  # 진행률 바
+python-dotenv  # .env 파일에서 환경 변수 로드
+
+# Chainlit (LangChain UI)
+chainlit==2.4.1
