@@ -1,0 +1,40 @@
+services:
+  base:
+    image: logicourt-base:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.base
+    command: echo "Base image built!"
+  
+    
+  core:
+    build:
+      context: ./core
+      dockerfile: Dockerfile
+    depends_on:
+      - base
+    volumes:
+      - ./core:/app  # ✅ core 폴더 전체를 /app으로 마운트
+    command: 
+      - sh
+      - -c
+      - |
+        echo "Core image built!" && \
+        python controller.py
+    # ports 설정 
+
+
+
+  # rag:
+  #   build:
+  #     context: ./rag
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - base
+
+  # hardware:
+  #   build:
+  #     context: ./hardware
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - base
