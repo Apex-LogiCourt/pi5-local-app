@@ -15,12 +15,9 @@ services:
       - base
     volumes:
       - ./core:/app  # ✅ core 폴더 전체를 /app으로 마운트
-    command: 
-      - sh
-      - -c
-      - |
-        echo "Core image built!" && \
-        python controller.py
+    command: streamlit run chat.py
+    ports:
+      - "8501:8501"  # Streamlit 기본 포트
     # ports 설정 
 
 

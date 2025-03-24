@@ -20,5 +20,10 @@ requests  # API 호출
 tqdm  # 진행률 바
 python-dotenv  # .env 파일에서 환경 변수 로드
 
+langchain-pinecone == 0.2.3
+
+# streamlit
+streamlit==1.43.2
+
 # Chainlit (LangChain UI)
 chainlit==2.4.1
