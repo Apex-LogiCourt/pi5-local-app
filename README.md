@@ -1,7 +1,39 @@
 # pi5-local-app
+### 프로젝트 실행 방법
+##### 초기 실행 시 
+1. 도커 엔진 실행
+	- Docker desektop 실행
+2. 루트 디렉토리에서 Base 이미지부터 빌드 후에 나머지 이미지 빌드
+	- 프로젝트 루트 디렉토리에서 아래 명령어를 입력 
+	- `docker compose up base --build -d`
+	- `docker compose up core --build -d` 
+3. 일단 컨테이너 종료 
+	- `docker compose down`
+
+##### 일반적인 실행 
+1. 도커엔진 실행
+2. `docker compose up`
+3. 터미널에 뜨는 Local URL에 접속하면 됨 
+```powershell
+core-1  | Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
+core-1  |
+core-1  | 
+core-1  |   You can now view your Streamlit app in your browser.
+core-1  | 
+core-1  |   Local URL: http://localhost:8501 //이 부분
+core-1  |   Network URL: http://172~                                                                          
+core-1  |   External URL: http://118~  
+```
+
+- 볼륨 마운트 해놔서 소스코드 변경하면 일반적인 경우 빌드 없이 동작함
+- 변경 사항이 씹힐 때는 `docker compose up --build` 로 빌드해주고 기다리면 됨
+
+---
 
 ### 브랜치 관리 
 - 방식이 결정되면 이후에 추가 
+
+---
 
 ### Git 커밋 메시지 컨벤션
 | 타입 (`type`) | 의미                                               | 예시                            |
