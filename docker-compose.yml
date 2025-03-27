@@ -9,13 +9,13 @@ services:
     
   core:
     build:
-      context: ./core
-      dockerfile: Dockerfile
+      context: .  # 루트 컨텍스트로 변경
+      dockerfile: core/Dockerfile
     depends_on:
       - base
     volumes:
-      - ./core:/app  # ✅ core 폴더 전체를 /app으로 마운트
-    command: streamlit run chat.py
+      - .:/app  # 전체 프로젝트를 마운트
+    command: streamlit run /app/core/chat.py  # 경로 정확히 지정
     ports:
       - "8501:8501"  # Streamlit 기본 포트
     # ports 설정 

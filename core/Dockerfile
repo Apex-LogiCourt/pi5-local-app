@@ -2,8 +2,11 @@
 FROM logicourt-base:latest
 
 WORKDIR /app
-COPY requirements.txt .
+# ✅ 명시적으로 core/requirements.txt 경로 지정
+COPY core/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
+ENV PYTHONPATH="${PYTHONPATH}:/app"
+
 COPY . .
-CMD ["python", "controller.py"]
+CMD ["streamlit", "run", "core/chat.py"]
