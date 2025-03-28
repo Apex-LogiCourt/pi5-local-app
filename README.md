@@ -9,8 +9,8 @@
 	- `docker compose down`
 
 ##### 일반적인 실행 
-1. 도커엔진 실행
-2. `docker compose up`
+1. 도커 엔진 실행
+2. 컨테이너 실행 :`docker compose up`
 3. 터미널에 뜨는 Local URL에 접속하면 됨 
 ```powershell
 core-1  | Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
