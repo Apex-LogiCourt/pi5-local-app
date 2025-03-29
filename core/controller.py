@@ -8,11 +8,6 @@ from case_generation.case_builder import get_case_summary, get_witness_profiles
 def get_case_summary_wrapper():
     return get_case_summary()
 
-#==============================================
-# case_generation.py의 함수
-# 등장인물 프로필 생성
-# case_generation.py -> chat.py로 넘겨줌
-#============================================== 
 def get_witness_profiles_wrapper():
     return get_witness_profiles()
 
