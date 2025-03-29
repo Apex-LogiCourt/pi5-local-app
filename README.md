@@ -10,7 +10,7 @@
 2. 루트 디렉토리에서 Base 이미지부터 빌드 후에 나머지 이미지 빌드
 	- 프로젝트 루트 디렉토리에서 아래 명령어를 입력 
 	- `docker compose up --build -d`
-	- 잘 안 될 때는 `docker compose up base --build -d`
+	- 잘 안 될 때는 `docker compose up base --build -d` 먼저 실행
 	- 일단 한 번 컨테이너 일괄 종료 해줍니다.
 3. Docker 관련 명령어 
 	- `docker compose down` : 컨테이너 일괄 종료 명령어 
