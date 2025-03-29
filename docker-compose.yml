@@ -1,9 +1,21 @@
 services:
+  qemu:
+    image: multiarch/qemu-user-static
+    container_name: qemu_setup
+    privileged: true
+    command: ["--reset", "-p", "yes"]
+    deploy:
+      restart_policy:
+        condition: on-failure
+
   base:
     image: logicourt-base:latest
+    platform: linux/arm64
     build:
       context: .
       dockerfile: Dockerfile.base
+    depends_on:
+      - qemu
     command: echo "Base image built!"
   
     
@@ -11,14 +23,25 @@ services:
     build:
       context: ./core
       dockerfile: Dockerfile
+      platforms:
+        - linux/arm64
     depends_on:
       - base
+      - qemu
     volumes:
       - ./core:/app  # ✅ core 폴더 전체를 /app으로 마운트
     command: streamlit run chat.py
     ports:
       - "8501:8501"  # Streamlit 기본 포트
     # ports 설정 
+
+
+# # 메모리 제한 설정 - 라즈베리파이5 기준 
+# deploy:
+#   resources:
+#     limits:
+#       cpus: "4" # 4개의 코어 사용
+#       memory: "8g" # 8GB의 메모리 사용  
 
 
 

@@ -2,17 +2,15 @@
 ### 프로젝트 실행 방법
 ##### 초기 실행 시 
 1. 도커 엔진 실행
-	- Docker desektop 실행
 2. 루트 디렉토리에서 Base 이미지부터 빌드 후에 나머지 이미지 빌드
 	- 프로젝트 루트 디렉토리에서 아래 명령어를 입력 
-	- `docker compose up base --build -d`
-	- `docker compose up core --build -d` 
-3. 일단 컨테이너 종료 
+	- `docker compose up --build -d`
+3. 컨테이너 일괄 종료 명령어
 	- `docker compose down`
 
 ##### 일반적인 실행 
-1. 도커엔진 실행
-2. `docker compose up`
+1. 도커 엔진 실행
+2. 컨테이너 실행 :`docker compose up`
 3. 터미널에 뜨는 Local URL에 접속하면 됨 
 ```powershell
 core-1  | Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
@@ -25,8 +23,17 @@ core-1  |   Network URL: http://172~
 core-1  |   External URL: http://118~  
 ```
 
-- 볼륨 마운트 해놔서 소스코드 변경하면 일반적인 경우 빌드 없이 동작함
-- 변경 사항이 씹힐 때는 `docker compose up --build` 로 빌드해주고 기다리면 됨
+##### 현재 정의된 서비스
+|서비스명|컨테이너명|설명|
+|---|---|---|
+|qemu|qemu_setup|ARM64 에뮬레이션을 위한 QEMU 설정 컨테이너|
+|base|pi5-local-app-base-1|Python 3.12 + Debian 12 기반의 공통 베이스 이미지|
+|core|pi5-local-app-core-1|Streamlit 기반의 메인 애플리케이션 컨테이너|
+
+
+> - 볼륨 마운트 해놔서 `core` 나 `rag` 내부의 소스코드를 변경하거나 파일을 추가해도 일반적인 경우 빌드 없이 동작함
+> - 변경 사항이 씹힐 때는 컨테이너 종료 후 다시 빌드 
+> - base부터 전부 다 빌드할 필요는 없고 변경이 있는 서비스만만 빌드해주면 됨 예시: `docker compose up core --build` 
 
 ---
 
