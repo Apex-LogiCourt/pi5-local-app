@@ -1,9 +1,9 @@
 import streamlit as st
 from dotenv import load_dotenv
-from llm import get_ai_response, get_judge_result, get_case_summary, ask_witness, get_witness_profiles, ask_defendant
+from controller import get_ai_response, get_judge_result, get_case_summary, ask_witness, get_witness_profiles, ask_defendant
 import random
 from config import CASE_EXAMPLES
-from llm import make_case_judgment_prompt, ask_llm
+from controller import make_case_judgment_prompt, ask_llm
 
 
 load_dotenv()
