@@ -2,12 +2,20 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-# 템플릿 임포트
-# case_builder.py 안에서
-from .prompt_templates.case_templates import (
+#==============================================
+# 템플릿 갈아끼면 쉽게 사용 가능
+# username_case_templates.py 와 같은 형식으로 사용 가능
+#============================================== 
+# from .prompt_templates.gunrein_case_templates import (
+#     CASE_SUMMARY_TEMPLATE,
+#     WITNESS_PROFILES_TEMPLATE,
+# )
+
+from .prompt_templates.ex_case_templates import (
     CASE_SUMMARY_TEMPLATE,
     WITNESS_PROFILES_TEMPLATE,
 )
+
 
 def get_llm(model="gpt-4o"):
     llm = ChatOpenAI(model=model)  
