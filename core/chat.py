@@ -3,11 +3,10 @@ from dotenv import load_dotenv
 import random
 from config import CASE_EXAMPLES
 
-from controller import get_ai_response, get_witness_profiles, get_case_summary
+from controller import get_witness_profiles, get_case_summary
 from controller import get_judge_result_wrapper as get_judge_result
 from controller import ask_witness_wrapper as ask_witness
 from controller import ask_defendant_wrapper as ask_defendant
-from controller import make_case_judgment_prompt, ask_llm
 
 
 load_dotenv()
@@ -173,13 +172,6 @@ def generate_case():
         "hint": case["hint"],
         "is_guilty": None  # 나중에 AI 판사나 유저 논쟁 결과로 결정
     }
-
-
-def simulate_judge_decision(case):
-    prompt = make_case_judgment_prompt(case)
-    print("[🧠 AI 판사 판단 요청 프롬프트]:\n", prompt)
-    response = ask_llm(prompt)
-    return response
 
 
 # 테스트 코드는 주석 처리 또는 삭제
