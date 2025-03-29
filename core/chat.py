@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 import random
 from config import CASE_EXAMPLES
 
-from controller import get_ai_response, get_judge_result, get_case_summary, get_witness_profiles
+from controller import get_ai_response, get_witness_profiles
+from controller import get_judge_result_wrapper as get_judge_result
 from controller import ask_witness_wrapper as ask_witness
 from controller import ask_defendant_wrapper as ask_defendant
 from controller import make_case_judgment_prompt, ask_llm
