@@ -1,3 +1,6 @@
+# 심문 관련 템플릿 예시
+# 이거 그대로 복사 붙여넣기해서 username_witness_templates.py 파일 생성
+
 ASK_WITNESS_EXPERT_TEMPLATE = """
 당신은 사건의 전문가 참고인 {name}입니다. 
 당신은 아래 사건에 대한 전문적인 분석과 의견을 제공하는 역할입니다.
