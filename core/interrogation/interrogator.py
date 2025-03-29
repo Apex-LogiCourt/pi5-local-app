@@ -1,7 +1,7 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from prompt_templates.witness_templates import (
+from .prompt_templates.witness_templates import (
     ASK_WITNESS_EXPERT_TEMPLATE,
     ASK_WITNESS_CHARACTER_TEMPLATE,
     ASK_DEFENDANT_TEMPLATE
