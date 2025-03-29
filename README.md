@@ -1,27 +1,25 @@
 # pi5-local-app
+## 주의사항
+- ⚠️프로젝트 컨벤션 지키기
+- ⚠️`Dockerfile.base`, `Dockerfile`, `docker-compose.yaml` 이거 3개는 건드리지 마세요 수정 ❌❌
+	- 해당파일 수정해야 돌아간다고 하면 깃 이슈에 올려주세요 
+
 ### 프로젝트 실행 방법
 ##### 초기 실행 시 
 1. 도커 엔진 실행
 2. 루트 디렉토리에서 Base 이미지부터 빌드 후에 나머지 이미지 빌드
 	- 프로젝트 루트 디렉토리에서 아래 명령어를 입력 
 	- `docker compose up --build -d`
-3. 컨테이너 일괄 종료 명령어
-	- `docker compose down`
+	- 잘 안 될 때는 `docker compose up base --build -d`
+	- 일단 한 번 컨테이너 일괄 종료 해줍니다.
+3. Docker 관련 명령어 
+	- `docker compose down` : 컨테이너 일괄 종료 명령어 
+	- `docker compose build` : 빌드만 하는 명령어 
 
 ##### 일반적인 실행 
 1. 도커 엔진 실행
-2. 컨테이너 실행 :`docker compose up`
+2. 컨테이너 일괄 실행 :`docker compose up`
 3. 터미널에 뜨는 Local URL에 접속하면 됨 
-```powershell
-core-1  | Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
-core-1  |
-core-1  | 
-core-1  |   You can now view your Streamlit app in your browser.
-core-1  | 
-core-1  |   Local URL: http://localhost:8501 //이 부분
-core-1  |   Network URL: http://172~                                                                          
-core-1  |   External URL: http://118~  
-```
 
 ##### 현재 정의된 서비스
 |서비스명|컨테이너명|설명|
@@ -37,8 +35,41 @@ core-1  |   External URL: http://118~
 
 ---
 
-### 브랜치 관리 
-- 방식이 결정되면 이후에 추가 
+### 브랜치 관리
+- feature 개발은 fork 해서 기능 개발이 끝나면 PR하는 방식으로 함 
+- 프로젝트 관리는 original !! 원래 !!! 의  [Apex-LogiCourt](https://github.com/Apex-LogiCourt)/[pi5-local-app](https://github.com/Apex-LogiCourt/pi5-local-app) 레포에서 진행함 
+- ⚠️브랜치명은 꼭 **소문자**로 통일해주세요 
+
+#### (1) 진행 방법 
+- 작업하기 전에 원격 레포에서 브랜치를 생성합니다 
+- 브랜치명은 아래 컨벤션을 보고 참고하시면 됩니다  
+- 브랜치 생성 시에 `Soure`는 `develop`으로 지정해주세요
+- 요약 : 원격 레포에서 브랜치 생성 -> 해당 브랜치에서 개발 -> 작업 끝 -> Pull Requests 작성 -> 관리자가 병합 -> 병합된 거 확인하면 브랜치 삭제 
+
+#### (2) 기능 개발 
+- `username/구현하는 feature명`
+- 예시 : `hyrge/login`, `hyrge/update-UI`
+- ⚠️`username` 으로는 브랜치 생성하지 마세요
+
+#### (3) 프로젝트 관리 
+- `main` : 항상 배포 가능한 상태를 유지
+- `develop` : 기능을 테스트하고 안정화 하는 브랜치
+- 가장 최신의 개발 브랜치는 `develop`이고 안정화가 다 되면 `main`으로 한 번씩 병합합니다 
+
+| 타입 (`type`)  | 의미                                               | 예시                         |
+| ------------ | ------------------------------------------------ | -------------------------- |
+| `fix/*`      | 버그 수정                                            |                            |
+| `docs/*`     | 문서 변경 (README, 주석 등)                             |                            |
+| `refactor/*` | 코드 리팩토링 (기능 변경 없이 개선)                            |                            |
+| `perf/*`     | 성능 개선                                            |                            |
+| `test/*`     | 테스트 코드 추가/수정                                     |                            |
+| `chore/*`    | 빌드, CI 설정 변경 (코드 변경 X)                           |                            |
+| `revert/*`   | 이전 커밋 되돌리기                                       |                            |
+| `build/*`    | 빌드 시스템 및 패키지 관련 설정 변경                            | `build/update-docker-base` |
+| `deps/*`     | 의존성 관리 변경 (`package.json`, `requirements.txt` 등) |                            |
+
+
+
 
 ---
 
@@ -183,7 +214,6 @@ chore: GitHub Actions CI/CD 설정 추가
 |`requirements.txt`|게임 로직 실행을 위한 패키지 목록|
 |`Dockerfile`|`core/` 컨테이너 설정|
 
----
 
 #### 2. `rag/` (검색 증강 생성, RAG)
 
@@ -210,7 +240,6 @@ chore: GitHub Actions CI/CD 설정 추가
 | `requirements.txt`            | RAG 관련 패키지 목록                  |
 | `Dockerfile`                  | `rag/` 컨테이너 설정                 |
 
----
 
 #### 3.`hardware/` (라즈베리파이 & 물리 장치)
 
@@ -246,7 +275,7 @@ chore: GitHub Actions CI/CD 설정 추가
 | `TTS_module.py`      | **음성 모듈(TTS) **           |
 | `gpio_config.yaml`   | GPIO 핀 매핑 설정 파일           |
 
----
+
 #### 4. `data/` (데이터 저장소)
 - **게임 진행 중 생성되는 데이터 및 리소스 저장**  
  - **사건 파일, 법률 문서, 증거 데이터 보관**
@@ -269,8 +298,6 @@ chore: GitHub Actions CI/CD 설정 추가
 | `evidence_resource/` | **증거 파일 저장소 (이미지, 오디오 등)**       |
 | `config.json`        | 환경 변수 (DB 연결 정보 등)               |
 
-
----
 
 #### 5.`ui/` (사용자 인터페이스)
 - **게임 인터페이스 (GUI & 채팅 패널)**
