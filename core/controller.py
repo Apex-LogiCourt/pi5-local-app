@@ -1,14 +1,18 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from .case_generation.case_builder import make_case_summary, make_witness_profiles
 
-def __init__():
+from typing import List, Dict
+from .case_generation.case_builder import make_case_summary, make_witness_profiles
+from .data_models import CaseData, WitnessProfile
+
+def __init__() -> CaseData:
+    print("contoller.__init__ 실행")
     # 사건 요약 생성
     case_summary = make_case_summary()
     # 증인 프로필 생성
     witness_profiles = make_witness_profiles(case_summary)
-    return case_summary, witness_profiles
+    return CaseData(case_summary=case_summary, witness_profiles=witness_profiles)
 
 #==============================================
 # case_generation.py의 함수
@@ -27,10 +31,13 @@ def get_witness_profiles_wrapper():
 # interrogator.py -> chat.py로 넘겨줌
 #============================================== 
 
-def ask_witness_wrapper(question, name, wtype, case_summary):
+def ask_witness_wrapper(question, name, type, case_summary):
     from interrogation.interrogator import ask_witness
-    return ask_witness(question, name, wtype, case_summary)
+    return ask_witness(question, name, type, case_summary)
 
+# def ask_witness_wrapper(question: str, name: str, wtype: str, case_summary: str) -> str:
+# from interrogation.interrogator import ask_witness
+# return ask_witness(question, name, wtype, case_summary)
 
 def ask_defendant_wrapper(question, defendant_name, case_summary):
     from interrogation.interrogator import ask_defendant
@@ -48,6 +55,9 @@ def get_judge_result_wrapper(message_list):
     return get_judge_result(message_list)
 
 
-case_summary, witness_profiles = __init__()
-print(case_summary)
-print(witness_profiles)
+if __name__ == "__main__":
+    print("main 실행")
+    case_data = __init__()
+    print(case_data.case_summary)
+    print(case_data.witness_profiles)
+
