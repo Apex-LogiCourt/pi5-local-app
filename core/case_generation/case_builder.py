@@ -1,6 +1,9 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from dotenv import load_dotenv
+
+load_dotenv()
 
 #==============================================
 # 템플릿 갈아끼면 쉽게 사용 가능
@@ -18,7 +21,7 @@ from .prompt_templates.ex_case_templates import (
 
 
 def get_llm(model="gpt-4o"):
-    llm = ChatOpenAI(model=model)  
+    llm = ChatOpenAI(model=model, temperature=0)  
     return llm
 
 def make_case_summary():
