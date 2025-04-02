@@ -160,17 +160,6 @@ if st.session_state.game_phase == "done":
             if key in st.session_state:
                 del st.session_state[key]
         st.rerun()
-        
-        
-def generate_case():
-    case = random.choice(CASE_EXAMPLES)
-    return {
-        "title": case["title"],
-        "description": case["description"],
-        "suspect": case["suspect"],
-        "hint": case["hint"],
-        "is_guilty": None  # 나중에 AI 판사나 유저 논쟁 결과로 결정
-    }
 
 
 # 테스트 코드는 주석 처리 또는 삭제
