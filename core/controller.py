@@ -1,4 +1,4 @@
-from case_generation.case_builder import get_case_summary, get_witness_profiles
+from case_generation.case_builder import make_case_summary, make_witness_profiles
 
 #==============================================
 # case_generation.py의 함수
@@ -6,10 +6,10 @@ from case_generation.case_builder import get_case_summary, get_witness_profiles
 # case_generation.py -> chat.py로 넘겨줌
 #============================================== 
 def get_case_summary_wrapper():
-    return get_case_summary()
+    return make_case_summary()
 
 def get_witness_profiles_wrapper():
-    return get_witness_profiles()
+    return make_witness_profiles()
 
 #==============================================
 # interrogator.py의 함수

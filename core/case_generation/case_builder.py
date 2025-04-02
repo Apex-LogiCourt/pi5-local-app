@@ -21,14 +21,14 @@ def get_llm(model="gpt-4o"):
     llm = ChatOpenAI(model=model)  
     return llm
 
-def get_case_summary():
+def make_case_summary():
     llm = get_llm()
     prompt = ChatPromptTemplate.from_template(CASE_SUMMARY_TEMPLATE)
     chain = prompt | llm | StrOutputParser()
     return chain.invoke({})
 
 
-def get_witness_profiles(case_summary):
+def make_witness_profiles(case_summary):
     llm = get_llm()
     prompt = ChatPromptTemplate.from_template(WITNESS_PROFILES_TEMPLATE)
     

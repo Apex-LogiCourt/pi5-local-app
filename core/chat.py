@@ -2,7 +2,7 @@ import streamlit as st
 from dotenv import load_dotenv
 import random
 
-from controller import get_witness_profiles, get_case_summary
+from controller import make_witness_profiles, make_case_summary
 from controller import get_judge_result_wrapper as get_judge_result
 from controller import ask_witness_wrapper as ask_witness
 from controller import ask_defendant_wrapper as ask_defendant
@@ -27,11 +27,11 @@ if st.session_state.game_phase == "init":
     # 이미 사건이 생성되었는지 확인
     if 'case_initialized' not in st.session_state:
         with st.spinner("사건을 생성 중입니다..."):
-            case_summary = get_case_summary()
+            case_summary = make_case_summary()
             st.session_state.message_list.append({"role": "system", "content": case_summary})
 
             # 참고인 자동 생성
-            witness_profiles = get_witness_profiles(case_summary)
+            witness_profiles = make_witness_profiles(case_summary)
             st.session_state.witness_profiles = witness_profiles
             
             # 사건이 초기화되었음을 표시
