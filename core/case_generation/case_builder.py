@@ -1,9 +1,6 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from dotenv import load_dotenv
-
-load_dotenv()
 
 #==============================================
 # 템플릿 갈아끼면 쉽게 사용 가능
@@ -20,8 +17,15 @@ from .prompt_templates.ex_case_templates import (
 )
 
 
-def get_llm(model="gpt-4o"):
-    llm = ChatOpenAI(model=model, temperature=0)  
+# def get_llm(model="gpt-4o"):
+def get_llm(model="gpt-4o-mini"):
+    llm = ChatOpenAI(model=model, temperature=1.5)  
+    """    
+    temperature 값의 의미:
+    0: 가장 결정적이고 예측 가능한 응답 (항상 가장 가능성이 높은 토큰 선택)
+    0.7: ChatGPT의 기본값 (적당한 창의성과 안정성)
+    ~1.0 : 창의적이지만 안정성 떨어짐
+    """
     return llm
 
 def make_case_summary():
@@ -38,6 +42,10 @@ def make_witness_profiles(case_summary):
     chain = prompt | llm | StrOutputParser()
     response = chain.invoke({"case_summary": case_summary})
     
+    # 여기 이 부분 !!!!!! data_models.py 에 있는 데이터클래스로 변환해서 담아주세요
+    # 애초에 출력을 할 때 Json 형태로 출력할 수 있거든요 가능하면 아래처럼 무식하게 파싱하지 마세요 
+    # opeonai에서는 아예 자체적으로 json 형태로 출력해주는 기능이 있습니다.
+
     # 텍스트 파싱
     witness_profiles = []
     try:
