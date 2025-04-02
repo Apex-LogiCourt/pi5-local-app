@@ -19,7 +19,7 @@ from .prompt_templates.ex_case_templates import (
 
 # def get_llm(model="gpt-4o"):
 def get_llm(model="gpt-4o-mini"):
-    llm = ChatOpenAI(model=model, temperature=1.5)  
+    llm = ChatOpenAI(model=model, temperature=1.0)  
     """    
     temperature 값의 의미:
     0: 가장 결정적이고 예측 가능한 응답 (항상 가장 가능성이 높은 토큰 선택)
