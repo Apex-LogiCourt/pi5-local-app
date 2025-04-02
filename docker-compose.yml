@@ -1,5 +1,6 @@
 services:
-  qemu:
+  # Mac에서 qemu 관련 전체 주석 처리 
+  qemu: 
     image: multiarch/qemu-user-static
     container_name: qemu_setup
     privileged: true
@@ -7,6 +8,7 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
+  # 이부분 까지 주석 처리 
 
   base:
     image: logicourt-base:latest
@@ -14,7 +16,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.base
-    depends_on:
+    depends_on: # Mac에서 qemu 관련 주석 처리
       - qemu
     command: echo "Base image built!"
   
@@ -27,22 +29,14 @@ services:
         - linux/arm64
     depends_on:
       - base
-      - qemu
+      - qemu # Mac에서 qemu 관련 주석 처리
     volumes:
-      - ./core:/app  # ✅ core 폴더 전체를 /app으로 마운트
+      - ./core:/app # ✅ core 폴더 전체를 /app으로 마운트
+      - data:/data  # 공유 볼륨을 마운트
     command: streamlit run chat.py
     ports:
       - "8501:8501"  # Streamlit 기본 포트
     # ports 설정 
-
-
-# # 메모리 제한 설정 - 라즈베리파이5 기준 
-# deploy:
-#   resources:
-#     limits:
-#       cpus: "4" # 4개의 코어 사용
-#       memory: "8g" # 8GB의 메모리 사용  
-
 
 
   # rag:
@@ -51,6 +45,8 @@ services:
   #     dockerfile: Dockerfile
   #   depends_on:
   #     - base
+  #   volumes:
+  #     - data:/data  # 공유 볼륨을 마운트
 
   # hardware:
   #   build:
@@ -58,3 +54,20 @@ services:
   #     dockerfile: Dockerfile
   #   depends_on:
   #     - base
+  #   volumes:
+  #     - data:/data  # 공유 볼륨을 마운트
+
+volumes:
+  data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data  # 로컬 디렉토리를 마운트
+
+# # 메모리 제한 설정 - 라즈베리파이5 기준 
+# deploy:
+#   resources:
+#     limits:
+#       cpus: "4" # 4개의 코어 사용
+#       memory: "8g" # 8GB의 메모리 사용  
