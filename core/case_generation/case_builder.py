@@ -1,7 +1,11 @@
+import json
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from core.data_models import CaseData, Case, Profile, Evidence
+
+from dotenv import load_dotenv
+load_dotenv()
 
 #==============================================
 # 템플릿 갈아끼면 쉽게 사용 가능
@@ -12,9 +16,10 @@ from core.data_models import CaseData, Case, Profile, Evidence
 #     WITNESS_PROFILES_TEMPLATE,
 # )
 
-from .prompt_templates.ex_case_templates import (
+from .prompt_templates.gunrein_case_templates import (
     CASE_SUMMARY_TEMPLATE,
     WITNESS_PROFILES_TEMPLATE,
+    CHARACTER_EXTRACTION_TEMPLATE,
 )
 
 
@@ -30,66 +35,87 @@ def get_llm(model="gpt-4o-mini"):
     return llm
 
 def make_case_summary():
+    """사건 개요와 등장인물 정보를 생성하는 함수"""
     llm = get_llm()
     prompt = ChatPromptTemplate.from_template(CASE_SUMMARY_TEMPLATE)
     chain = prompt | llm | StrOutputParser()
     return chain.invoke({})
 
+def extract_characters(case_summary):
+    """사건 개요에서 등장인물 이름을 추출하는 함수"""
+    llm = get_llm()
+    prompt = ChatPromptTemplate.from_template(CHARACTER_EXTRACTION_TEMPLATE)
+    chain = prompt | llm | StrOutputParser()
+    
+    try:
+        response = chain.invoke({"case_summary": case_summary})
+        print("\n[등장인물 추출 응답]")
+        print(response)
+        
+        # JSON 응답을 파싱하여 등장인물 이름 추출
+        characters = json.loads(response)
+        
+        # 필수 키가 있는지 확인
+        required_keys = ["defendant", "victim", "witness", "reference"]
+        missing_keys = [key for key in required_keys if key not in characters]
+        if missing_keys:
+            raise ValueError(f"필수 키가 누락되었습니다: {', '.join(missing_keys)}")
+            
+        # 빈 문자열이나 None 값 체크
+        for key, value in characters.items():
+            if not value or value.strip() == "":
+                raise ValueError(f"{key}의 이름이 비어있습니다")
+                
+        return characters
+        
+    except (json.JSONDecodeError, TypeError, ValueError) as e:
+        print(f"등장인물 추출 에러: {str(e)}")
+        # 파싱 실패시 기본 이름 반환
+        return {
+            "defendant": "김철수",
+            "victim": "이영희",
+            "witness": "정하늘",
+            "reference": "최교수"
+        }
 
 def make_witness_profiles(case_summary):
+    """사건 개요에서 등장인물 정보를 추출하여 Profile 객체 리스트로 변환하는 함수"""
+    # 등장인물 이름 추출
+    characters = extract_characters(case_summary)
+    
     llm = get_llm()
     prompt = ChatPromptTemplate.from_template(WITNESS_PROFILES_TEMPLATE)
     
+    # 추출한 이름을 변수로 제공
     chain = prompt | llm | StrOutputParser()
-    response = chain.invoke({"case_summary": case_summary})
+    response = chain.invoke({
+        "case_summary": case_summary,
+        "defendant_name": characters["defendant"],
+        "victim_name": characters["victim"],
+        "witness_name": characters["witness"],
+        "reference_name": characters["reference"]
+    })
     
-    # 여기 이 부분 !!!!!! data_models.py 에 있는 데이터클래스로 변환해서 담아주세요
-    # 애초에 출력을 할 때 Json 형태로 출력할 수 있거든요 가능하면 아래처럼 무식하게 파싱하지 마세요 
-    # opeonai에서는 아예 자체적으로 json 형태로 출력해주는 기능이 있습니다.
-
-    # 텍스트 파싱
-    witness_profiles = []
     try:
-        lines = [line.strip() for line in response.split("\n") if line.strip()]
-        for line in lines:
-            if not line.startswith("참고인") or "=" not in line or "|" not in line:
-                continue
-                
-            parts = line.split(":", 1)[1].split("|")
-            profile = {}
-            
-            for part in parts:
-                if "=" not in part:
-                    continue
-                key, value = part.split("=", 1)
-                if key == "이름":
-                    profile["name"] = value
-                elif key == "유형":
-                    profile["type"] = value
-                elif key == "배경":
-                    profile["background"] = value
-            
-            if "name" in profile and "type" in profile:
-                witness_profiles.append(profile)
-    except Exception:
-        # 파싱에 실패한 경우 기본 프로필 사용
-        witness_profiles = [
-            {"name": "김민수", "type": "character", "background": "사건 목격자"},
-            {"name": "박지연", "type": "character", "background": "관련자"},
-            {"name": "박건우", "type": "expert", "background": "법의학 전문가"}
+        # JSON 응답을 파싱하여 Profile 객체 리스트로 변환
+        profiles_data = json.loads(response)
+        # 필수 키가 있는지 확인
+        required_keys = ["name", "type", "context"]
+        for profile in profiles_data:
+            if not all(key in profile for key in required_keys):
+                raise ValueError("프로필에 필수 키가 누락되었습니다")
+        profiles = [Profile(**profile) for profile in profiles_data]
+        return profiles
+    except (json.JSONDecodeError, TypeError, ValueError) as e:
+        print("JSON 파싱 에러:", str(e))
+        # 파싱 실패시 기본 프로필 반환
+        return [
+            Profile(name=characters["defendant"], type="defendant", context="피고인으로서 출석"),
+            Profile(name=characters["victim"], type="victim", context="피해자로서 출석"),
+            Profile(name=characters["witness"], type="witness", context="사건 목격자로서 출석"),
+            Profile(name=characters["reference"], type="reference", context="참고인으로서 출석")
         ]
-    
-    # 프로필이 3개 미만이면 기본 프로필로 보충
-    if len(witness_profiles) < 3:
-        default_profiles = [
-            {"name": "김민수", "type": "character", "background": "사건 목격자"},
-            {"name": "박지연", "type": "character", "background": "관련자"},
-            {"name": "박건우", "type": "expert", "background": "법의학 전문가"}
-        ]
-        witness_profiles.extend(default_profiles[:(3-len(witness_profiles))])
-    
-    return witness_profiles[:3]  # 최대 3개만 반환
-  
+
 # 여기다가 Case, Profile, Evidence CaseData에 넣어서 반환해주세요
 def create_case_data():
     case = Case(    
@@ -99,3 +125,23 @@ def create_case_data():
     profiles = []
     evidences = []
     return CaseData(case, profiles, evidences)
+
+if __name__ == "__main__":
+    print("사건 개요 생성 중...")
+    case_summary = make_case_summary()
+    print("\n[생성된 사건 개요]")
+    print(case_summary)
+    
+    print("\n등장인물 추출 중...")
+    characters = extract_characters(case_summary)
+    print("\n[추출된 등장인물]")
+    for role, name in characters.items():
+        print(f"- {role}: {name}")
+    
+    print("\n등장인물 프로필 생성 중...")
+    profiles = make_witness_profiles(case_summary)
+    print("\n[생성된 등장인물 프로필]")
+    for profile in profiles:
+        print(f"- {profile.name} ({profile.type}): {profile.context}")
+    
+    
