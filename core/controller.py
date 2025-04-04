@@ -3,16 +3,32 @@ load_dotenv()
 
 
 from typing import List, Dict
-from .case_generation.case_builder import make_case_summary, make_witness_profiles
-from .data_models import CaseData, WitnessProfile
+from .case_generation.case_builder import make_case_summary, make_witness_profiles, create_case_data
+from .data_models import CaseData, Case, Profile, Evidence
 
-def __init__() -> CaseData:
-    print("contoller.__init__ 실행")
-    # 사건 요약 생성
-    case_summary = make_case_summary()
-    # 증인 프로필 생성
-    witness_profiles = make_witness_profiles(case_summary)
-    return CaseData(case_summary=case_summary, witness_profiles=witness_profiles)
+
+# 싱글톤 패턴 적용
+class CaseDataManager:
+    _instance = None
+    _case_data: CaseData = None
+    
+    def __init__(self):
+        # 새로운 인스턴스 생성 방지
+        raise RuntimeError('이 클래스의 인스턴스를 직접 생성할 수 없습니다다ㅋ')
+    
+    @classmethod
+    def initialize(cls) -> CaseData:
+        if cls._case_data is None:
+            print("controller 초기화 실행")
+            cls._case_data = create_case_data()
+        return cls._case_data
+    
+    @classmethod
+    def get_case_data(cls) -> CaseData:
+        if cls._case_data is None:
+            return cls.initialize()
+        return cls._case_data
+
 
 #==============================================
 # case_generation.py의 함수
