@@ -1,6 +1,7 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from core.data_models import CaseData, Case, Profile, Evidence
 
 #==============================================
 # 템플릿 갈아끼면 쉽게 사용 가능
@@ -89,3 +90,12 @@ def make_witness_profiles(case_summary):
     
     return witness_profiles[:3]  # 최대 3개만 반환
   
+# 여기다가 Case, Profile, Evidence CaseData에 넣어서 반환해주세요
+def create_case_data():
+    case = Case(    
+        outline="",
+        behind=""
+    )
+    profiles = []
+    evidences = []
+    return CaseData(case, profiles, evidences)
