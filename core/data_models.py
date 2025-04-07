@@ -21,7 +21,7 @@ class Evidence:
     name: str  # 증거품 이름(명사형) 
     type: Literal["attorney", "prosecutor"]  # 제출 주체
     description: List[str]  # 증거 설명 (추가 가능)
-    # picture: str  # 사진 경로 (향후 구현)
+    picture: str  # 사진 경로 (향후 구현)
 
 
 # Controller에서 최종적으로 다른 모듈로 념겨줄 데이터 형식이에용
