@@ -19,7 +19,7 @@ class Profile:
 @dataclass
 class Evidence:
     name: str  # 증거품 이름(명사형) 
-    type: Literal["attorney", "prosecutor"]  # 제출 주체
+    type: Literal["attorney", "prosecutor"]  # 제출 주체 
     description: List[str]  # 증거 설명 (추가 가능)
     picture: str  # 사진 경로 (향후 구현)
 

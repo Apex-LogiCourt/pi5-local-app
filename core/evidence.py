@@ -19,7 +19,7 @@ CREATE_EVIDENCE_TEMPLATE = """
 단, 모든 증거는 재판에 참석한 인원과 연관이 있어야 합니다.
 증거품의 종류에는 제한이 없으나 답변은 다음의 형식을 따라야 합니다.
 
-name: 증거품 이름(명사), "한 단어"만 사용하세요.
+name: 증거품 이름(명사), "한 단어"만 사용하세요. (예시: 카세트 테이프, 식칼 등)
 type: 증거 제출 주체(attorney, prosecutor)
 description: 증거에 대한 설명. 한 문장으로 설명하세요.
 
@@ -74,6 +74,7 @@ def update_evidence_description(evidence: Evidence, casedata: CaseData) -> Evide
         {case_data}
 
         추가될 증거품의 설명을 한 문장으로 대답하세요.
+        기존의 증거품 설명과 동일한 내용은 제외하고, 추가될 내용만 대답하세요.
         """)
     ])
     chain = prompt | llm | StrOutputParser()
@@ -100,13 +101,8 @@ def format_profiles(raw_profiles):
     profiles = "\n".join([f"- {p}" for p in raw_profiles])
     return profiles
 
-def convert_data_class(raw_data: List[dict]) -> List[Evidence]:
+def convert_data_class(data: List[dict]) -> List[Evidence]:
     import ast
-
-    if isinstance(raw_data, str):
-        data = ast.literal_eval(raw_data)
-    else:
-        data = raw_data
     if "evidence" in data:
         data = data["evidence"]
 
@@ -185,3 +181,37 @@ def resize_img(input_path, output_path, target_size):
     except:
         return -1
     return 0
+
+### TEST CODE ###
+c = Case(
+    outline="""
+    피해자 김현수는 성공한 사업가로, 최근 은퇴 후 유산을 정리하고 있었습니다. 그의 조카 김민준은 김현수와 가까운 사이였으며, 유산 상속에 큰 관심을 보이고 있었습니다.
+    김현수는 자신의 저택에서 의식불명 상태로 발견되었고, 이틀 후 사망했습니다. 경찰은 김현수의 죽음이 단순한 사고가 아니라 누군가에 의해 계획된 범죄일 가능성을 제기했습니다. 사건 당일, 김민준은 저택을 방문했던 것으로 확인되었으며, 김현수의 유산에 관한 논의가 있었던 것으로 밝혀졌습니다.
+    """,
+    behind=""
+)
+plist = []
+plist.append(
+    Profile(
+        name="김민준",
+        type="suspect",
+        context="32세, 김현수의 조카로 현재 중소기업에서 근무 중입니다. 그는 평소 삼촌의 유산을 통해 사업 확장을 꿈꾸고 있었습니다. 사건 발생 시점에 김민준은 저택을 방문했으나 이후 친구들과 저녁 식사 모임이 있었다고 주장합니다."
+    )
+)
+plist.append(
+    Profile(
+        name="이상훈",
+        type="witness",
+        context="사건 당일 저녁, 김민준이 친구와 함께 있었으며, 그의 행동에 의심스러운 점이 없었다는 증언입니다."
+    )
+)
+cd = CaseData(
+    case = c,
+    profiles=plist,
+    evidences=None
+)
+res = make_evidence(case_data=c, profiles=plist)
+print(res)
+print("\n\n")
+update_evidence_description(res[0], cd)
+print(res[0].description)
