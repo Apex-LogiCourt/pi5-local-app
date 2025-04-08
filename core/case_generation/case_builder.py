@@ -62,17 +62,17 @@ def get_witness_profiles(case_summary):
     except Exception:
         # 파싱에 실패한 경우 기본 프로필 사용
         witness_profiles = [
-            {"name": "김민수", "type": "character", "background": "사건 목격자"},
-            {"name": "박지연", "type": "character", "background": "관련자"},
-            {"name": "박건우", "type": "expert", "background": "법의학 전문가"}
+            {"name": "김민수", "type": "witness", "background": "사건 목격자"},
+            {"name": "박지연", "type": "reference", "background": "관련자"},
+            {"name": "이용의", "type": "defendant", "background": "피고인"}
         ]
     
     # 프로필이 3개 미만이면 기본 프로필로 보충
     if len(witness_profiles) < 3:
         default_profiles = [
-            {"name": "김민수", "type": "character", "background": "사건 목격자"},
-            {"name": "박지연", "type": "character", "background": "관련자"},
-            {"name": "박건우", "type": "expert", "background": "법의학 전문가"}
+            {"name": "김민수", "type": "witness", "background": "사건 목격자"},
+            {"name": "박지연", "type": "reference", "background": "관련자"},
+            {"name": "이용의", "type": "defendant", "background": "피고인"}
         ]
         witness_profiles.extend(default_profiles[:(3-len(witness_profiles))])
     

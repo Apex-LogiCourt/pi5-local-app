@@ -8,8 +8,8 @@ from case_generation.case_builder import get_case_summary, get_witness_profiles
 def get_case_summary_wrapper():
     return get_case_summary()
 
-def get_witness_profiles_wrapper():
-    return get_witness_profiles()
+def get_witness_profiles_wrapper(case_summary):
+    return get_witness_profiles(case_summary)
 
 #==============================================
 # interrogator.py의 함수
@@ -17,14 +17,14 @@ def get_witness_profiles_wrapper():
 # interrogator.py -> chat.py로 넘겨줌
 #============================================== 
 
-def ask_witness_wrapper(question, name, wtype, case_summary):
+def ask_witness_wrapper(question, name, wtype, case_summary, conversation_history):
     from interrogation.interrogator import ask_witness
-    return ask_witness(question, name, wtype, case_summary)
+    return ask_witness(question, name, wtype, case_summary, conversation_history)
 
 
-def ask_defendant_wrapper(question, defendant_name, case_summary):
+def ask_defendant_wrapper(question, defendant_name, case_summary, conversation_history):
     from interrogation.interrogator import ask_defendant
-    return ask_defendant(question, defendant_name, case_summary)
+    return ask_defendant(question, defendant_name, case_summary, conversation_history)
 
 
 #==============================================
