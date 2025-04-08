@@ -26,8 +26,8 @@ from .prompt_templates.gunrein_case_templates import (
 
 
 # def get_llm(model="gpt-4o"):
-def get_llm(model="gpt-4o-mini"):
-    llm = ChatOpenAI(model=model, temperature=1.0)  
+def get_llm(model="gpt-4o-mini", temperature=1.0):
+    llm = ChatOpenAI(model=model, temperature=temperature)  
     """    
     temperature 값의 의미:
     0: 가장 결정적이고 예측 가능한 응답 (항상 가장 가능성이 높은 토큰 선택)
@@ -36,24 +36,47 @@ def get_llm(model="gpt-4o-mini"):
     """
     return llm
 
-def make_case_summary():
-    """사건 개요와 등장인물 정보를 생성하는 함수"""
-    llm = get_llm()
+def get_case_summary_chain(model="gpt-4o-mini", temperature=1.0):
+    """사건 개요 생성을 위한 체인을 반환하는 함수
+    
+    Args:
+        model (str): 사용할 모델 이름
+        temperature (float): 생성 온도 (0~1.0)
+        
+    Returns:
+        chain: 사건 개요 생성 체인
+    """
+    llm = get_llm(model, temperature)
     prompt = ChatPromptTemplate.from_template(CASE_SUMMARY_TEMPLATE)
     chain = prompt | llm | StrOutputParser()
-    return chain.invoke({})
+    return chain
 
-def extract_characters(case_summary):
-    """사건 개요에서 등장인물 이름을 추출하는 함수"""
-    llm = get_llm()
+def get_character_extraction_chain(model="gpt-4o-mini", temperature=0.7):
+    """등장인물 추출을 위한 체인을 반환하는 함수
+    
+    Args:
+        model (str): 사용할 모델 이름
+        temperature (float): 생성 온도 (0~1.0)
+        
+    Returns:
+        chain: 등장인물 추출 체인
+    """
+    llm = get_llm(model, temperature)
     prompt = ChatPromptTemplate.from_template(CHARACTER_EXTRACTION_TEMPLATE)
     chain = prompt | llm | StrOutputParser()
+    return chain
+
+def extract_characters_from_response(response, verbose=False):
+    """LLM 응답에서 등장인물 이름을 추출하는 함수
     
-    try:
-        response = chain.invoke({"case_summary": case_summary})
-        print("\n[등장인물 추출 응답]")
-        print(response)
+    Args:
+        response (str): LLM 응답
+        verbose (bool): 상세 로그 출력 여부
         
+    Returns:
+        dict: 추출된 등장인물 이름 (역할별)
+    """
+    try:
         # JSON 응답을 파싱하여 등장인물 이름 추출
         characters = json.loads(response)
         
@@ -71,7 +94,8 @@ def extract_characters(case_summary):
         return characters
         
     except (json.JSONDecodeError, TypeError, ValueError) as e:
-        print(f"등장인물 추출 에러: {str(e)}")
+        if verbose:
+            print(f"등장인물 추출 에러: {str(e)}")
         # 파싱 실패시 기본 이름 반환
         return {
             "defendant": "김철수",
@@ -80,24 +104,32 @@ def extract_characters(case_summary):
             "reference": "최교수"
         }
 
-def make_witness_profiles(case_summary):
-    """사건 개요에서 등장인물 정보를 추출하여 Profile 객체 리스트로 변환하는 함수"""
-    # 등장인물 이름 추출
-    characters = extract_characters(case_summary)
+def get_witness_profiles_chain(model="gpt-4o-mini", temperature=0.7):
+    """등장인물 프로필 생성을 위한 체인을 반환하는 함수
     
-    llm = get_llm()
+    Args:
+        model (str): 사용할 모델 이름
+        temperature (float): 생성 온도 (0~1.0)
+        
+    Returns:
+        chain: 등장인물 프로필 생성 체인
+    """
+    llm = get_llm(model, temperature)
     prompt = ChatPromptTemplate.from_template(WITNESS_PROFILES_TEMPLATE)
-    
-    # 추출한 이름을 변수로 제공
     chain = prompt | llm | StrOutputParser()
-    response = chain.invoke({
-        "case_summary": case_summary,
-        "defendant_name": characters["defendant"],
-        "victim_name": characters["victim"],
-        "witness_name": characters["witness"],
-        "reference_name": characters["reference"]
-    })
+    return chain
+
+def process_witness_profiles_response(response, characters, verbose=False):
+    """LLM 응답에서 등장인물 프로필을 추출하는 함수
     
+    Args:
+        response (str): LLM 응답
+        characters (dict): 등장인물 이름 딕셔너리
+        verbose (bool): 상세 로그 출력 여부
+        
+    Returns:
+        list: Profile 객체 리스트
+    """
     try:
         # JSON 응답을 파싱하여 Profile 객체 리스트로 변환
         profiles_data = json.loads(response)
@@ -109,7 +141,8 @@ def make_witness_profiles(case_summary):
         profiles = [Profile(**profile) for profile in profiles_data]
         return profiles
     except (json.JSONDecodeError, TypeError, ValueError) as e:
-        print("JSON 파싱 에러:", str(e))
+        if verbose:
+            print("JSON 파싱 에러:", str(e))
         # 파싱 실패시 기본 프로필 반환
         return [
             Profile(name=characters["defendant"], type="defendant", context="피고인으로서 출석"),
@@ -118,17 +151,32 @@ def make_witness_profiles(case_summary):
             Profile(name=characters["reference"], type="reference", context="참고인으로서 출석")
         ]
 
-def make_evidence(case_summary):
-    """사건 개요를 바탕으로 검사측과 변호사측의 증거를 생성하는 함수"""
-    llm = get_llm()
+def get_evidence_chain(model="gpt-4o-mini", temperature=0.7):
+    """증거 생성을 위한 체인을 반환하는 함수
+    
+    Args:
+        model (str): 사용할 모델 이름
+        temperature (float): 생성 온도 (0~1.0)
+        
+    Returns:
+        chain: 증거 생성 체인
+    """
+    llm = get_llm(model, temperature)
     prompt = ChatPromptTemplate.from_template(EVIDENCE_TEMPLATE)
     chain = prompt | llm | StrOutputParser()
+    return chain
+
+def process_evidence_response(response, verbose=False):
+    """LLM 응답에서 증거를 추출하는 함수
     
-    try:
-        response = chain.invoke({"case_summary": case_summary})
-        print("\n[증거 생성 응답]")
-        print(response)
+    Args:
+        response (str): LLM 응답
+        verbose (bool): 상세 로그 출력 여부
         
+    Returns:
+        list: Evidence 객체 리스트
+    """
+    try:
         # JSON 응답을 파싱하여 증거 정보 추출
         evidence_data = json.loads(response)
         
@@ -157,7 +205,8 @@ def make_evidence(case_summary):
         return evidences
         
     except (json.JSONDecodeError, TypeError, ValueError) as e:
-        print(f"증거 생성 에러: {str(e)}")
+        if verbose:
+            print(f"증거 생성 에러: {str(e)}")
         # 파싱 실패시 기본 증거 반환
         return [
             Evidence(name="CCTV 영상", description="사건 현장의 CCTV 영상", type="prosecution"),
@@ -166,26 +215,32 @@ def make_evidence(case_summary):
             Evidence(name="신원조회", description="피고인의 신원조회 결과", type="defense")
         ]
 
-def make_case_behind(case_summary, evidences):
-    """사건 개요와 증거를 바탕으로 사건의 내막을 생성하는 함수"""
-    llm = get_llm()
-    prompt = ChatPromptTemplate.from_template(CASE_BEHIND_TEMPLATE)
+def get_case_behind_chain(model="gpt-4o-mini", temperature=0.7):
+    """사건 내막 생성을 위한 체인을 반환하는 함수
     
-    # 증거 정보를 문자열로 변환
-    evidence_str = ""
-    for evidence in evidences:
-        evidence_str += f"- {evidence.name} ({evidence.type}): {evidence.description}\n"
-    
-    chain = prompt | llm | StrOutputParser()
-    
-    try:
-        response = chain.invoke({
-            "case_summary": case_summary,
-            "evidence": evidence_str
-        })
-        print("\n[사건 내막 생성 응답]")
-        print(response)
+    Args:
+        model (str): 사용할 모델 이름
+        temperature (float): 생성 온도 (0~1.0)
         
+    Returns:
+        chain: 사건 내막 생성 체인
+    """
+    llm = get_llm(model, temperature)
+    prompt = ChatPromptTemplate.from_template(CASE_BEHIND_TEMPLATE)
+    chain = prompt | llm | StrOutputParser()
+    return chain
+
+def process_case_behind_response(response, verbose=False):
+    """LLM 응답에서 사건 내막을 추출하는 함수
+    
+    Args:
+        response (str): LLM 응답
+        verbose (bool): 상세 로그 출력 여부
+        
+    Returns:
+        str: 생성된 사건 내막
+    """
+    try:
         # JSON 응답을 파싱하여 내막 정보 추출
         behind_data = json.loads(response)
         
@@ -204,47 +259,146 @@ def make_case_behind(case_summary, evidences):
         return behind_str
         
     except (json.JSONDecodeError, TypeError, ValueError) as e:
-        print(f"사건 내막 생성 에러: {str(e)}")
+        if verbose:
+            print(f"사건 내막 생성 에러: {str(e)}")
         # 파싱 실패시 기본 내막 반환
         return "사건의 내막을 생성하는데 실패했습니다."
 
-# 여기다가 Case, Profile, Evidence CaseData에 넣어서 반환해주세요
-def create_case_data():
+def prepare_evidence_str_for_behind(evidences):
+    """증거 목록을 문자열로 변환하는 함수
+    
+    Args:
+        evidences (list): Evidence 객체 리스트
+        
+    Returns:
+        str: 증거 정보 문자열
+    """
+    evidence_str = ""
+    for evidence in evidences:
+        evidence_str += f"- {evidence.name} ({evidence.type}): {evidence.description}\n"
+    return evidence_str
+
+def create_case_data(model="gpt-4o-mini", temperature=1.0, verbose=False):
+    """사건 데이터를 생성하는 함수
+    
+    Args:
+        model (str): 사용할 모델 이름
+        temperature (float): 생성 온도 (0~1.0)
+        verbose (bool): 상세 로그 출력 여부
+        
+    Returns:
+        CaseData: 생성된 사건 데이터
+    """
+    if verbose:
+        print("사건 개요 생성 중...")
+    
+    # 사건 개요 생성
+    case_summary_chain = get_case_summary_chain(model, temperature)
+    case_summary = case_summary_chain.invoke({})
+    
+    if verbose:
+        print("등장인물 추출 중...")
+    
+    # 등장인물 추출
+    character_chain = get_character_extraction_chain()
+    character_response = character_chain.invoke({"case_summary": case_summary})
+    characters = extract_characters_from_response(character_response, verbose)
+    
+    if verbose:
+        print("등장인물 프로필 생성 중...")
+    
+    # 등장인물 프로필 생성
+    profile_chain = get_witness_profiles_chain()
+    profile_response = profile_chain.invoke({
+        "case_summary": case_summary,
+        "defendant_name": characters["defendant"],
+        "victim_name": characters["victim"],
+        "witness_name": characters["witness"],
+        "reference_name": characters["reference"]
+    })
+    profiles = process_witness_profiles_response(profile_response, characters, verbose)
+    
+    if verbose:
+        print("증거 생성 중...")
+    
+    # 증거 생성
+    evidence_chain = get_evidence_chain()
+    evidence_response = evidence_chain.invoke({"case_summary": case_summary})
+    evidences = process_evidence_response(evidence_response, verbose)
+    
+    if verbose:
+        print("사건 내막 생성 중...")
+    
+    # 사건 내막 생성
+    behind_chain = get_case_behind_chain()
+    evidence_str = prepare_evidence_str_for_behind(evidences)
+    behind_response = behind_chain.invoke({
+        "case_summary": case_summary,
+        "evidence": evidence_str
+    })
+    behind = process_case_behind_response(behind_response, verbose)
+    
+    # Case 객체 생성
     case = Case(    
         outline=case_summary,
         behind=behind
     )
-    profiles = []
-    evidences = []
-    return CaseData(case, profiles, evidences)
+    
+    if verbose:
+        print("사건 데이터 생성 완료")
+    
+    # CaseData 객체 생성 및 반환
+    return CaseData(case=case, profiles=profiles, evidences=evidences)
 
+# 테스트 코드 (이 파일을 직접 실행할 때만 실행됨)
 if __name__ == "__main__":
-    print("사건 개요 생성 중...")
-    case_summary = make_case_summary()
-    print("\n[생성된 사건 개요]")
+    # 체인만 생성하는 테스트
+    print("체인 생성 테스트")
+    
+    # 사건 개요 생성
+    case_summary_chain = get_case_summary_chain()
+    case_summary = case_summary_chain.invoke({})
     print(case_summary)
+    print("사건 개요 체인 생성 완료")
     
-    print("\n등장인물 추출 중...")
-    characters = extract_characters(case_summary)
-    print("\n[추출된 등장인물]")
-    for role, name in characters.items():
-        print(f"- {role}: {name}")
+    # 등장인물 추출
+    character_chain = get_character_extraction_chain()
+    character_response = character_chain.invoke({"case_summary": case_summary})
+    print(character_response)
+    # 추출된 응답 처리
+    characters = extract_characters_from_response(character_response)
+    print("등장인물 추출 체인 생성 완료")
     
-    print("\n등장인물 프로필 생성 중...")
-    profiles = make_witness_profiles(case_summary)
-    print("\n[생성된 등장인물 프로필]")
-    for profile in profiles:
-        print(f"- {profile.name} ({profile.type}): {profile.context}")
-        
-    print("\n증거 생성 중...")
-    evidences = make_evidence(case_summary)
-    print("\n[생성된 증거]")
-    for evidence in evidences:
-        print(f"- {evidence.name} ({evidence.type}): {evidence.description}")
-        
-    print("\n사건 내막 생성 중...")
-    behind = make_case_behind(case_summary, evidences)
-    print("\n[생성된 사건 내막]")
-    print(behind)
+    # 등장인물 프로필 생성
+    profile_chain = get_witness_profiles_chain()
+    profile_response = profile_chain.invoke({
+        "case_summary": case_summary,
+        "defendant_name": characters["defendant"],
+        "victim_name": characters["victim"],
+        "witness_name": characters["witness"],
+        "reference_name": characters["reference"]
+    })
+    print(profile_response)
+    print("등장인물 프로필 체인 생성 완료")
+    
+    # 증거 생성
+    evidence_chain = get_evidence_chain()
+    evidence_response = evidence_chain.invoke({"case_summary": case_summary})
+    print(evidence_response)
+    # 증거 응답 처리
+    evidences = process_evidence_response(evidence_response)
+    print("증거 체인 생성 완료")
+    
+    # 사건 내막 생성
+    behind_chain = get_case_behind_chain()
+    evidence_str = prepare_evidence_str_for_behind(evidences)
+    behind_response = behind_chain.invoke({
+        "case_summary": case_summary,
+        "evidence": evidence_str
+    })
+    print(behind_response)
+    print("사건 내막 체인 생성 완료")
+    
+    print("\n모든 체인 생성 테스트 완료")
     
     
