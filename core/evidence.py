@@ -1,11 +1,10 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
-from langchain_core.pydantic_v1 import Field
 from langchain_core.output_parsers import (
     JsonOutputParser,
     StrOutputParser
 )
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from data_models import Case, Profile, Evidence, CaseData
 from typing import List, Literal
 from dotenv import load_dotenv
@@ -181,6 +180,8 @@ def resize_img(input_path, output_path, target_size):
     except:
         return -1
     return 0
+
+
 
 ### TEST CODE ###
 c = Case(
