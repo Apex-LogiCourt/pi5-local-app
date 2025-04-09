@@ -101,22 +101,11 @@ def format_profiles(raw_profiles):
     return profiles
 
 def convert_data_class(data: List[dict]) -> List[Evidence]:
-    import ast
-    if "evidence" in data:
+    # 데이터 형식 검증 
+    if isinstance(data, dict) and "evidence" in data:
         data = data["evidence"]
 
-    result = []
-    for item in data:
-        desc = item["description"]
-        if isinstance(desc, str):
-            desc = [desc] #str to List
-        result.append(Evidence(
-            name=item["name"],
-            type=item["type"],
-            picture=None,
-            description=desc
-        ))
-    return result
+    return [Evidence.from_dict(item) for item in data]
 
 def make_evidence_image(name):
     try:
