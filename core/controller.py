@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-
+from langchain_openai import ChatOpenAI
 from typing import List, Dict
 from .case_generation.case_builder import make_case_summary, make_witness_profiles
 from .data_models import CaseData, Case, Profile, Evidence
@@ -38,13 +38,42 @@ class CaseDataManager:
         if cls._case_data is None:
             print("controller 초기화 실행")
             cls._case_data = CaseData(cls._case, cls._profiles, cls._evidences)
-            print(cls._case_data)
-            # 이 부분에서 각각 사건 개요, 참고인, 증거 데이터를 case_builder에서 가져와서 호출할 예정
-            # 출력 결과에 따라 JSON 형태로 구조화 하기 위한 파싱 작업 필요 
+            print('case_data :', cls._case_data)
         return cls._case_data
+    
+    #==============================================
+    # case_builder에서 chain을 받아오고 실행 -> chat.py에서 호출됨 
 
-    # getter 메소드 추가 
+    @classmethod
+    def generate_case_stream(cls) -> Case:
+        # case_builder 에서 사건 개요를 생성하는 chain을 받아와서 실행하는 메소드 
+        # 이후 출력 결과에 따라 JSON 형태로 구조화 하기 위한 파싱 작업 필요 
+        print("generate_case 실행")
+        outline = build_case_chain()
+        
+        _case = Case(
+            outline=outline,
+            behind=""
+        )
+        return _case
+    
+    #==============================================
+    # getter/ setter 메소드 추가 
     # 호출 방식 예시 : CaseDataManager.get_case_data()
+
+    @classmethod
+    def set_case(cls, case: Case):
+        cls._case = case
+
+    @classmethod
+    def set_profiles(cls, profiles: List[Profile]):
+        cls._profiles = profiles
+
+    @classmethod
+    def set_evidences(cls, evidences: List[Evidence]):
+        cls._evidences = evidences
+
+    #==============================================
 
     @classmethod
     def get_case(cls) -> Case:
