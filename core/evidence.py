@@ -50,7 +50,7 @@ def make_evidence(case_data: Case, profiles: List[Profile]) -> List[Evidence]:
     chain = prompt | llm | parser
 
     response = chain.invoke({
-        "case_data":str_case_data,
+        "case_data": str_case_data,
         "profile": str_profiles_data
     })
     evidences = convert_data_class(response)
