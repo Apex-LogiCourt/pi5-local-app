@@ -10,23 +10,9 @@ from .data_models import CaseData, Case, Profile, Evidence
 # 싱글톤 패턴 적용
 class CaseDataManager:
     _instance = None
-    # 이 부분은 이해를 위한 선언이라 나중에는 다 삭제할 것임
-    _case = Case(
-        outline="",
-        behind=""
-    )
-    _evidences = [Evidence(
-        name="",
-        type="",
-        background="",
-        description="" 
-    )]
-    _profiles = [Profile(
-        name="",
-        type="",
-        background="",
-        description=""
-    )]
+    _case : Case = None
+    _evidences : List[Evidence] = None
+    _profiles : List[Profile] = None
     _case_data : CaseData = None
     
     def __init__(self):
