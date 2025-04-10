@@ -120,10 +120,11 @@ def get_naver_image(name): #이미지 처리 로직 개선 필요... 엉뚱한 �
     import urllib.request
     import requests
     import xml.etree.ElementTree as xmlET
-    import os
-
-    client_id = os.environ.get("X-Naver-Client-Id")
-    client_secret = os.environ.get("X-Naver-Client-Secret")
+    from dotenv import dotenv_values
+    
+    env = dotenv_values()
+    client_id = env.get("X_NAVER_CLIENT_ID")
+    client_secret = env.get("X_NAVER_CLIENT_SECRET")
 
     params = {
         'query': name,
