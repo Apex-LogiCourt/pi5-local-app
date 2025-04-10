@@ -22,44 +22,37 @@ from .prompt_templates.ex_case_templates import (
     CASE_BEHIND_TEMPLATE,
 )
 
-
-# def get_llm(model="gpt-4o"):
 def get_llm(model="gpt-4o-mini", temperature=1.0):
     llm = ChatOpenAI(model=model, temperature=temperature)  
-    """    
-    temperature 값의 의미:
-    0: 가장 결정적이고 예측 가능한 응답 (항상 가장 가능성이 높은 토큰 선택)
-    0.7: ChatGPT의 기본값 (적당한 창의성과 안정성)
-    ~1.0 : 창의적이지만 안정성 떨어짐
-    """
     return llm
 
+# 사건 개요 생성을 위한 체인을 반환하는 함수
 def get_case_summary_chain():
-    """사건 개요 생성을 위한 체인을 반환하는 함수
-    """
     llm = get_llm(model="gpt-4o-mini", temperature=1.0) # 모델선택 / 온도설정
     prompt = ChatPromptTemplate.from_template(CASE_SUMMARY_TEMPLATE)
     chain = prompt | llm | StrOutputParser()
     return chain
 
-def get_character_chain():
-    """등장인물 생성을 위한 체인을 반환하는 함수"""
+# 등장 인물 생성 | 매개 변수 case_summary(str)
+def get_character_chain(case_summary=None):
     llm = get_llm(model="gpt-4o-mini", temperature=0.7) # 모델선택 / 온도설정
-    prompt = ChatPromptTemplate.from_template(CREATE_CHARACTER_TEMPLATE)
+    formatted_template = CREATE_CHARACTER_TEMPLATE.format(case_summary=case_summary)
+    prompt = ChatPromptTemplate.from_template(formatted_template)
     chain = prompt | llm | StrOutputParser()
     return chain
 
-def get_case_truth_chain():
-    """사건의 진실(내막)을 생성하는 체인"""
+# 사건의 진실(내막) 생성 | 매개 변수 case_summary(str), character(str)
+# 이후에 evidence 도 인자에 추가
+def get_case_truth_chain(case_summary=None, character=None):
     llm = get_llm(model="gpt-4o-mini", temperature=0.5) # 모델선택 / 온도설정
-    prompt = ChatPromptTemplate.from_template(CASE_BEHIND_TEMPLATE)
+    formatted_template = CASE_BEHIND_TEMPLATE.format(case_summary=case_summary, character=character)
+    prompt = ChatPromptTemplate.from_template(formatted_template)
     chain = prompt | llm | StrOutputParser()
     return chain
 
 
-""" 테스트 코드 (컨트롤러 호출 예시) """
+# 테스트 코드 (컨트롤러 호출 예시) 
 if __name__ == "__main__":
-    """ 사건 개요 생성 테스트 """
     story = {} # 사건 개요 저장
     
     # 1. 사건 개요 생성
@@ -78,7 +71,7 @@ if __name__ == "__main__":
 
     print('\n\n---------------')  
     
-    """ 등장인물 추출 테스트 """
+    # 등장인물 추출 테스트
     character_chain = get_character_chain()
     character = character_chain.invoke({"case_summary": case_summary})
     print(character)
