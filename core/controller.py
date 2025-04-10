@@ -4,7 +4,7 @@ load_dotenv()
 
 from typing import List, Dict
 from .case_generation.case_builder import make_case_summary, make_witness_profiles
-from .data_models import CaseData, WitnessProfile
+from .data_models import CaseData, Profile
 
 def __init__() -> CaseData:
     print("contoller.__init__ 실행")
@@ -32,7 +32,7 @@ def get_witness_profiles_wrapper():
 #============================================== 
 
 def ask_witness_wrapper(question, name, type, case_summary):
-    from interrogation.interrogator import ask_witness
+    from .interrogation.interrogator import ask_witness
     return ask_witness(question, name, type, case_summary)
 
 # def ask_witness_wrapper(question: str, name: str, wtype: str, case_summary: str) -> str:
@@ -40,7 +40,7 @@ def ask_witness_wrapper(question, name, type, case_summary):
 # return ask_witness(question, name, wtype, case_summary)
 
 def ask_defendant_wrapper(question, defendant_name, case_summary):
-    from interrogation.interrogator import ask_defendant
+    from .interrogation.interrogator import ask_defendant
     return ask_defendant(question, defendant_name, case_summary)
 
 
@@ -51,7 +51,7 @@ def ask_defendant_wrapper(question, defendant_name, case_summary):
 #==============================================  
 
 def get_judge_result_wrapper(message_list):
-    from verdict import get_judge_result
+    from .verdict import get_judge_result
     return get_judge_result(message_list)
 
 
