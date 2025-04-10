@@ -2,7 +2,7 @@ import streamlit as st
 from dotenv import load_dotenv
 import random
 
-from controller import make_witness_profiles, make_case_summary
+from controller import CaseDataManager
 from controller import get_judge_result_wrapper as get_judge_result
 from controller import ask_witness_wrapper as ask_witness
 from controller import ask_defendant_wrapper as ask_defendant
@@ -26,15 +26,22 @@ if 'game_phase' not in st.session_state:
 if st.session_state.game_phase == "init":
     # 이미 사건이 생성되었는지 확인
     if 'case_initialized' not in st.session_state:
+        case_container = st.container()
         with st.spinner("사건을 생성 중입니다..."):
-            case_summary = make_case_summary()
-            st.session_state.message_list.append({"role": "system", "content": case_summary})
-
-            # 참고인 자동 생성
-            witness_profiles = make_witness_profiles(case_summary)
-            st.session_state.witness_profiles = witness_profiles
+            # 스트리밍 결과를 임시로 저장할 변수
+            placeholder = st.empty()
             
-            # 사건이 초기화되었음을 표시
+            def update_ui(content, full_text):
+                # 깜빡이는 커서 효과 추가
+                placeholder.markdown(f"{full_text}▌")
+            
+            case_summary = CaseDataManager.generate_case_stream(callback=update_ui)
+            
+            # 스트리밍이 완료된 후 empty 컨테이너 지우기
+            placeholder.empty()
+            
+            # 메시지 리스트에 추가
+            st.session_state.message_list.append({"role": "system", "content": case_summary})
             st.session_state.case_initialized = True
             
         st.success("사건 생성 완료! 검사부터 시작하세요")
@@ -59,8 +66,10 @@ if 'last_turn_input' in st.session_state:
 # 메시지 출력
 for i, message in enumerate(st.session_state.message_list):
     if i == 0 and message["role"] == "system":  # 첫 번째 메시지가 시스템(사건 개요)인 경우
-        with st.expander("📜 사건 개요 및 증거", expanded=True):
-            st.markdown(message["content"])
+        # 초기화 단계(init)가 아닐 때만 사건 개요를 expander로 다시 표시
+        if st.session_state.game_phase != "init":
+            with st.expander("📜 사건 개요", expanded=True):
+                st.markdown(message["content"])
     else:
         with st.chat_message(message["role"]):
             st.write(message["content"])
