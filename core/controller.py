@@ -3,8 +3,8 @@ load_dotenv()
 
 from langchain_openai import ChatOpenAI
 from typing import List, Dict
-from .case_generation.case_builder import make_case_summary, make_witness_profiles
-from .data_models import CaseData, Case, Profile, Evidence
+from case_generation.case_builder import build_case_chain
+from data_models import CaseData, Case, Profile, Evidence
 
 
 # 싱글톤 패턴 적용
@@ -23,8 +23,8 @@ class CaseDataManager:
     def initialize(cls) -> CaseData:
         if cls._case_data is None:
             print("controller 초기화 실행")
-            cls._case_data = CaseData(cls._case, cls._profiles, cls._evidences)
-            print('case_data :', cls._case_data)
+            # cls._case_data = CaseData(cls._case, cls._profiles, cls._evidences)
+            # print('case_data :', cls._case_data)
         return cls._case_data
     
     #==============================================
