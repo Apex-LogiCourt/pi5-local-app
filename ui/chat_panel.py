@@ -1,4 +1,4 @@
-# streamlit run ui/st_chat_panel.py로 실행행
+# streamlit run ui/chat_panel.py로 실행
 import sys
 import os
 import streamlit as st
@@ -102,10 +102,10 @@ if st.session_state.mode == "debate":
         if 'defendant_name' not in st.session_state:
             st.session_state.defendant_name = "피고인"
     
-    # 이의 사용 횟수 초기화
-    if "objection_count" not in st.session_state:
-        st.session_state.objection_count = 0  # 최대 2회 허용
     col1, col2, col3 = st.columns([3, 2, 1])
+    # ✅ 이의 사용 횟수 초기화 (역할별로)
+    if "objection_count" not in st.session_state:
+      st.session_state.objection_count = {"검사": 0, "변호사": 0}    
     with col1:
         with st.expander("🔎 참고인 호출하기"):
             st.markdown("**어떤 참고인을 호출하시겠습니까?**")
@@ -125,14 +125,14 @@ if st.session_state.mode == "debate":
             st.session_state.defendant_name = defendant_name
 
     with col3:
-        if st.button("🚨 이의 있습니다!", use_container_width=True):
-            if "objection_count" not in st.session_state:
-                st.session_state.objection_count = 0
+        role = st.session_state.turn
+        opponent = "변호사" if role == "검사" else "검사"
 
-            if st.session_state.objection_count >= 2:
-                st.warning("❗ 더 이상 이의 제기할 수 없습니다.")
+        if st.button("🚨 이의 있습니다!", use_container_width=True):
+            if st.session_state.objection_count[role] >= 2:
+                st.warning(f"❗ {opponent}는 더 이상 이의 제기할 수 없습니다.")
             else:
-                opponent = "변호사" if st.session_state.turn == "검사" else "검사"
+                # 메시지는 opponent가 말한 것처럼 보이게 출력
                 st.session_state.message_list.append({
                     "role": opponent,
                     "content": "이의 있습니다!"
@@ -141,9 +141,13 @@ if st.session_state.mode == "debate":
                     "role": "judge",
                     "content": "이의, 받아들입니다."
                 })
-                st.session_state.objection_count += 1
-                st.session_state.last_turn_input = st.session_state.turn
+                st.session_state.objection_count[role] += 1
+
+                # ✅ 실제 턴은 이의 제기자(role)가 발언 완료
+                st.session_state.last_turn_input = role
                 st.rerun()
+
+
 
 # 참고인 질문 모드
 if st.session_state.mode == "witness":
@@ -201,7 +205,12 @@ if st.session_state.game_phase == "judgement":
 # 게임 종료 후 다시하기
 if st.session_state.game_phase == "done":
     if st.button("🔁 다시하기"):
-        for key in ["game_phase", "turn", "done_flags", "message_list", "mode", "witness_profiles", "case_initialized", "defendant_name"]:
+        for key in [
+            "game_phase", "turn", "done_flags", "message_list",
+            "mode", "witness_profiles", "case_initialized",
+            "defendant_name", "objection_count"  # ✅ 추가!
+        ]:
             if key in st.session_state:
                 del st.session_state[key]
         st.rerun()
+
