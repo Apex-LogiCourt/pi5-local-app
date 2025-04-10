@@ -127,8 +127,5 @@ def get_judge_result_wrapper(message_list):
 
 
 if __name__ == "__main__":
-    print("main 실행")
-    case_data = __init__()
-    print(case_data.case_summary)
-    print(case_data.witness_profiles)
-
+    CaseDataManager.initialize()
+    print(CaseDataManager.generate_case_stream())
