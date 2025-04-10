@@ -17,7 +17,7 @@ class CaseDataManager:
     
     def __init__(self):
         # 새로운 인스턴스 생성 방지
-        raise RuntimeError('이 클래스의 인스턴스를 직접 생성할 수 없습니다다ㅋ')
+        raise RuntimeError('이 클래스의 인스턴스를 직접 생성할 수 없습니다')
     
     @classmethod
     def initialize(cls) -> CaseData:
@@ -31,17 +31,19 @@ class CaseDataManager:
     # case_builder에서 chain을 받아오고 실행 -> chat.py에서 호출됨 
 
     @classmethod
-    def generate_case_stream(cls) -> Case:
-        # case_builder 에서 사건 개요를 생성하는 chain을 받아와서 실행하는 메소드 
-        # 이후 출력 결과에 따라 JSON 형태로 구조화 하기 위한 파싱 작업 필요 
-        print("generate_case 실행")
-        outline = build_case_chain()
+    def generate_case_stream(cls, callback=None):
+        # print("generate_case 실행")
+        chain = build_case_chain()
+        result = ""
         
-        _case = Case(
-            outline=outline,
-            behind=""
-        )
-        return _case
+        for chunk in chain.stream({}):
+            content = chunk.content if hasattr(chunk, 'content') else chunk
+            result += content
+            
+            if callback:
+                callback(content, result)
+        
+        return result
     
     #==============================================
     # getter/ setter 메소드 추가 
