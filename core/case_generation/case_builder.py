@@ -34,7 +34,7 @@ def get_case_summary_chain():
     return chain
 
 # 등장 인물 생성 | 매개 변수 case_summary(str)
-def get_character_chain(case_summary=None):
+def get_character_chain(case_summary: str):
     llm = get_llm(model="gpt-4o-mini", temperature=0.7) # 모델선택 / 온도설정
     formatted_template = CREATE_CHARACTER_TEMPLATE.format(case_summary=case_summary)
     prompt = ChatPromptTemplate.from_template(formatted_template)
@@ -42,8 +42,7 @@ def get_character_chain(case_summary=None):
     return chain
 
 # 사건의 진실(내막) 생성 | 매개 변수 case_summary(str), character(str)
-# 이후에 evidence 도 인자에 추가
-def get_case_truth_chain(case_summary=None, character=None):
+def get_case_truth_chain(case_summary: str, character: str):
     llm = get_llm(model="gpt-4o-mini", temperature=0.5) # 모델선택 / 온도설정
     formatted_template = CASE_BEHIND_TEMPLATE.format(case_summary=case_summary, character=character)
     prompt = ChatPromptTemplate.from_template(formatted_template)
