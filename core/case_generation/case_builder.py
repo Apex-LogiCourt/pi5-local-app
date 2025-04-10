@@ -71,22 +71,17 @@ if __name__ == "__main__":
     print('\n\n---------------')  
     
     # 등장인물 추출 테스트
-    character_chain = get_character_chain()
-    character = character_chain.invoke({"case_summary": case_summary})
+    character_chain = get_character_chain(case_summary)
+    character = character_chain.invoke({})
     print(character)
     
     
     print('\n\n---------------')
     # 사건의 진실 생성
     print("사건의 진실 생성 중...\n")
-    case_truth_chain = get_case_truth_chain()
+
     case_truth = ""
-    
-    # 스트리밍으로 사건의 진실 생성
-    for chunk in case_truth_chain.stream({
-        "case_summary": case_summary,
-        "character": character
-    }):
+    for chunk in get_case_truth_chain(case_summary, character).stream({}):
         if hasattr(chunk, 'content'):
             print(chunk.content, end='', flush=True)
             case_truth += chunk.content
