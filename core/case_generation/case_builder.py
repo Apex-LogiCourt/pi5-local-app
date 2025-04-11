@@ -2,7 +2,6 @@ import json
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from core.data_models import CaseData, Case, Profile, Evidence
 
 from dotenv import load_dotenv
 load_dotenv()

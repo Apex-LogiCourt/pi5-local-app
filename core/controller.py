@@ -32,7 +32,6 @@ class CaseDataManager:
 
     @classmethod
     def generate_case_stream(cls, callback=None):
-        # print("generate_case 실행")
         chain = build_case_chain()
         result = ""
         
@@ -49,7 +48,6 @@ class CaseDataManager:
     
     @classmethod
     def generate_profiles_stream(cls, callback=None):
-        # print("generate_case 실행")
         chain = build_character_chain(cls._case.outline)
         result = ""
         
