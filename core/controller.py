@@ -83,18 +83,6 @@ class CaseDataManager:
     
 
 #==============================================
-# case_generation.py의 함수
-# 사건 생성 및 요약
-# case_generation.py -> chat.py로 넘겨줌
-# 삭제 예정 
-#============================================== 
-def get_case_summary_wrapper():
-    return make_case_summary()
-
-def get_witness_profiles_wrapper():
-    return make_witness_profiles()
-
-#==============================================
 # interrogator.py의 함수
 # 단순히 함수 호출 목적
 # interrogator.py -> chat.py로 넘겨줌
