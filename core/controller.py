@@ -74,11 +74,10 @@ class CaseDataManager:
             
             if callback:
                 callback(content, result)
-        # _case = Case(outline=result, behind="")
     
         return result
     
-    
+
     @classmethod
     async def parse_and_store_profiles(cls, result: str):
         print("parse_and_store_profiles 실행")
@@ -189,5 +188,6 @@ def get_judge_result_wrapper(message_list):
 
 
 if __name__ == "__main__":
-    CaseDataManager.initialize()
-    CaseDataManager.generate_case_stream()
+    asyncio.run(CaseDataManager.initialize())  # 비동기 호출
+    asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
+    asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
