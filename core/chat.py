@@ -35,12 +35,15 @@ if st.session_state.game_phase == "init":
                 def update_ui(content, full_text):
                     placeholder.markdown(f"{full_text}▌")
                 case_summary = CaseDataManager.generate_case_stream(callback=update_ui)
+                profiles = CaseDataManager.generate_profiles_stream(callback=update_ui)
+
                 
-                # 스트리밍이 완료된 후 empty 컨테이너 지우기
                 placeholder.empty()
+                
                 
                 # 메시지 리스트에 추가
                 st.session_state.message_list.append({"role": "system", "content": case_summary})
+                st.session_state.message_list.append({"role": "system", "content": profiles})
                 st.session_state.case_initialized = True
                 
         st.success("사건 생성 완료! 검사부터 시작하세요")
@@ -68,6 +71,10 @@ for i, message in enumerate(st.session_state.message_list):
         # 초기화 단계(init)가 아닐 때만 사건 개요를 expander로 다시 표시
         if st.session_state.game_phase != "init":
             with st.expander("📜 사건 개요", expanded=True):
+                st.markdown(message["content"])
+    elif i == 1 and message["role"] == "system" :
+        if st.session_state.game_phase != "init":
+            with st.expander("🕵️ 출석 중인 참고인", expanded=True):
                 st.markdown(message["content"])
     else:
         with st.chat_message(message["role"]):
