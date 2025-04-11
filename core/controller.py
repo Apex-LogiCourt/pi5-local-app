@@ -3,8 +3,9 @@ load_dotenv()
 
 from langchain_openai import ChatOpenAI
 from typing import List, Dict
-from case_generation.case_builder import build_case_chain, build_character_chain
+from case_generation.case_builder import build_case_chain, build_character_chain,build_case_behind_chain
 from data_models import CaseData, Case, Profile, Evidence
+import asyncio
 
 
 # 싱글톤 패턴 적용
@@ -47,7 +48,7 @@ class CaseDataManager:
         return result
     
     @classmethod
-    def generate_profiles_stream(cls, callback=None):
+    async def generate_profiles_stream(cls, callback=None):
         chain = build_character_chain(cls._case.outline)
         result = ""
         
@@ -57,8 +58,27 @@ class CaseDataManager:
             
             if callback:
                 callback(content, result)
-        # _case = Case(outline=result, behind="")
+
+        # 비동기 작업 후 다른 함수 호출 (즉시 반환)
+        # 내용을 파싱해서 profiles 리스트에 저장 하는 함수를 호출해야함 비동기로 !!
+        # asyncio.create_task(cls.some_other_function(result))  # 비동기 함수 호출
         return result
+    
+    @classmethod
+    async def generate_case_behind(cls, callback=None):
+        chain = build_case_behind_chain(cls._case.outline, cls._profiles) 
+        result = ""
+        
+        for chunk in chain.stream({}):
+            content = chunk.content if hasattr(chunk, 'content') else chunk
+            result += content
+            
+            if callback:
+                callback(content, result)
+        # _case = Case(outline=result, behind="")
+        
+        return result
+    
     
     #==============================================
     # getter/ setter 메소드 추가 
