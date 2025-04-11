@@ -3,7 +3,7 @@ load_dotenv()
 
 from langchain_openai import ChatOpenAI
 from typing import List, Dict
-from case_generation.case_builder import build_case_chain
+from case_generation.case_builder import build_case_chain, build_character_chain
 from data_models import CaseData, Case, Profile, Evidence
 
 
@@ -42,7 +42,24 @@ class CaseDataManager:
             
             if callback:
                 callback(content, result)
+        _case = Case(outline=result, behind="")        
+        cls._case = _case
+        # print(_case.outline)
+        return result
+    
+    @classmethod
+    def generate_profiles_stream(cls, callback=None):
+        # print("generate_case 실행")
+        chain = build_character_chain(cls._case.outline)
+        result = ""
         
+        for chunk in chain.stream({}):
+            content = chunk.content if hasattr(chunk, 'content') else chunk
+            result += content
+            
+            if callback:
+                callback(content, result)
+        # _case = Case(outline=result, behind="")
         return result
     
     #==============================================
@@ -116,4 +133,4 @@ def get_judge_result_wrapper(message_list):
 
 if __name__ == "__main__":
     CaseDataManager.initialize()
-    print(CaseDataManager.generate_case_stream())
+    CaseDataManager.generate_case_stream()
