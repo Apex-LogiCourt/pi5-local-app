@@ -21,7 +21,7 @@ class CaseDataManager:
         raise RuntimeError('이 클래스의 인스턴스를 직접 생성할 수 없습니다')
     
     @classmethod
-    def initialize(cls) -> CaseData:
+    async def initialize(cls) -> CaseData:
         if cls._case_data is None:
             print("controller 초기화 실행")
             # cls._case_data = CaseData(cls._case, cls._profiles, cls._evidences)
@@ -32,7 +32,7 @@ class CaseDataManager:
     # case_builder에서 chain을 받아오고 실행 -> chat.py에서 호출됨 
 
     @classmethod
-    def generate_case_stream(cls, callback=None):
+    async def generate_case_stream(cls, callback=None):
         chain = build_case_chain()
         result = ""
         
@@ -42,9 +42,8 @@ class CaseDataManager:
             
             if callback:
                 callback(content, result)
-        _case = Case(outline=result, behind="")        
-        cls._case = _case
-        # print(_case.outline)
+        
+        cls._case = Case(outline=result, behind="")
         return result
     
     @classmethod
@@ -61,7 +60,7 @@ class CaseDataManager:
 
         # 비동기 작업 후 다른 함수 호출 (즉시 반환)
         # 내용을 파싱해서 profiles 리스트에 저장 하는 함수를 호출해야함 비동기로 !!
-        # asyncio.create_task(cls.some_other_function(result))  # 비동기 함수 호출
+        asyncio.create_task(cls.parse_and_store_profiles(result)) 
         return result
     
     @classmethod
@@ -76,7 +75,7 @@ class CaseDataManager:
             if callback:
                 callback(content, result)
         # _case = Case(outline=result, behind="")
-        
+    
         return result
     
     

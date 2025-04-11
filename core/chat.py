@@ -1,5 +1,6 @@
 import streamlit as st
 from dotenv import load_dotenv
+import asyncio  # asyncio 모듈 추가
 import random
 
 from controller import CaseDataManager
@@ -34,8 +35,8 @@ if st.session_state.game_phase == "init":
                 
                 def update_ui(content, full_text):
                     placeholder.markdown(f"{full_text}▌")
-                case_summary = CaseDataManager.generate_case_stream(callback=update_ui)
-                profiles = CaseDataManager.generate_profiles_stream(callback=update_ui)
+                case_summary = asyncio.run(CaseDataManager.generate_case_stream(callback=update_ui))
+                profiles = asyncio.run(CaseDataManager.generate_profiles_stream(callback=update_ui))
 
                 
                 placeholder.empty()
