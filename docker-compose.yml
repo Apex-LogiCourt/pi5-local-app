@@ -33,7 +33,7 @@ services:
     volumes:
       - ./core:/app # ✅ core 폴더 전체를 /app으로 마운트
       - data:/data  # 공유 볼륨을 마운트
-    command: python -m streamlit run chat.py
+    command: streamlit run chat.py
     ports:
       - "8501:8501"  # Streamlit 기본 포트
     # ports 설정 

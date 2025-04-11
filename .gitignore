@@ -7,7 +7,3 @@ __pycache__/
 *.pyw
 *.pyz
 *.pywz
-
-
-# 증거 이미지 리소스 폴더 제외
-data/evidence_resource/

@@ -19,21 +19,10 @@ class Profile:
 @dataclass
 class Evidence:
     name: str  # 증거품 이름(명사형) 
-    type: Literal["attorney", "prosecutor"]  # 제출 주체 
+    type: Literal["attorney", "prosecutor"]  # 제출 주체
     description: List[str]  # 증거 설명 (추가 가능)
-    picture: str  # 사진 경로 (향후 구현)
+    # picture: str  # 사진 경로 (향후 구현)
 
-    @classmethod
-    def from_dict(cls, data: dict) -> 'Evidence':
-        desc = data.get("description", [])
-        if isinstance(desc, str):
-            desc = [desc]  # str to List
-        return cls(
-            name=data["name"],
-            type=data["type"],
-            description=desc,
-            picture=None
-        )
 
 # Controller에서 최종적으로 다른 모듈로 념겨줄 데이터 형식이에용
 # 아직 구현이 안 됐지만 이렇게 넘어올거라고 믿고 작업해주세요 
