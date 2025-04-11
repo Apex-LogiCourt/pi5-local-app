@@ -79,6 +79,46 @@ class CaseDataManager:
         return result
     
     
+    @classmethod
+    async def parse_and_store_profiles(cls, result: str):
+        print("parse_and_store_profiles 실행")
+        profiles = cls.parse_character_template(result)  # 결과값을 파싱하여 프로필 리스트 생성
+        cls.set_profiles(profiles)  # 프로필 리스트를 저장하는 메소드 호출
+        print(profiles)
+
+    @classmethod
+    def parse_character_template(cls, template: str) -> List[Profile]:
+        profiles = []
+        
+        # 각 인물 블록을 분리
+        character_blocks = template.strip().split('--------------------------------')
+        
+        for block in character_blocks:
+            lines = block.strip().split('\n')
+            if len(lines) < 4:  # 최소 4줄이 필요
+                continue
+            
+            # 이름, 직업, 성격, 배경 추출
+            name_line = lines[0].strip()
+            background_line = lines[3].strip()
+            
+            # 이름 추출 (예: "피고: 이정우" -> "이정우")
+            name = name_line.split(':')[1].strip()
+            
+            # 프로필 객체 생성
+            profile_type = "defendant" if "피고" in name_line else "victim" if "피해자" in name_line else "witness" if "목격자" in name_line else "reference"
+            
+            profile = Profile(
+                name=name,
+                type=profile_type,
+                context=background_line.split(':')[1].strip()  # 배경에서 필요한 정보 추출
+            )
+            
+            profiles.append(profile)
+        
+        return profiles
+    
+    
     #==============================================
     # getter/ setter 메소드 추가 
     # 호출 방식 예시 : CaseDataManager.get_case_data()
