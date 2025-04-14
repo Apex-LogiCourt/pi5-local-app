@@ -35,34 +35,31 @@ class CaseDataManager:
     @classmethod
     async def generate_case_stream(cls, callback=None):
         chain = build_case_chain()
-        result = ""
-        
-        for chunk in chain.stream({}):
-            content = chunk.content if hasattr(chunk, 'content') else chunk
-            result += content
-            
-            if callback:
-                callback(content, result)
-        
+        result = cls._handle_stream(chain, callback)
         cls._case = Case(outline=result, behind="")
         return result
     
     @classmethod
     async def generate_profiles_stream(cls, callback=None):
         chain = build_character_chain(cls._case.outline)
-        result = ""
+        result = cls._handle_stream(chain, callback)
         
-        for chunk in chain.stream({}):
-            content = chunk.content if hasattr(chunk, 'content') else chunk
-            result += content
-            
-            if callback:
-                callback(content, result)
-
         # 비동기 작업 후 다른 함수 호출 (즉시 반환)
-        # 내용을 파싱해서 profiles 리스트에 저장 하는 함수를 호출해야함 비동기로 !!
         asyncio.create_task(cls._parse_and_store_profiles(result)) 
         return result
+    
+    @classmethod
+    async def generate_evidences(cls, callback=None):
+        # evidence 생성
+        evidences = make_evidence(case_data=cls._case, profiles=cls._profiles)
+        cls._evidences = evidences 
+        
+        # UI 콜백 처리
+        if callback:
+            for evidence in evidences:
+                callback(evidence, evidences)  # 각 증거품이 생성될 때마다 UI 업데이트
+        
+        return evidences
     
     # 호출 시점 : 최종 판결과 함께 또는 최종 판결을 읽고 있을 때 
     # 매개변수로 변경된 증거 리스트도 포함 
@@ -99,7 +96,7 @@ class CaseDataManager:
             lines = block.strip().split('\n')
             if len(lines) < 4: 
                 continue
-            
+
             # 이름, 직업, 성격, 배경 추출
             name_line = lines[0].strip()
             background_line = lines[3].strip()
@@ -119,6 +116,17 @@ class CaseDataManager:
             profiles.append(profile)
         
         return profiles
+    
+    @staticmethod
+    def _handle_stream(chain, callback=None):
+        result = ""
+        for chunk in chain.stream({}):
+            content = chunk.content if hasattr(chunk, 'content') else chunk
+            result += content
+            
+            if callback:
+                callback(content, result)
+        return result
     
     
     #==============================================
@@ -194,3 +202,4 @@ if __name__ == "__main__":
     asyncio.run(CaseDataManager.initialize())  # 비동기 호출
     asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
     asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
+    
