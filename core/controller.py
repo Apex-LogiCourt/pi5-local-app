@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from langchain_openai import ChatOpenAI
 from typing import List, Dict
 from case_generation.case_builder import build_case_chain, build_character_chain,build_case_behind_chain
 from evidence import make_evidence
@@ -10,6 +9,7 @@ import asyncio
 
 
 # 싱글톤 패턴 적용
+# 자꾸 코드가 길어지고 예외처리 같은 거 하면서 복잡해지니까 class를 나누고 싶단 생각도 듦
 class CaseDataManager:
     _instance = None
     _case : Case = None
@@ -44,23 +44,24 @@ class CaseDataManager:
         chain = build_character_chain(cls._case.outline)
         result = cls._handle_stream(chain, callback)
         
-        # 비동기 작업 후 다른 함수 호출 (즉시 반환)
-        asyncio.create_task(cls._parse_and_store_profiles(result)) 
+        asyncio.create_task(cls._parse_and_store_profiles(result))
         return result
     
-    @classmethod
-    async def generate_evidences(cls, callback=None):
-        # evidence 생성
-        evidences = make_evidence(case_data=cls._case, profiles=cls._profiles)
-        cls._evidences = evidences 
-        cls._case_data = CaseData(cls._case, cls._profiles, cls._evidences)
-        
-        # UI 콜백 처리
-        if callback:
-            for evidence in evidences:
-                callback(evidence, evidences)  # 각 증거품이 생성될 때마다 UI 업데이트
-        
-        return evidences
+    @classmethod 
+    async def generate_evidences(cls, callbacks=None):
+        # 데이터가 준비된 경우 바로 처리
+        if cls._case is not None and cls._profiles is not None:
+            evidences = make_evidence(case_data=cls._case, profiles=cls._profiles)
+            cls._evidences = evidences 
+            cls._case_data = CaseData(cls._case, cls._profiles, cls._evidences)
+            
+            if callbacks:
+                for callback in callbacks:
+                    callback(evidences)
+                    
+            return evidences
+            
+        return await cls._wait_for_data(callbacks) #데이터가 제대로 안 담긴 경우 대기하거나 재시도 
     
     # 호출 시점 : 최종 판결과 함께 또는 최종 판결을 읽고 있을 때 
     # 매개변수로 변경된 증거 리스트도 포함 
@@ -73,10 +74,10 @@ class CaseDataManager:
     # 프로필 파싱 및 저장하는 내부 메소드 
     @classmethod
     async def _parse_and_store_profiles(cls, result: str):
-        print("parse_and_store_profiles 실행")
+        # print("parse_and_store_profiles 실행")
         profiles = cls._parse_character_template(result)
         cls.set_profiles(profiles)
-        print(profiles)
+        # print(profiles)
 
     @staticmethod
     def _parse_character_template(template: str) -> List[Profile]:
@@ -120,6 +121,23 @@ class CaseDataManager:
             if callback:
                 callback(content, result)
         return result
+    
+    # 증거 만들기 전에 데이터가 없다면 준비될 때까지 대기
+    @classmethod
+    async def _wait_for_data(cls, callbacks=None):
+        MAX_RETRIES = 5
+        retry_count = 0
+        
+        while retry_count < MAX_RETRIES:
+            print(f"데이터 준비 중... (시도: {retry_count + 1})")
+            await asyncio.sleep(0.5)
+            retry_count += 1
+            
+            if cls._case is not None and cls._profiles is not None:
+                return await cls.generate_evidences(callbacks)
+                
+        print("데이터 준비 실패")
+        return None
     
     
     #==============================================
