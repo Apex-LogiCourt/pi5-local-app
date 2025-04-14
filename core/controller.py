@@ -4,6 +4,7 @@ load_dotenv()
 from langchain_openai import ChatOpenAI
 from typing import List, Dict
 from case_generation.case_builder import build_case_chain, build_character_chain,build_case_behind_chain
+from evidence import make_evidence, update_evidence
 from data_models import CaseData, Case, Profile, Evidence
 import asyncio
 
@@ -60,7 +61,7 @@ class CaseDataManager:
 
         # 비동기 작업 후 다른 함수 호출 (즉시 반환)
         # 내용을 파싱해서 profiles 리스트에 저장 하는 함수를 호출해야함 비동기로 !!
-        asyncio.create_task(cls.parse_and_store_profiles(result)) 
+        asyncio.create_task(cls._parse_and_store_profiles(result)) 
         return result
     
     # 호출 시점 : 최종 판결과 함께 또는 최종 판결을 읽고 있을 때 
@@ -79,16 +80,16 @@ class CaseDataManager:
     
         return result
     
-
+    # 프로필 파싱 및 저장하는 내부 메소드 
     @classmethod
-    async def parse_and_store_profiles(cls, result: str):
+    async def _parse_and_store_profiles(cls, result: str):
         print("parse_and_store_profiles 실행")
-        profiles = cls.parse_character_template(result)  # 결과값을 파싱하여 프로필 리스트 생성
-        cls.set_profiles(profiles)  # 프로필 리스트를 저장하는 메소드 호출
+        profiles = cls._parse_character_template(result)
+        cls.set_profiles(profiles)
         print(profiles)
 
-    @classmethod
-    def parse_character_template(cls, template: str) -> List[Profile]:
+    @staticmethod
+    def _parse_character_template(template: str) -> List[Profile]:
         profiles = []
         
         # 각 인물 블록을 분리
@@ -96,7 +97,7 @@ class CaseDataManager:
         
         for block in character_blocks:
             lines = block.strip().split('\n')
-            if len(lines) < 4:  # 최소 4줄이 필요
+            if len(lines) < 4: 
                 continue
             
             # 이름, 직업, 성격, 배경 추출
