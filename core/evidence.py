@@ -184,6 +184,34 @@ if __name__ == "__main__":
     res = make_evidence(case_data=CaseDataManager.get_case(), 
                         profiles=CaseDataManager.get_profiles())
     print(res)
+    # c = Case(
+    #     outline="""
+    #     피해자 김현수는 성공한 사업가로, 최근 은퇴 후 유산을 정리하고 있었습니다. 그의 조카 김민준은 김현수와 가까운 사이였으며, 유산 상속에 큰 관심을 보이고 있었습니다.
+    #     김현수는 자신의 저택에서 의식불명 상태로 발견되었고, 이틀 후 사망했습니다. 경찰은 김현수의 죽음이 단순한 사고가 아니라 누군가에 의해 계획된 범죄일 가능성을 제기했습니다. 사건 당일, 김민준은 저택을 방문했던 것으로 확인되었으며, 김현수의 유산에 관한 논의가 있었던 것으로 밝혀졌습니다.
+    #     """,
+    #     behind=""
+    # )
+    # plist = []
+    # plist.append(
+    #     Profile(
+    #         name="김민준",
+    #         type="suspect",
+    #         context="32세, 김현수의 조카로 현재 중소기업에서 근무 중입니다. 그는 평소 삼촌의 유산을 통해 사업 확장을 꿈꾸고 있었습니다. 사건 발생 시점에 김민준은 저택을 방문했으나 이후 친구들과 저녁 식사 모임이 있었다고 주장합니다."
+    #     )
+    # )
+    # plist.append(
+    #     Profile(
+    #         name="이상훈",
+    #         type="witness",
+    #         context="사건 당일 저녁, 김민준이 친구와 함께 있었으며, 그의 행동에 의심스러운 점이 없었다는 증언입니다."
+    #     )
+    # )
+    # cd = CaseData(
+    #     case = c,
+    #     profiles=plist,
+    #     evidences=None
+    # )
+    # res = make_evidence(case_data=c, profiles=plist)
     # print("\n\n")
     # update_evidence_description(res[0], cd)
     # print(res[0].description)
