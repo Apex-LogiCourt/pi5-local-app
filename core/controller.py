@@ -53,6 +53,7 @@ class CaseDataManager:
         # evidence 생성
         evidences = make_evidence(case_data=cls._case, profiles=cls._profiles)
         cls._evidences = evidences 
+        cls._case_data = CaseData(cls._case, cls._profiles, cls._evidences)
         
         # UI 콜백 처리
         if callback:
@@ -202,4 +203,5 @@ if __name__ == "__main__":
     asyncio.run(CaseDataManager.initialize())  # 비동기 호출
     asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
     asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
+
     
