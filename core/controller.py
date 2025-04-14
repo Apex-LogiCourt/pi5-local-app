@@ -1,14 +1,15 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from langchain_openai import ChatOpenAI
 from typing import List, Dict
 from case_generation.case_builder import build_case_chain, build_character_chain,build_case_behind_chain
+from evidence import make_evidence
 from data_models import CaseData, Case, Profile, Evidence
 import asyncio
 
 
 # 싱글톤 패턴 적용
+# 자꾸 코드가 길어지고 예외처리 같은 거 하면서 복잡해지니까 class를 나누고 싶단 생각도 듦
 class CaseDataManager:
     _instance = None
     _case : Case = None
@@ -34,59 +35,52 @@ class CaseDataManager:
     @classmethod
     async def generate_case_stream(cls, callback=None):
         chain = build_case_chain()
-        result = ""
-        
-        for chunk in chain.stream({}):
-            content = chunk.content if hasattr(chunk, 'content') else chunk
-            result += content
-            
-            if callback:
-                callback(content, result)
-        
+        result = cls._handle_stream(chain, callback)
         cls._case = Case(outline=result, behind="")
         return result
     
     @classmethod
     async def generate_profiles_stream(cls, callback=None):
         chain = build_character_chain(cls._case.outline)
-        result = ""
+        result = cls._handle_stream(chain, callback)
         
-        for chunk in chain.stream({}):
-            content = chunk.content if hasattr(chunk, 'content') else chunk
-            result += content
-            
-            if callback:
-                callback(content, result)
-
-        # 비동기 작업 후 다른 함수 호출 (즉시 반환)
-        # 내용을 파싱해서 profiles 리스트에 저장 하는 함수를 호출해야함 비동기로 !!
-        asyncio.create_task(cls.parse_and_store_profiles(result)) 
+        asyncio.create_task(cls._parse_and_store_profiles(result))
         return result
     
+    @classmethod 
+    async def generate_evidences(cls, callbacks=None):
+        # 데이터가 준비된 경우 바로 처리
+        if cls._case is not None and cls._profiles is not None:
+            evidences = make_evidence(case_data=cls._case, profiles=cls._profiles)
+            cls._evidences = evidences 
+            cls._case_data = CaseData(cls._case, cls._profiles, cls._evidences)
+            
+            if callbacks:
+                for callback in callbacks:
+                    callback(evidences)
+                    
+            return evidences
+            
+        return await cls._wait_for_data(callbacks) #데이터가 제대로 안 담긴 경우 대기하거나 재시도 
+    
+    # 호출 시점 : 최종 판결과 함께 또는 최종 판결을 읽고 있을 때 
+    # 매개변수로 변경된 증거 리스트도 포함 
     @classmethod
     async def generate_case_behind(cls, callback=None):
         chain = build_case_behind_chain(cls._case.outline, cls._profiles) 
-        result = ""
-        
-        for chunk in chain.stream({}):
-            content = chunk.content if hasattr(chunk, 'content') else chunk
-            result += content
-            
-            if callback:
-                callback(content, result)
-    
+        result = cls._handle_stream(chain, callback)
         return result
     
-
+    # 프로필 파싱 및 저장하는 내부 메소드 
     @classmethod
-    async def parse_and_store_profiles(cls, result: str):
-        print("parse_and_store_profiles 실행")
-        profiles = cls.parse_character_template(result)  # 결과값을 파싱하여 프로필 리스트 생성
-        cls.set_profiles(profiles)  # 프로필 리스트를 저장하는 메소드 호출
-        print(profiles)
+    async def _parse_and_store_profiles(cls, result: str):
+        # print("parse_and_store_profiles 실행")
+        profiles = cls._parse_character_template(result)
+        cls.set_profiles(profiles)
+        # print(profiles)
 
-    @classmethod
-    def parse_character_template(cls, template: str) -> List[Profile]:
+    @staticmethod
+    def _parse_character_template(template: str) -> List[Profile]:
         profiles = []
         
         # 각 인물 블록을 분리
@@ -94,9 +88,9 @@ class CaseDataManager:
         
         for block in character_blocks:
             lines = block.strip().split('\n')
-            if len(lines) < 4:  # 최소 4줄이 필요
+            if len(lines) < 4: 
                 continue
-            
+
             # 이름, 직업, 성격, 배경 추출
             name_line = lines[0].strip()
             background_line = lines[3].strip()
@@ -116,6 +110,34 @@ class CaseDataManager:
             profiles.append(profile)
         
         return profiles
+    
+    @staticmethod
+    def _handle_stream(chain, callback=None):
+        result = ""
+        for chunk in chain.stream({}):
+            content = chunk.content if hasattr(chunk, 'content') else chunk
+            result += content
+            
+            if callback:
+                callback(content, result)
+        return result
+    
+    # 증거 만들기 전에 데이터가 없다면 준비될 때까지 대기
+    @classmethod
+    async def _wait_for_data(cls, callbacks=None):
+        MAX_RETRIES = 5
+        retry_count = 0
+        
+        while retry_count < MAX_RETRIES:
+            print(f"데이터 준비 중... (시도: {retry_count + 1})")
+            await asyncio.sleep(0.5)
+            retry_count += 1
+            
+            if cls._case is not None and cls._profiles is not None:
+                return await cls.generate_evidences(callbacks)
+                
+        print("데이터 준비 실패")
+        return None
     
     
     #==============================================
@@ -191,3 +213,5 @@ if __name__ == "__main__":
     asyncio.run(CaseDataManager.initialize())  # 비동기 호출
     asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
     asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
+    asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
+    print(CaseDataManager.get_case_data())

@@ -10,6 +10,9 @@ from typing import List, Literal
 from dotenv import load_dotenv
 load_dotenv()
 
+# from controller import CaseDataManager #테스트 할 때만 돌려보세용 
+# import asyncio #여기도 주석해제
+
 CREATE_EVIDENCE_TEMPLATE = """
 다음의 사건 개요를 바탕으로 재판에 필요한 증거를 제공해주세요.
 {case_data}
@@ -102,8 +105,25 @@ def format_profiles(raw_profiles):
 
 def convert_data_class(data: List[dict]) -> List[Evidence]:
     # 데이터 형식 검증 
-    if isinstance(data, dict) and "evidence" in data:
-        data = data["evidence"]
+    """
+    evidences = convert_data_class(response)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "D:\WS\pi5-local-app\core\evidence.py", line 111, in convert_data_class
+    return [Evidence.from_dict(item) for item in data]
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+    File "D:\WS\pi5-local-app\core\data_models.py", line 28, in from_dict       
+    desc = data.get("description", [])
+           ^^^^^^^^
+    AttributeError: 'str' object has no attribute 'get'
+    이 부분에서 가끔씩 뻑남 에러처리 해줘야 할듯 data가 리스트 타입이 아니고 str로 잡히네 
+    data 찍어보니까 data["증거품"] 이렇게 내려올 때가 있음 계속 테스팅 하면서 예외처리 잡아줘야 될듯 
+    """
+    print("convert_data_class의 data:", data)
+    if isinstance(data, dict):
+        if "증거품" in data:
+            data = data["증거품"]
+        elif "evidence" in data:
+            data = data["evidence"]
 
     return [Evidence.from_dict(item) for item in data]
 
@@ -175,6 +195,13 @@ def resize_img(input_path, output_path, target_size):
 
 ### TEST CODE ###
 if __name__ == "__main__":
+    # CaseDataManager import 한 뒤에 테스트 할 때만 돌려보세용  
+    # asyncio.run(CaseDataManager.initialize())  # CaseDataManager 초기화 
+    # asyncio.run(CaseDataManager.generate_case_stream())  # case 생성 
+    # asyncio.run(CaseDataManager.generate_profiles_stream())  # 프로필 생성
+    # res = make_evidence(case_data=CaseDataManager.get_case(), 
+    #                     profiles=CaseDataManager.get_profiles())
+    # print(res)
     c = Case(
         outline="""
         피해자 김현수는 성공한 사업가로, 최근 은퇴 후 유산을 정리하고 있었습니다. 그의 조카 김민준은 김현수와 가까운 사이였으며, 유산 상속에 큰 관심을 보이고 있었습니다.
@@ -203,7 +230,7 @@ if __name__ == "__main__":
         evidences=None
     )
     res = make_evidence(case_data=c, profiles=plist)
-    print(res)
     print("\n\n")
     update_evidence_description(res[0], cd)
     print(res[0].description)
+
