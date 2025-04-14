@@ -63,6 +63,8 @@ class CaseDataManager:
         asyncio.create_task(cls.parse_and_store_profiles(result)) 
         return result
     
+    # 호출 시점 : 최종 판결과 함께 또는 최종 판결을 읽고 있을 때 
+    # 매개변수로 변경된 증거 리스트도 포함 
     @classmethod
     async def generate_case_behind(cls, callback=None):
         chain = build_case_behind_chain(cls._case.outline, cls._profiles) 
