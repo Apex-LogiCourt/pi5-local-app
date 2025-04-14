@@ -4,7 +4,7 @@ load_dotenv()
 from langchain_openai import ChatOpenAI
 from typing import List, Dict
 from case_generation.case_builder import build_case_chain, build_character_chain,build_case_behind_chain
-from evidence import make_evidence, update_evidence
+from evidence import make_evidence
 from data_models import CaseData, Case, Profile, Evidence
 import asyncio
 
@@ -203,5 +203,5 @@ if __name__ == "__main__":
     asyncio.run(CaseDataManager.initialize())  # 비동기 호출
     asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
     asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
-
-    
+    asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
+    print(CaseDataManager.get_case_data())
