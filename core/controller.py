@@ -21,7 +21,7 @@ class CaseDataManager:
         raise RuntimeError('이 클래스의 인스턴스를 직접 생성할 수 없습니다')
     
     @classmethod
-    def initialize(cls) -> CaseData:
+    async def initialize(cls) -> CaseData:
         if cls._case_data is None:
             print("controller 초기화 실행")
             # cls._case_data = CaseData(cls._case, cls._profiles, cls._evidences)
@@ -32,7 +32,7 @@ class CaseDataManager:
     # case_builder에서 chain을 받아오고 실행 -> chat.py에서 호출됨 
 
     @classmethod
-    def generate_case_stream(cls, callback=None):
+    async def generate_case_stream(cls, callback=None):
         chain = build_case_chain()
         result = ""
         
@@ -42,9 +42,8 @@ class CaseDataManager:
             
             if callback:
                 callback(content, result)
-        _case = Case(outline=result, behind="")        
-        cls._case = _case
-        # print(_case.outline)
+        
+        cls._case = Case(outline=result, behind="")
         return result
     
     @classmethod
@@ -61,7 +60,7 @@ class CaseDataManager:
 
         # 비동기 작업 후 다른 함수 호출 (즉시 반환)
         # 내용을 파싱해서 profiles 리스트에 저장 하는 함수를 호출해야함 비동기로 !!
-        # asyncio.create_task(cls.some_other_function(result))  # 비동기 함수 호출
+        asyncio.create_task(cls.parse_and_store_profiles(result)) 
         return result
     
     @classmethod
@@ -75,9 +74,48 @@ class CaseDataManager:
             
             if callback:
                 callback(content, result)
-        # _case = Case(outline=result, behind="")
-        
+    
         return result
+    
+
+    @classmethod
+    async def parse_and_store_profiles(cls, result: str):
+        print("parse_and_store_profiles 실행")
+        profiles = cls.parse_character_template(result)  # 결과값을 파싱하여 프로필 리스트 생성
+        cls.set_profiles(profiles)  # 프로필 리스트를 저장하는 메소드 호출
+        print(profiles)
+
+    @classmethod
+    def parse_character_template(cls, template: str) -> List[Profile]:
+        profiles = []
+        
+        # 각 인물 블록을 분리
+        character_blocks = template.strip().split('--------------------------------')
+        
+        for block in character_blocks:
+            lines = block.strip().split('\n')
+            if len(lines) < 4:  # 최소 4줄이 필요
+                continue
+            
+            # 이름, 직업, 성격, 배경 추출
+            name_line = lines[0].strip()
+            background_line = lines[3].strip()
+            
+            # 이름 추출 (예: "피고: 이정우" -> "이정우")
+            name = name_line.split(':')[1].strip()
+            
+            # 프로필 객체 생성
+            profile_type = "defendant" if "피고" in name_line else "victim" if "피해자" in name_line else "witness" if "목격자" in name_line else "reference"
+            
+            profile = Profile(
+                name=name,
+                type=profile_type,
+                context=background_line.split(':')[1].strip()  # 배경에서 필요한 정보 추출
+            )
+            
+            profiles.append(profile)
+        
+        return profiles
     
     
     #==============================================
@@ -150,5 +188,6 @@ def get_judge_result_wrapper(message_list):
 
 
 if __name__ == "__main__":
-    CaseDataManager.initialize()
-    CaseDataManager.generate_case_stream()
+    asyncio.run(CaseDataManager.initialize())  # 비동기 호출
+    asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
+    asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  

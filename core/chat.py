@@ -1,5 +1,6 @@
 import streamlit as st
 from dotenv import load_dotenv
+import asyncio  # asyncio 모듈 추가
 import random
 
 from controller import CaseDataManager
@@ -34,8 +35,8 @@ if st.session_state.game_phase == "init":
                 
                 def update_ui(content, full_text):
                     placeholder.markdown(f"{full_text}▌")
-                case_summary = CaseDataManager.generate_case_stream(callback=update_ui)
-                profiles = CaseDataManager.generate_profiles_stream(callback=update_ui)
+                case_summary = asyncio.run(CaseDataManager.generate_case_stream(callback=update_ui))
+                profiles = asyncio.run(CaseDataManager.generate_profiles_stream(callback=update_ui))
 
                 
                 placeholder.empty()
@@ -74,7 +75,7 @@ for i, message in enumerate(st.session_state.message_list):
                 st.markdown(message["content"])
     elif i == 1 and message["role"] == "system" :
         if st.session_state.game_phase != "init":
-            with st.expander("🕵️ 출석 중인 참고인", expanded=True):
+            with st.expander("🕵️ 등장인물", expanded=True):
                 st.markdown(message["content"])
     else:
         with st.chat_message(message["role"]):
@@ -150,29 +151,29 @@ for i, message in enumerate(st.session_state.message_list):
 #         st.session_state.mode = "debate"
 #         st.rerun()
 
-# # 사용자 주장 입력
-# if st.session_state.mode == "debate" and st.session_state.game_phase == "debate":
-#     if user_input := st.chat_input(f"{st.session_state.turn.upper()}의 주장을 입력하세요 (이상입니다 입력 시 종료)"):
-#         role = st.session_state.turn
-#         with st.chat_message(role):
-#             st.write(user_input)
-#         st.session_state.message_list.append({"role": role, "content": user_input})
-#         st.session_state.last_turn_input = role
-#         st.rerun()
+# 사용자 주장 입력
+if st.session_state.mode == "debate" and st.session_state.game_phase == "debate":
+    if user_input := st.chat_input(f"{st.session_state.turn.upper()}의 주장을 입력하세요 (이상입니다 입력 시 종료)"):
+        role = st.session_state.turn
+        with st.chat_message(role):
+            st.write(user_input)
+        st.session_state.message_list.append({"role": role, "content": user_input})
+        st.session_state.last_turn_input = role
+        st.rerun()
 
-# # 판결 단계
-# if st.session_state.game_phase == "judgement":
-#     with st.chat_message("judge"):
-#         with st.spinner("AI 판사가 판단 중입니다..."):
-#             result = get_judge_result(st.session_state.message_list)
-#             st.write(result)
-#         st.session_state.game_phase = "done"
+# 판결 단계
+if st.session_state.game_phase == "judgement":
+    with st.chat_message("judge"):
+        with st.spinner("AI 판사가 판단 중입니다..."):
+            result = get_judge_result(st.session_state.message_list)
+            st.write(result)
+        st.session_state.game_phase = "done"
 
-# # 게임 종료 후 다시하기
-# if st.session_state.game_phase == "done":
-#     if st.button("🔁 다시하기"):
-#         for key in ["game_phase", "turn", "done_flags", "message_list", "mode", "witness_profiles", "case_initialized", "defendant_name"]:
-#             if key in st.session_state:
-#                 del st.session_state[key]
-#         st.rerun()
+# 게임 종료 후 다시하기
+if st.session_state.game_phase == "done":
+    if st.button("🔁 다시하기"):
+        for key in ["game_phase", "turn", "done_flags", "message_list", "mode", "witness_profiles", "case_initialized", "defendant_name"]:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.rerun()
 
