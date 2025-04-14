@@ -67,15 +67,7 @@ class CaseDataManager:
     @classmethod
     async def generate_case_behind(cls, callback=None):
         chain = build_case_behind_chain(cls._case.outline, cls._profiles) 
-        result = ""
-        
-        for chunk in chain.stream({}):
-            content = chunk.content if hasattr(chunk, 'content') else chunk
-            result += content
-            
-            if callback:
-                callback(content, result)
-    
+        result = cls._handle_stream(chain, callback)
         return result
     
     # 프로필 파싱 및 저장하는 내부 메소드 
