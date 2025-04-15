@@ -1,6 +1,10 @@
+import json
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+
+from dotenv import load_dotenv
+load_dotenv()
 
 #==============================================
 # 템플릿 갈아끼면 쉽게 사용 가능
@@ -13,68 +17,75 @@ from langchain_core.output_parsers import StrOutputParser
 
 from .prompt_templates.ex_case_templates import (
     CASE_SUMMARY_TEMPLATE,
-    WITNESS_PROFILES_TEMPLATE,
+    CREATE_CHARACTER_TEMPLATE,
+    CASE_BEHIND_TEMPLATE,
 )
 
-
-def get_llm(model="gpt-4o"):
-    llm = ChatOpenAI(model=model)  
+def get_llm(model="gpt-4o-mini", temperature=1.0):
+    llm = ChatOpenAI(model=model, temperature=temperature)  
     return llm
 
-def get_case_summary():
-    llm = get_llm()
+# 사건 개요 생성을 위한 체인을 반환하는 함수
+def build_case_chain():
+    llm = get_llm(model="gpt-4o-mini", temperature=1.0) # 모델선택 / 온도설정
     prompt = ChatPromptTemplate.from_template(CASE_SUMMARY_TEMPLATE)
     chain = prompt | llm | StrOutputParser()
-    return chain.invoke({})
+    return chain
 
-
-def get_witness_profiles(case_summary):
-    llm = get_llm()
-    prompt = ChatPromptTemplate.from_template(WITNESS_PROFILES_TEMPLATE)
-    
+# 등장 인물 생성 | 매개 변수 case_summary(str)
+def build_character_chain(case_summary: str):
+    llm = get_llm(model="gpt-4o-mini", temperature=0.7) # 모델선택 / 온도설정
+    formatted_template = CREATE_CHARACTER_TEMPLATE.format(case_summary=case_summary)
+    prompt = ChatPromptTemplate.from_template(formatted_template)
     chain = prompt | llm | StrOutputParser()
-    response = chain.invoke({"case_summary": case_summary})
+    return chain
+
+# 사건의 진실(내막) 생성 | 매개 변수 case_summary(str), character(str)
+def build_case_behind_chain(case_summary: str, character: str):
+    llm = get_llm(model="gpt-4o-mini", temperature=0.5) # 모델선택 / 온도설정
+    formatted_template = CASE_BEHIND_TEMPLATE.format(case_summary=case_summary, character=character)
+    prompt = ChatPromptTemplate.from_template(formatted_template)
+    chain = prompt | llm | StrOutputParser()
+    return chain
+
+
+# 테스트 코드 (컨트롤러 호출 예시) 
+if __name__ == "__main__":
+    story = {} # 사건 개요 저장
     
-    # 텍스트 파싱
-    witness_profiles = []
-    try:
-        lines = [line.strip() for line in response.split("\n") if line.strip()]
-        for line in lines:
-            if not line.startswith("참고인") or "=" not in line or "|" not in line:
-                continue
-                
-            parts = line.split(":", 1)[1].split("|")
-            profile = {}
-            
-            for part in parts:
-                if "=" not in part:
-                    continue
-                key, value = part.split("=", 1)
-                if key == "이름":
-                    profile["name"] = value
-                elif key == "유형":
-                    profile["type"] = value
-                elif key == "배경":
-                    profile["background"] = value
-            
-            if "name" in profile and "type" in profile:
-                witness_profiles.append(profile)
-    except Exception:
-        # 파싱에 실패한 경우 기본 프로필 사용
-        witness_profiles = [
-            {"name": "김민수", "type": "character", "background": "사건 목격자"},
-            {"name": "박지연", "type": "character", "background": "관련자"},
-            {"name": "박건우", "type": "expert", "background": "법의학 전문가"}
-        ]
+    # 1. 사건 개요 생성
+    print("사건 개요 생성 중...\n")
+    case_summary_chain = build_case_chain()
+    case_summary = ""
     
-    # 프로필이 3개 미만이면 기본 프로필로 보충
-    if len(witness_profiles) < 3:
-        default_profiles = [
-            {"name": "김민수", "type": "character", "background": "사건 목격자"},
-            {"name": "박지연", "type": "character", "background": "관련자"},
-            {"name": "박건우", "type": "expert", "background": "법의학 전문가"}
-        ]
-        witness_profiles.extend(default_profiles[:(3-len(witness_profiles))])
+    # 스트리밍으로 사건 개요 생성
+    for chunk in case_summary_chain.stream({}):
+        if hasattr(chunk, 'content'):
+            print(chunk.content, end='', flush=True)
+            case_summary += chunk.content
+        else:
+            print(chunk, end='', flush=True)
+            case_summary += chunk
+
+    print('\n\n---------------')  
     
-    return witness_profiles[:3]  # 최대 3개만 반환
-  
+    # 등장인물 추출 테스트
+    character_chain = build_character_chain(case_summary)
+    character = character_chain.invoke({})
+    print(character)
+    
+    
+    print('\n\n---------------')
+    # 사건의 진실 생성
+    print("사건의 진실 생성 중...\n")
+
+    case_truth = ""
+    for chunk in build_case_behind_chain(case_summary, character).stream({}):
+        if hasattr(chunk, 'content'):
+            print(chunk.content, end='', flush=True)
+            case_truth += chunk.content
+        else:
+            print(chunk, end='', flush=True)
+            case_truth += chunk
+
+    
