@@ -50,6 +50,8 @@ def build_case_behind_chain(case_summary: str, character: str):
 
 
 # 테스트 코드 (컨트롤러 호출 예시) 
+###
+"""
 if __name__ == "__main__":
     story = {} # 사건 개요 저장
     
@@ -87,5 +89,5 @@ if __name__ == "__main__":
         else:
             print(chunk, end='', flush=True)
             case_truth += chunk
-
+"""
     

@@ -43,8 +43,8 @@ class CaseDataManager:
     async def generate_profiles_stream(cls, callback=None):
         chain = build_character_chain(cls._case.outline)
         result = cls._handle_stream(chain, callback)
-        
-        asyncio.create_task(cls._parse_and_store_profiles(result))
+        # 프로필을 파싱하고 저장한 뒤에 결과를 반환하도록 변경
+        await cls._parse_and_store_profiles(result)
         return result
     
     @classmethod 
