@@ -48,24 +48,20 @@ if 'game_phase' not in st.session_state:
 if st.session_state.game_phase == "init":
     # 이미 사건이 생성되었는지 확인
     if 'case_initialized' not in st.session_state:
-        case_container = st.container()  # 컨테이너 생성
-        with case_container:  # 컨테이너 안에서 UI 요소들 배치
-            with st.spinner("사건을 생성 중입니다..."):
-                # 스트리밍 결과를 임시로 저장할 변수
-                placeholder = st.empty()
-                
-                def update_ui(content, full_text):
-                    placeholder.markdown(f"{full_text}▌")
-                case_summary = asyncio.run(CaseDataManager.generate_case_stream(callback=update_ui))
-                profiles = asyncio.run(CaseDataManager.generate_profiles_stream(callback=update_ui))
-                
-                placeholder.empty()
-                
-                
-                # 메시지 리스트에 추가
-                st.session_state.message_list.append({"role": "system", "content": case_summary})
-                st.session_state.message_list.append({"role": "system", "content": profiles})
-                st.session_state.case_initialized = True
+        with st.spinner("사건을 생성 중입니다..."):
+            placeholder = st.empty()
+            
+            def update_ui(content, full_text):
+                placeholder.markdown(f"{full_text}▌")
+            case_summary = asyncio.run(CaseDataManager.generate_case_stream(callback=update_ui))
+            profiles = asyncio.run(CaseDataManager.generate_profiles_stream(callback=update_ui))
+            
+            placeholder.empty()
+        
+            # 메시지 리스트에 추가
+            st.session_state.message_list.append({"role": "system", "content": case_summary})
+            st.session_state.message_list.append({"role": "system", "content": profiles})
+            st.session_state.case_initialized = True
                 
         st.success("사건 생성 완료! 검사부터 시작하세요")
         
