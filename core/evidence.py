@@ -21,23 +21,29 @@ CREATE_EVIDENCE_TEMPLATE = """
 단, 모든 증거는 재판에 참석한 인원과 연관이 있어야 합니다.
 증거품의 종류에는 제한이 없으나 답변은 다음의 형식을 따라야 합니다.
 
-name: 증거품 이름(명사), "한 단어"만 사용하세요. (예시: 카세트 테이프, 식칼 등)
-type: 증거 제출 주체(attorney, prosecutor)
-description: 증거에 대한 설명. 한 문장으로 설명하세요.
+기본 증거품의 형식: {format_instructions}
 
-제공된 세 개의 키워드명을 기준으로 JSON 형식으로 답하세요.
+다음 형식의 JSON 배열로 6개의 증거를 출력하세요:
+[
+  {{ "name": "증거명", "type": "attorney", "description": ["한 문장 설명"] }},
+  ...
+]
+
+"type" 필드를 기준으로 attorney 3개, prosecutor 3개를 포함해야 합니다.
+그러나 출력은 하나의 리스트 형태로 제공해야 하며, "attorney": [...], "prosecutor": [...] 같은 형식은 사용하지 마세요.
 """
 
 ## make_evidence(Case, List[Profile]) -> List[Evidence]: 최초 증거 생성, 3개 생성되는 듯.
 ## update_evidence_description(Evidence, CaseData) -> Evidence: 넘겨준 Evidence의 설명 추가
 
 class EvidenceModel(BaseModel):
-    name: str = Field(description="증거품 이름(명사형)")
+    name: str = Field(description="한 단어의 증거품 이름(명사형)")
     type: Literal["attorney", "prosecutor"] = Field(description="제출 주체")
-    description: List[str] = Field(description="증거 설명")
+    description: List[str] = Field(description="한 문장의 증거 설명")
 
 def get_llm():
-    return ChatOpenAI(model="gpt-4o-mini", temperature=1.0)
+    # return ChatOpenAI(model="gpt-4o-mini", temperature=1.0)
+    return ChatOpenAI(model="gpt-4o-mini")
 
 def make_evidence(case_data: Case, profiles: List[Profile]) -> List[Evidence]:
     str_case_data = format_case(case_data)
@@ -118,7 +124,7 @@ def convert_data_class(data: List[dict]) -> List[Evidence]:
     이 부분에서 가끔씩 뻑남 에러처리 해줘야 할듯 data가 리스트 타입이 아니고 str로 잡히네 
     data 찍어보니까 data["증거품"] 이렇게 내려올 때가 있음 계속 테스팅 하면서 예외처리 잡아줘야 될듯 
     """
-    print(type(data))
+    print("type(data): "+ str(type(data)))
     print("convert_data_class의 data:", data)
     if isinstance(data, dict):
         if "증거품" in data:
@@ -195,15 +201,14 @@ def resize_img(input_path, output_path, target_size):
 def get_evidence_name_for_prompt(name):
     llm = get_llm()
     prompt = ChatPromptTemplate.from_messages([
-        ("system",
-        """
-        다음의 단어를 영문 한 단어로 대답하세요. {evidence_name}.
-        """)
+        ("system", "You are a language assistant that rewrites Korean terms into simple English phrases or keywords that can be visualized easily as pictograms. Avoid literal translation and aim for intuitive, visual concepts. Output only 1–3 words with no explanations."),
+        ("human", "input: {evidence_name}")
     ])
     chain = prompt | llm | StrOutputParser()
     res = chain.invoke({
         "evidence_name": name,
     })
+    print(res) #test
     return res
 
 def create_image_by_ai(name: str):
@@ -232,7 +237,7 @@ def create_image_by_ai(name: str):
         },
         files={"none": ''},
         data={
-            "prompt": "A simple black and white pictogram of a " + evidence_name + ", minimalist design, vector art, flat colors, clean lines, no background, high contrast, clear shapes, centered",
+            "prompt": "A simple black and white pictogram of a " + evidence_name + ", minimalist design, vector art, flat colors, clean lines, no background, high contrast, clear shapes, centered, bold outline, outlined,",
             "model" : "sd3.5-large",
             "mode" : "text-to-image",
             "aspect_ratio" : "1:1",
@@ -251,19 +256,19 @@ def create_image_by_ai(name: str):
 
 ### TEST CODE ###
 if __name__ == "__main__":
-    res = create_image_by_ai("참고인 진술서")
-    print(res)
+    # res = create_image_by_ai("메시지 기록")
+    # print(res)
 
     # CaseDataManager import 한 뒤에 테스트 할 때만 돌려보세용  
 
-    # from controller import CaseDataManager #테스트 할 때만 돌려보세용 
-    # import asyncio #여기도 주석해제
-    # asyncio.run(CaseDataManager.initialize())  # CaseDataManager 초기화 
-    # asyncio.run(CaseDataManager.generate_case_stream())  # case 생성 
-    # asyncio.run(CaseDataManager.generate_profiles_stream())  # 프로필 생성
-    # res = make_evidence(case_data=CaseDataManager.get_case(), 
-    #                     profiles=CaseDataManager.get_profiles())
-    # print(res)
+    from controller import CaseDataManager #테스트 할 때만 돌려보세용 
+    import asyncio #여기도 주석해제
+    asyncio.run(CaseDataManager.initialize())  # CaseDataManager 초기화 
+    asyncio.run(CaseDataManager.generate_case_stream())  # case 생성 
+    asyncio.run(CaseDataManager.generate_profiles_stream())  # 프로필 생성
+    res = make_evidence(case_data=CaseDataManager.get_case(), 
+                        profiles=CaseDataManager.get_profiles())
+    print("\n\n", res)
 
     # c = Case(
     #     outline="""
