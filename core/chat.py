@@ -36,7 +36,7 @@ if 'game_phase' not in st.session_state:
     st.session_state.done_flags = {"검사": False, "변호사": False}
     st.session_state.message_list = []
     st.session_state.mode = "debate"  # or "witness" 
-
+    st.session_state.objection_count = {"검사": 0, "변호사": 0}  # 이의 제기 횟수 추적
 
     # CaseData 객체와 관련 데이터클래스들 저장
     st.session_state.case_data = None
@@ -183,11 +183,17 @@ if st.session_state.mode == "debate":
 
 # 사용자 주장 입력
 if st.session_state.mode == "debate" and st.session_state.game_phase == "debate":
-    if user_input := st.chat_input(f"{st.session_state.turn.upper()}의 주장을 입력하세요 (이상입니다 입력 시 종료)"):
+    if user_input := st.chat_input(f"{st.session_state.turn.upper()}의 주장을 입력하세요 (이상입니다 입력 시 종료)", key="chat_input"):
         role = st.session_state.turn
         with st.chat_message(role):
             st.write(user_input)
         st.session_state.message_list.append({"role": role, "content": user_input})
+        st.session_state.last_turn_input = role
+        st.rerun()
+    
+    if st.button("🚨 이의 있음!", key="objection_button"):
+        role = st.session_state.turn
+        st.session_state.message_list.append({"role": role, "content": "이의 있습니다!"})
         st.session_state.last_turn_input = role
         st.rerun()
 
