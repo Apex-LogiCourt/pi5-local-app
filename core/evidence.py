@@ -118,6 +118,7 @@ def convert_data_class(data: List[dict]) -> List[Evidence]:
     이 부분에서 가끔씩 뻑남 에러처리 해줘야 할듯 data가 리스트 타입이 아니고 str로 잡히네 
     data 찍어보니까 data["증거품"] 이렇게 내려올 때가 있음 계속 테스팅 하면서 예외처리 잡아줘야 될듯 
     """
+    print(type(data))
     print("convert_data_class의 data:", data)
     if isinstance(data, dict):
         if "증거품" in data:
@@ -191,46 +192,108 @@ def resize_img(input_path, output_path, target_size):
         return -1
     return 0
 
+def get_evidence_name_for_prompt(name):
+    llm = get_llm()
+    prompt = ChatPromptTemplate.from_messages([
+        ("system",
+        """
+        다음의 단어를 영문 한 단어로 대답하세요. {evidence_name}.
+        """)
+    ])
+    chain = prompt | llm | StrOutputParser()
+    res = chain.invoke({
+        "evidence_name": name,
+    })
+    return res
+
+def create_image_by_ai(name: str):
+    # image create by stable diffusion API
+    # image name ex) 2025-05-03-진술서.jpg
+    import requests
+    import datetime
+    from dotenv import dotenv_values
+    import random # 이미지 관리용. 임시 추가
+
+    env = dotenv_values()
+    key = env.get("SD_API_KEY")
+    today = datetime.datetime.now()
+    formatted_date = today.strftime("%y-%m-%d")
+    new_name = name.replace(" ", "-")
+
+    evidence_name = get_evidence_name_for_prompt(name)
+    # save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + ".jpg"
+    save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + str(random.randrange(1,1000)) + ".jpg"
+
+    response = requests.post(
+        f"https://api.stability.ai/v2beta/stable-image/generate/sd3",
+        headers={
+            "authorization": key,
+            "accept": "image/*"
+        },
+        files={"none": ''},
+        data={
+            "prompt": "A simple black and white pictogram of a " + evidence_name + ", minimalist design, vector art, flat colors, clean lines, no background, high contrast, clear shapes, centered",
+            "model" : "sd3.5-large",
+            "mode" : "text-to-image",
+            "aspect_ratio" : "1:1",
+            "output_format": "jpeg",
+        },
+    )
+
+    if response.status_code == 200:
+        with open(save_path, 'wb') as file:
+            file.write(response.content)
+    else:
+        return response.status_code
+    
+    return save_path
 
 
 ### TEST CODE ###
 if __name__ == "__main__":
+    res = create_image_by_ai("참고인 진술서")
+    print(res)
+
     # CaseDataManager import 한 뒤에 테스트 할 때만 돌려보세용  
+
+    # from controller import CaseDataManager #테스트 할 때만 돌려보세용 
+    # import asyncio #여기도 주석해제
     # asyncio.run(CaseDataManager.initialize())  # CaseDataManager 초기화 
     # asyncio.run(CaseDataManager.generate_case_stream())  # case 생성 
     # asyncio.run(CaseDataManager.generate_profiles_stream())  # 프로필 생성
     # res = make_evidence(case_data=CaseDataManager.get_case(), 
     #                     profiles=CaseDataManager.get_profiles())
     # print(res)
-    c = Case(
-        outline="""
-        피해자 김현수는 성공한 사업가로, 최근 은퇴 후 유산을 정리하고 있었습니다. 그의 조카 김민준은 김현수와 가까운 사이였으며, 유산 상속에 큰 관심을 보이고 있었습니다.
-        김현수는 자신의 저택에서 의식불명 상태로 발견되었고, 이틀 후 사망했습니다. 경찰은 김현수의 죽음이 단순한 사고가 아니라 누군가에 의해 계획된 범죄일 가능성을 제기했습니다. 사건 당일, 김민준은 저택을 방문했던 것으로 확인되었으며, 김현수의 유산에 관한 논의가 있었던 것으로 밝혀졌습니다.
-        """,
-        behind=""
-    )
-    plist = []
-    plist.append(
-        Profile(
-            name="김민준",
-            type="suspect",
-            context="32세, 김현수의 조카로 현재 중소기업에서 근무 중입니다. 그는 평소 삼촌의 유산을 통해 사업 확장을 꿈꾸고 있었습니다. 사건 발생 시점에 김민준은 저택을 방문했으나 이후 친구들과 저녁 식사 모임이 있었다고 주장합니다."
-        )
-    )
-    plist.append(
-        Profile(
-            name="이상훈",
-            type="witness",
-            context="사건 당일 저녁, 김민준이 친구와 함께 있었으며, 그의 행동에 의심스러운 점이 없었다는 증언입니다."
-        )
-    )
-    cd = CaseData(
-        case = c,
-        profiles=plist,
-        evidences=None
-    )
-    res = make_evidence(case_data=c, profiles=plist)
-    print("\n\n")
-    update_evidence_description(res[0], cd)
-    print(res[0].description)
+
+    # c = Case(
+    #     outline="""
+    #     피해자 김현수는 성공한 사업가로, 최근 은퇴 후 유산을 정리하고 있었습니다. 그의 조카 김민준은 김현수와 가까운 사이였으며, 유산 상속에 큰 관심을 보이고 있었습니다.
+    #     김현수는 자신의 저택에서 의식불명 상태로 발견되었고, 이틀 후 사망했습니다. 경찰은 김현수의 죽음이 단순한 사고가 아니라 누군가에 의해 계획된 범죄일 가능성을 제기했습니다. 사건 당일, 김민준은 저택을 방문했던 것으로 확인되었으며, 김현수의 유산에 관한 논의가 있었던 것으로 밝혀졌습니다.
+    #     """,
+    #     behind=""
+    # )
+    # plist = []
+    # plist.append(
+    #     Profile(
+    #         name="김민준",
+    #         type="suspect",
+    #         context="32세, 김현수의 조카로 현재 중소기업에서 근무 중입니다. 그는 평소 삼촌의 유산을 통해 사업 확장을 꿈꾸고 있었습니다. 사건 발생 시점에 김민준은 저택을 방문했으나 이후 친구들과 저녁 식사 모임이 있었다고 주장합니다."
+    #     )
+    # )
+    # plist.append(
+    #     Profile(
+    #         name="이상훈",
+    #         type="witness",
+    #         context="사건 당일 저녁, 김민준이 친구와 함께 있었으며, 그의 행동에 의심스러운 점이 없었다는 증언입니다."
+    #     )
+    # )
+    # cd = CaseData(
+    #     case = c,
+    #     profiles=plist,
+    #     evidences=None
+    # )
+    # res = make_evidence(case_data=c, profiles=plist)
+    # print("\n\n")
+    # update_evidence_description(res[0], cd)
+    # print(res[0].description)
 
