@@ -57,14 +57,12 @@ if st.session_state.game_phase == "init":
             profiles = asyncio.run(CaseDataManager.generate_profiles_stream(callback=update_ui))
             
             placeholder.empty()
-        
+            
             # 메시지 리스트에 추가
             st.session_state.message_list.append({"role": "system", "content": case_summary})
             st.session_state.message_list.append({"role": "system", "content": profiles})
             st.session_state.case_initialized = True
-                
-        st.success("사건 생성 완료! 검사부터 시작하세요")
-        
+            
     # 어떤 경우든 게임 단계는 debate로 변경
     st.session_state.game_phase = "debate"
 
@@ -84,18 +82,21 @@ if 'last_turn_input' in st.session_state:
 
 # 메시지 출력
 for i, message in enumerate(st.session_state.message_list):
-    if i == 0 and message["role"] == "system":  # 첫 번째 메시지가 시스템(사건 개요)인 경우
-        # 초기화 단계(init)가 아닐 때만 사건 개요를 expander로 다시 표시
-        if st.session_state.game_phase != "init":
-            with st.expander("📜 사건 개요", expanded=True):
-                st.markdown(message["content"])
-    elif i == 1 and message["role"] == "system" :
-        if st.session_state.game_phase != "init":
-            with st.expander("🕵️ 등장인물", expanded=True):
-                st.markdown(message["content"])
-    else:
+    if i > 1:
         with st.chat_message(message["role"]):
             st.write(message["content"])
+
+if (
+    st.session_state.game_phase != "init"
+    and st.session_state.message_list
+    and len(st.session_state.message_list) > 1
+):
+    with st.sidebar:
+        with st.expander("📜 사건 개요", expanded=True):
+            st.markdown(st.session_state.message_list[0]["content"])
+        with st.expander("🕵️ 등장인물", expanded=True):
+            st.markdown(st.session_state.message_list[1]["content"])
+    st.success("사건 생성 완료! 검사부터 시작하세요")
 
 # 참고인 호출 UI
 
