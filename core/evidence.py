@@ -33,7 +33,7 @@ CREATE_EVIDENCE_TEMPLATE = """
 그러나 출력은 하나의 리스트 형태로 제공해야 하며, "attorney": [...], "prosecutor": [...] 같은 형식은 사용하지 마세요.
 """
 
-## make_evidence(Case, List[Profile]) -> List[Evidence]: 최초 증거 생성, 3개 생성되는 듯.
+## make_evidence(Case, List[Profile]) -> List[Evidence]: 최초 증거 생성
 ## update_evidence_description(Evidence, CaseData) -> Evidence: 넘겨준 Evidence의 설명 추가
 
 class EvidenceModel(BaseModel):
@@ -123,6 +123,11 @@ def convert_data_class(data: List[dict]) -> List[Evidence]:
     AttributeError: 'str' object has no attribute 'get'
     이 부분에서 가끔씩 뻑남 에러처리 해줘야 할듯 data가 리스트 타입이 아니고 str로 잡히네 
     data 찍어보니까 data["증거품"] 이렇게 내려올 때가 있음 계속 테스팅 하면서 예외처리 잡아줘야 될듯 
+    
+    >> 2025-05-04::youngho
+    메인 템플릿 수정 후 혼자 테스트 보았을 때 문제없이 동작.
+    그러나 LLM 특성상 100% 보장은 없으므로, data 타입 확인하고 케이스별 수동 예외처리 필요
+    혹은 이 부분에서 에러 발생시 컨트롤러 측에서 다시 generate_evidences 하는 식으로 처리도 가능해 보임(높은 확률로 정상 동작하므로).
     """
     print("type(data): "+ str(type(data)))
     print("convert_data_class의 data:", data)
@@ -142,7 +147,7 @@ def make_evidence_image(name):
         return -1
     return path
 
-def get_naver_image(name): #이미지 처리 로직 개선 필요... 엉뚱한 이미지는 어떻게 처리??
+def get_naver_image(name): #create_image_by_ai()로 대체. API Credit 부족으로 인한 임시 사용 ㅜㅜ
     import urllib.parse
     import urllib.request
     import requests
@@ -213,7 +218,6 @@ def get_evidence_name_for_prompt(name):
 
 def create_image_by_ai(name: str):
     # image create by stable diffusion API
-    # image name ex) 2025-05-03-진술서.jpg
     import requests
     import datetime
     from dotenv import dotenv_values
