@@ -64,6 +64,7 @@ if st.session_state.game_phase == "init":
             st.session_state.case_initialized = True
             
     # 어떤 경우든 게임 단계는 debate로 변경
+    st.success("사건 생성 완료! 검사부터 시작하세요")
     st.session_state.game_phase = "debate"
 
 # 이전 턴 처리 후 턴 전환
@@ -96,7 +97,6 @@ if (
             st.markdown(st.session_state.message_list[0]["content"])
         with st.expander("🕵️ 등장인물", expanded=True):
             st.markdown(st.session_state.message_list[1]["content"])
-    st.success("사건 생성 완료! 검사부터 시작하세요")
 
 # 참고인 호출 UI
 
@@ -183,17 +183,31 @@ if st.session_state.mode == "debate":
 
 # 사용자 주장 입력
 if st.session_state.mode == "debate" and st.session_state.game_phase == "debate":
-    if user_input := st.chat_input(f"{st.session_state.turn.upper()}의 주장을 입력하세요 (이상입니다 입력 시 종료)", key="chat_input"):
+    col1, col2 = st.columns([8, 2])
+    with col1:
+        user_input = st.text_input(
+            "주장 입력",  # label(아무거나, 실제로는 안 보임)
+            key="chat_input",
+            placeholder=f"{st.session_state.turn.upper()}의 주장을 입력하세요 (이상입니다 입력 시 종료)",
+            label_visibility="collapsed"  # label 숨김
+        )
+    with col2:
+        objection = st.button("🚨이의 있음!", key="objection_button", use_container_width=True)
+
+    # 입력값이 있을 때만 처리 (중복 방지)
+    if user_input and st.session_state.get("last_user_input") != user_input:
         role = st.session_state.turn
         with st.chat_message(role):
             st.write(user_input)
         st.session_state.message_list.append({"role": role, "content": user_input})
         st.session_state.last_turn_input = role
+        st.session_state.last_user_input = user_input  # 중복 방지
         st.rerun()
-    
-    if st.button("🚨 이의 있음!", key="objection_button"):
+
+    if objection:
         role = st.session_state.turn
-        st.session_state.message_list.append({"role": role, "content": "이의 있습니다!"})
+        st.session_state.message_list.append({"role": role, "content": user_input})
+        st.session_state.message_list.append({"role": role, "content": "이의 있음!"})
         st.session_state.last_turn_input = role
         st.rerun()
 
