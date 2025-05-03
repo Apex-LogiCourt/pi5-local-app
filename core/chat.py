@@ -32,7 +32,7 @@ st.caption("검사와 변호사가 주장하고, AI 판사가 판단합니다.")
 # 초기 상태 설정
 if 'game_phase' not in st.session_state:
     st.session_state.game_phase = "init"  # init, debate, judgement
-    st.session_state.turn = "검사"
+    st.session_state.turn = True  # True: 검사, False: 변호사
     st.session_state.done_flags = {"검사": False, "변호사": False}
     st.session_state.message_list = []
     st.session_state.mode = "debate"  # or "witness" 
@@ -66,20 +66,6 @@ if st.session_state.game_phase == "init":
     # 어떤 경우든 게임 단계는 debate로 변경
     st.success("사건 생성 완료! 검사부터 시작하세요")
     st.session_state.game_phase = "debate"
-
-# 이전 턴 처리 후 턴 전환
-if 'last_turn_input' in st.session_state:
-    prev = st.session_state.last_turn_input
-    last_msg = st.session_state.message_list[-1]["content"].strip().lower()
-    if last_msg == "이상입니다":
-        st.session_state.done_flags[prev] = True
-        if all(st.session_state.done_flags.values()):
-            st.session_state.game_phase = "judgement"
-        else:
-            st.session_state.turn = "변호사" if prev == "검사" else "검사"
-    else:
-        st.session_state.turn = "변호사" if prev == "검사" else "검사"
-    del st.session_state.last_turn_input
 
 # 메시지 출력
 for i, message in enumerate(st.session_state.message_list):
@@ -185,30 +171,38 @@ if st.session_state.mode == "debate":
 if st.session_state.mode == "debate" and st.session_state.game_phase == "debate":
     col1, col2 = st.columns([8, 2])
     with col1:
+        current_role = "검사" if st.session_state.turn else "변호사"
         user_input = st.text_input(
-            "주장 입력",  # label(아무거나, 실제로는 안 보임)
-            key="chat_input",
-            placeholder=f"{st.session_state.turn.upper()}의 주장을 입력하세요 (이상입니다 입력 시 종료)",
-            label_visibility="collapsed"  # label 숨김
+            "주장 입력",
+            key=f"chat_input_{st.session_state.turn}_{len(st.session_state.message_list)}",
+            placeholder=f"{current_role.upper()}의 주장을 입력하세요 (이상입니다 입력 시 종료)",
+            label_visibility="collapsed"
         )
     with col2:
         objection = st.button("🚨이의 있음!", key="objection_button", use_container_width=True)
 
     # 입력값이 있을 때만 처리 (중복 방지)
     if user_input and st.session_state.get("last_user_input") != user_input:
-        role = st.session_state.turn
+        role = "검사" if st.session_state.turn else "변호사"
         with st.chat_message(role):
             st.write(user_input)
         st.session_state.message_list.append({"role": role, "content": user_input})
-        st.session_state.last_turn_input = role
         st.session_state.last_user_input = user_input  # 중복 방지
+        
+        # "이상입니다" 입력 시에만 턴 전환 로직 실행
+        if user_input.strip().lower() == "이상입니다":
+            st.session_state.done_flags[role] = True
+            if all(st.session_state.done_flags.values()):
+                st.session_state.game_phase = "judgement"
+            else:
+                st.session_state.turn = not st.session_state.turn  # 턴 전환
+        
         st.rerun()
 
     if objection:
-        role = st.session_state.turn
-        st.session_state.message_list.append({"role": role, "content": user_input})
+        st.session_state.turn = not st.session_state.turn  # 이의 제기 시 턴 전환
+        role = "검사" if st.session_state.turn else "변호사"
         st.session_state.message_list.append({"role": role, "content": "이의 있음!"})
-        st.session_state.last_turn_input = role
         st.rerun()
 
 # 판결 단계
