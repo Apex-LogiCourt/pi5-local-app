@@ -5,7 +5,7 @@ from langchain_core.output_parsers import (
     StrOutputParser
 )
 from pydantic import BaseModel, Field
-from data_models import Case, Profile, Evidence, CaseData
+from .data_models import Case, Profile, Evidence, CaseData
 from typing import List, Literal
 from dotenv import load_dotenv
 load_dotenv()
