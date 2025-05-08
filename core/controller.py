@@ -205,7 +205,7 @@ def ask_defendant_wrapper(question, defendant_name, case_summary):
 #==============================================  
 
 def get_judge_result_wrapper(message_list):
-    from .verdict import get_judge_result
+    from verdict import get_judge_result
     return get_judge_result(message_list)
 
 
