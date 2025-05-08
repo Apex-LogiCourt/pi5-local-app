@@ -238,9 +238,14 @@ class GameController:
             "phase_changed": False
         }
         
-        if "이상입니다" in user_input.lower():
+        # 입력 정규화
+        normalized_input = user_input.rstrip('.').strip()
+        
+        # 주장 후 "이상입니다" 입력 시 턴만 변경
+        if user_input.endswith("이상입니다"):
             response["should_change_turn"] = True
-            if user_input.rstrip('.').strip() == "이상입니다":
+            # "이상입니다"만 입력한 경우 완료 플래그 설정
+            if normalized_input == "이상입니다":
                 self.set_done_flag(current_role)
                 if self.check_game_end():
                     self.game_phase = "judgement"
