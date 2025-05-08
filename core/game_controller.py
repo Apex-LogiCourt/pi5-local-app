@@ -10,6 +10,7 @@ from langchain_core.utils.function_calling import convert_to_openai_tool
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 import asyncio
 from pydantic import BaseModel, Field
+from langgraph.prebuilt import create_react_agent
 
 # ==============================================
 # State Models
@@ -158,27 +159,18 @@ class GameController:
             handle_defendant_question,
             handle_evidence
         ]
-        self.openai_tools = [convert_to_openai_tool(tool) for tool in self.tools]
-        self.workflow = self._create_workflow()
+
+        self.workflow = self._create_react_workflow()
     
-    def _create_workflow(self) -> StateGraph:
-        """LangGraph 워크플로우 생성"""
+    def _create_react_workflow(self):
+        """ReAct 기반 워크플로우 생성"""
+        # ReAct 에이전트 생성
+        react_agent = create_react_agent(self.llm, self.tools)
+        
+        # 워크플로우 설정
         workflow = StateGraph(GameState)
-        
-        # 노드 추가
-        workflow.add_node("process_input", RunnableLambda(WorkflowComponents.process_input))
-        workflow.add_node("check_game_end", RunnableLambda(WorkflowComponents.check_game_end))
-        
-        # 엣지 추가
-        workflow.add_edge("process_input", "check_game_end")
-        workflow.add_conditional_edges(
-            "check_game_end",
-            RunnableLambda(WorkflowComponents.route_to_end, name="route_to_end"),
-            {"end": END}
-        )
-        
-        # 시작 노드 설정
-        workflow.set_entry_point("process_input")
+        workflow.add_node("react_agent", react_agent)
+        workflow.set_entry_point("react_agent")
         
         return workflow.compile()
     
@@ -238,14 +230,11 @@ class GameController:
             "phase_changed": False
         }
         
-        # 입력 정규화
-        normalized_input = user_input.rstrip('.').strip()
-        
         # 주장 후 "이상입니다" 입력 시 턴만 변경
         if user_input.endswith("이상입니다"):
             response["should_change_turn"] = True
             # "이상입니다"만 입력한 경우 완료 플래그 설정
-            if normalized_input == "이상입니다":
+            if user_input.strip() == "이상입니다":
                 self.set_done_flag(current_role)
                 if self.check_game_end():
                     self.game_phase = "judgement"
