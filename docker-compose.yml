@@ -36,6 +36,8 @@ services:
     command: streamlit run core/chat.py
     ports:
       - "8501:8501"  # Streamlit 기본 포트
+    networks:
+      - logicourt_network
     # ports 설정 
 
 
@@ -56,6 +58,8 @@ services:
   #     - base
   #   volumes:
   #     - data:/data  # 공유 볼륨을 마운트
+  #   networks:
+  #     - logicourt_network
 
 volumes:
   data:
@@ -71,3 +75,7 @@ volumes:
 #     limits:
 #       cpus: "4" # 4개의 코어 사용
 #       memory: "8g" # 8GB의 메모리 사용  
+
+networks:
+  logicourt_network:
+    driver: bridge
