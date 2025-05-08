@@ -181,22 +181,24 @@ if st.session_state.mode == "debate" and st.session_state.game_phase == "debate"
     with col2:
         objection = st.button("🚨이의 있음!", key="objection_button", use_container_width=True)
 
-    # 입력값이 있을 때만 처리 (중복 방지)
-    if user_input and st.session_state.get("last_user_input") != user_input:
+    # 메시지 입력 + 턴 전환 
+    if user_input:
         role = "검사" if st.session_state.turn else "변호사"
         with st.chat_message(role):
             st.write(user_input)
         st.session_state.message_list.append({"role": role, "content": user_input})
-        st.session_state.last_user_input = user_input  # 중복 방지
         
         # "이상입니다" 입력 시에만 턴 전환 로직 실행
-        if user_input.strip().lower() == "이상입니다":
-            st.session_state.done_flags[role] = True
-            if all(st.session_state.done_flags.values()):
-                st.session_state.game_phase = "judgement"
-            else:
+        if user_input.rstrip('.').strip().endswith("이상입니다"):
+            if user_input.rstrip('.').strip() == "이상입니다":
                 st.session_state.turn = not st.session_state.turn  # 턴 전환
-        
+                st.session_state.done_flags[role] = True
+                print("현재 done_flags:", st.session_state.done_flags)
+                if all(st.session_state.done_flags.values()):
+                    print("모든 플레이어가 완료됨:", st.session_state.done_flags)
+                    st.session_state.game_phase = "judgement"
+                    print("game_phase 변경됨:", st.session_state.game_phase)
+                    st.session_state.phase_changed = True  # phase 변경 플래그 추가
         st.rerun()
 
     if objection:
@@ -206,7 +208,7 @@ if st.session_state.mode == "debate" and st.session_state.game_phase == "debate"
         st.rerun()
 
 # 판결 단계
-if st.session_state.game_phase == "judgement":
+if st.session_state.game_phase == "judgement" or st.session_state.get("phase_changed", False):
     with st.chat_message("judge"):
         with st.spinner("AI 판사가 판단 중입니다..."):
             result = get_judge_result(st.session_state.message_list)
@@ -216,7 +218,7 @@ if st.session_state.game_phase == "judgement":
 # 게임 종료 후 다시하기
 if st.session_state.game_phase == "done":
     if st.button("🔁 다시하기"):
-        for key in ["game_phase", "turn", "done_flags", "message_list", "mode", "witness_profiles", "case_initialized", "defendant_name"]:
+        for key in ["game_phase", "turn", "done_flags", "message_list", "mode", "witness_profiles", "case_initialized", "defendant_name", "phase_changed"]:
             if key in st.session_state:
                 del st.session_state[key]
         st.rerun()
