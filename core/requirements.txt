@@ -32,3 +32,6 @@ chainlit==2.4.1
 # FastAPI
 fastapi>=0.110.0
 uvicorn>=0.27.1
+
+# LangGraph
+langgraph>=0.0.20  # LangGraph 최신 버전
