@@ -50,7 +50,7 @@ def check_contextual_relevance(user_input: str, case_summary: str) -> bool:
     chain = (
         {"case_summary": lambda _: case_summary, "user_input": lambda x: x}
         | prompt
-        | ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+        | ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
         | RunnableLambda(lambda output: output.content.strip().lower() == "true")
     )
     return chain.invoke(user_input)
@@ -219,11 +219,19 @@ class GameController:
     
     def add_message(self, role: str, content: str):
         """메시지 추가 - state.messages에 메시지 추가"""
-        message = {
-            "role": "user",  # LangChain이 허용하는 값으로 고정
-            "content": content,
-            "metadata": {"actual_role": role}
-        }
+
+        if role == "검사" or role == "변호사":
+            message = {
+                "role": "user",  # LangChain이 허용하는 값으로 고정
+                "content": content,
+                "metadata": {"actual_role": role}
+            }
+        if role == "system":
+            message = {
+                "role": "system",
+                "content": content,
+                "metadata": {"actual_role": "판사"}
+            }
         self.state.messages.append(message)
     
     def change_turn(self):
@@ -241,24 +249,23 @@ class GameController:
     def process_input(self, user_input: str) -> Dict:
         """사용자 입력 처리"""
         current_role = "검사" if self.turn else "변호사"
-        
-        # ✅ 무조건 필터 돌림 (LangGraph와 무관하게)
-        if not check_contextual_relevance.invoke({
-            "user_input": user_input,
-            "case_summary": self.state.messages[0]["content"] if self.state.messages else ""
-        }):
-            return {
-                "role": current_role,
-                "content": "⚠️ 이 발언은 현재 재판 흐름과 관련이 없습니다. 다시 입력해주세요.",
-                "should_change_turn": False,
-                "phase_changed": False
-            }
-        
+
         # 메시지를 상태에 추가
         self.add_message(current_role, user_input)
+
+        # 문맥 관련성 체크 결과 출력
+        is_relevant = check_contextual_relevance.invoke({
+            "user_input": user_input,
+            "case_summary": self.state.messages[0]["content"] if self.state.messages else ""
+        })
+        print(f"문맥 관련성 체크 결과: {is_relevant}")
+
+        if not is_relevant:
+            self.add_message("system", f"{current_role}측, 해당 발언은 현재 재판 흐름과 관련이 없습니다. 경고입니다.")
+
         
         # LangGraph 워크플로우 실행
-        result = self.workflow.invoke(self.state)
+        # result = self.workflow.invoke(self.state)
         
         # 결과 처리
         response = {

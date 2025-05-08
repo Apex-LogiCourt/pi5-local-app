@@ -22,7 +22,6 @@ def display_message(message):
 def process_user_input(user_input):
     """사용자 입력을 처리합니다."""
     result = st.session_state.game_controller.process_input(user_input)
-    st.session_state.game_controller.add_message(result["role"], result["content"])
     if result["should_change_turn"]:
         st.session_state.game_controller.change_turn()
     if result["phase_changed"]:
