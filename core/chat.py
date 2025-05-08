@@ -32,11 +32,11 @@ st.caption("검사와 변호사가 주장하고, AI 판사가 판단합니다.")
 # 초기 상태 설정
 if 'game_phase' not in st.session_state:
     st.session_state.game_phase = "init"  # init, debate, judgement
-    st.session_state.turn = "검사"
+    st.session_state.turn = True  # True: 검사, False: 변호사
     st.session_state.done_flags = {"검사": False, "변호사": False}
     st.session_state.message_list = []
     st.session_state.mode = "debate"  # or "witness" 
-
+    st.session_state.objection_count = {"검사": 0, "변호사": 0}  # 이의 제기 횟수 추적
 
     # CaseData 객체와 관련 데이터클래스들 저장
     st.session_state.case_data = None
@@ -48,58 +48,41 @@ if 'game_phase' not in st.session_state:
 if st.session_state.game_phase == "init":
     # 이미 사건이 생성되었는지 확인
     if 'case_initialized' not in st.session_state:
-        case_container = st.container()  # 컨테이너 생성
-        with case_container:  # 컨테이너 안에서 UI 요소들 배치
-            with st.spinner("사건을 생성 중입니다..."):
-                # 스트리밍 결과를 임시로 저장할 변수
-                placeholder = st.empty()
-                
-                def update_ui(content, full_text):
-                    placeholder.markdown(f"{full_text}▌")
-                case_summary = asyncio.run(CaseDataManager.generate_case_stream(callback=update_ui))
-                profiles = asyncio.run(CaseDataManager.generate_profiles_stream(callback=update_ui))
-                
-                placeholder.empty()
-                
-                
-                # 메시지 리스트에 추가
-                st.session_state.message_list.append({"role": "system", "content": case_summary})
-                st.session_state.message_list.append({"role": "system", "content": profiles})
-                st.session_state.case_initialized = True
-                
-        st.success("사건 생성 완료! 검사부터 시작하세요")
-        
+        with st.spinner("사건을 생성 중입니다..."):
+            placeholder = st.empty()
+            
+            def update_ui(content, full_text):
+                placeholder.markdown(f"{full_text}▌")
+            case_summary = asyncio.run(CaseDataManager.generate_case_stream(callback=update_ui))
+            profiles = asyncio.run(CaseDataManager.generate_profiles_stream(callback=update_ui))
+            
+            placeholder.empty()
+            
+            # 메시지 리스트에 추가
+            st.session_state.message_list.append({"role": "system", "content": case_summary})
+            st.session_state.message_list.append({"role": "system", "content": profiles})
+            st.session_state.case_initialized = True
+            
     # 어떤 경우든 게임 단계는 debate로 변경
+    st.success("사건 생성 완료! 검사부터 시작하세요")
     st.session_state.game_phase = "debate"
-
-# 이전 턴 처리 후 턴 전환
-if 'last_turn_input' in st.session_state:
-    prev = st.session_state.last_turn_input
-    last_msg = st.session_state.message_list[-1]["content"].strip().lower()
-    if last_msg == "이상입니다":
-        st.session_state.done_flags[prev] = True
-        if all(st.session_state.done_flags.values()):
-            st.session_state.game_phase = "judgement"
-        else:
-            st.session_state.turn = "변호사" if prev == "검사" else "검사"
-    else:
-        st.session_state.turn = "변호사" if prev == "검사" else "검사"
-    del st.session_state.last_turn_input
 
 # 메시지 출력
 for i, message in enumerate(st.session_state.message_list):
-    if i == 0 and message["role"] == "system":  # 첫 번째 메시지가 시스템(사건 개요)인 경우
-        # 초기화 단계(init)가 아닐 때만 사건 개요를 expander로 다시 표시
-        if st.session_state.game_phase != "init":
-            with st.expander("📜 사건 개요", expanded=True):
-                st.markdown(message["content"])
-    elif i == 1 and message["role"] == "system" :
-        if st.session_state.game_phase != "init":
-            with st.expander("🕵️ 등장인물", expanded=True):
-                st.markdown(message["content"])
-    else:
+    if i > 1:
         with st.chat_message(message["role"]):
             st.write(message["content"])
+
+if (
+    st.session_state.game_phase != "init"
+    and st.session_state.message_list
+    and len(st.session_state.message_list) > 1
+):
+    with st.sidebar:
+        with st.expander("📜 사건 개요", expanded=True):
+            st.markdown(st.session_state.message_list[0]["content"])
+        with st.expander("🕵️ 등장인물", expanded=True):
+            st.markdown(st.session_state.message_list[1]["content"])
 
 # 참고인 호출 UI
 
@@ -186,16 +169,48 @@ if st.session_state.mode == "debate":
 
 # 사용자 주장 입력
 if st.session_state.mode == "debate" and st.session_state.game_phase == "debate":
-    if user_input := st.chat_input(f"{st.session_state.turn.upper()}의 주장을 입력하세요 (이상입니다 입력 시 종료)"):
-        role = st.session_state.turn
+    col1, col2 = st.columns([8, 2])
+    with col1:
+        current_role = "검사" if st.session_state.turn else "변호사"
+        user_input = st.text_input(
+            "주장 입력",
+            key=f"chat_input_{st.session_state.turn}_{len(st.session_state.message_list)}",
+            placeholder=f"{current_role.upper()}의 주장을 입력하세요 (이상입니다 입력 시 종료)",
+            label_visibility="collapsed"
+        )
+    with col2:
+        objection = st.button(
+            "🚨이의 있음!",
+            key="objection_button",
+            use_container_width=True,
+            disabled=st.session_state.game_phase != "debate" or st.session_state.done_flags["변호사" if st.session_state.turn else "검사"]  # 토론 단계가 아니거나 상대방이 완료했을 때 비활성화
+        )
+
+    # 메시지 입력 + 턴 전환 
+    if user_input:
+        role = "검사" if st.session_state.turn else "변호사"
         with st.chat_message(role):
             st.write(user_input)
         st.session_state.message_list.append({"role": role, "content": user_input})
-        st.session_state.last_turn_input = role
+        
+        # "이상입니다" 입력 시에만 턴 전환 로직 실행
+        if user_input.rstrip('.').strip().endswith("이상입니다"):
+            st.session_state.turn = not st.session_state.turn  # 턴 전환
+            if user_input.rstrip('.').strip() == "이상입니다":
+                st.session_state.done_flags[role] = True
+                if all(st.session_state.done_flags.values()):
+                    st.session_state.game_phase = "judgement"
+                    st.session_state.phase_changed = True  # phase 변경 플래그 추가
+        st.rerun()
+
+    if objection:
+        st.session_state.turn = not st.session_state.turn  # 이의 제기 시 턴 전환
+        role = "검사" if st.session_state.turn else "변호사"
+        st.session_state.message_list.append({"role": role, "content": "이의 있음!"})
         st.rerun()
 
 # 판결 단계
-if st.session_state.game_phase == "judgement":
+if st.session_state.game_phase == "judgement" or st.session_state.get("phase_changed", False):
     with st.chat_message("judge"):
         with st.spinner("AI 판사가 판단 중입니다..."):
             result = get_judge_result(st.session_state.message_list)
@@ -205,7 +220,7 @@ if st.session_state.game_phase == "judgement":
 # 게임 종료 후 다시하기
 if st.session_state.game_phase == "done":
     if st.button("🔁 다시하기"):
-        for key in ["game_phase", "turn", "done_flags", "message_list", "mode", "witness_profiles", "case_initialized", "defendant_name"]:
+        for key in ["game_phase", "turn", "done_flags", "message_list", "mode", "witness_profiles", "case_initialized", "defendant_name", "phase_changed"]:
             if key in st.session_state:
                 del st.session_state[key]
         st.rerun()
