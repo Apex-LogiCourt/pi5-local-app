@@ -11,6 +11,13 @@ from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 import asyncio
 from pydantic import BaseModel, Field
 from langgraph.prebuilt import create_react_agent
+from langchain.prompts import PromptTemplate
+
+
+
+
+
+
 
 # ==============================================
 # State Models
@@ -27,6 +34,26 @@ class GameState(BaseModel):
 # ==============================================
 # Game Tools
 # ==============================================
+
+
+@tool
+def check_contextual_relevance(user_input: str, case_summary: str) -> bool:
+    """입력이 현재 재판 역할극의 문맥과 관련 있는지 판단합니다."""
+    prompt = PromptTemplate.from_template("""
+    당신은 역할극 기반 재판 시뮬레이션의 조정자입니다.
+    사건 개요: {case_summary}
+    사용자의 새 발언: "{user_input}"
+    이 발언이 현재 재판 역할극 흐름과 관련이 있습니까?
+    관련 있으면 true, 관련 없으면 false로만 답하세요.
+    """)
+
+    chain = (
+        {"case_summary": lambda _: case_summary, "user_input": lambda x: x}
+        | prompt
+        | ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+        | RunnableLambda(lambda output: output.content.strip().lower() == "true")
+    )
+    return chain.invoke(user_input)
 
 @tool
 def handle_argument(input_text: str, role: str) -> Dict:
@@ -140,7 +167,6 @@ class GameController:
         self.game_phase = "init"
         self.turn = True  # True: 검사, False: 변호사
         self.done_flags = {"검사": False, "변호사": False}
-        self.message_list = []
         self.mode = "debate"
         self.objection_count = {"검사": 0, "변호사": 0}
         
@@ -192,12 +218,13 @@ class GameController:
         return False
     
     def add_message(self, role: str, content: str):
-        """메시지 추가"""
-        self.message_list.append({
-            "role": "user",
+        """메시지 추가 - state.messages에 메시지 추가"""
+        message = {
+            "role": "user",  # LangChain이 허용하는 값으로 고정
             "content": content,
             "metadata": {"actual_role": role}
-        })
+        }
+        self.state.messages.append(message)
     
     def change_turn(self):
         """턴 변경"""
@@ -215,12 +242,21 @@ class GameController:
         """사용자 입력 처리"""
         current_role = "검사" if self.turn else "변호사"
         
+        # ✅ 무조건 필터 돌림 (LangGraph와 무관하게)
+        if not check_contextual_relevance.invoke({
+            "user_input": user_input,
+            "case_summary": self.state.messages[0]["content"] if self.state.messages else ""
+        }):
+            return {
+                "role": current_role,
+                "content": "⚠️ 이 발언은 현재 재판 흐름과 관련이 없습니다. 다시 입력해주세요.",
+                "should_change_turn": False,
+                "phase_changed": False
+            }
+        
         # 메시지를 상태에 추가
-        self.state.messages.append({
-            "role": "user",  # LangChain이 허용하는 값으로 고정
-            "content": user_input,
-            "metadata": {"actual_role": current_role}
-        })
+        self.add_message(current_role, user_input)
+        
         # LangGraph 워크플로우 실행
         result = self.workflow.invoke(self.state)
         
@@ -262,16 +298,16 @@ class GameController:
             "game_phase": self.game_phase,
             "turn": "검사" if self.turn else "변호사",
             "done_flags": self.done_flags,
-            "message_list": self.message_list,
+            "message_list": self.state.messages,  # state.messages 사용
             "mode": self.mode,
             "objection_count": self.objection_count
         }
     
     def get_judge_result(self) -> str:
         """판사 판결 결과 반환"""
-        return get_judge_result(self.message_list)
+        return get_judge_result(self.state.messages)  # state.messages 사용
     
     def reset(self):
         """게임 상태 초기화"""
         self._initialize_game_state()
-        self.state = GameState()  # 상태도 초기화
+        self.state = GameState()  # 상태 초기화

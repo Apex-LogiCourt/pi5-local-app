@@ -45,21 +45,21 @@ if st.session_state.game_controller.game_phase == "init":
     initialize_case()
 
 # 메시지 출력
-for i, message in enumerate(st.session_state.game_controller.message_list):
+for i, message in enumerate(st.session_state.game_controller.state.messages):
     if i > 1:
         display_message(message)
 
 # 사이드바에 사건 정보 표시
 if (
     st.session_state.game_controller.game_phase != "init"
-    and st.session_state.game_controller.message_list
-    and len(st.session_state.game_controller.message_list) > 1
+    and st.session_state.game_controller.state.messages
+    and len(st.session_state.game_controller.state.messages) > 1
 ):
     with st.sidebar:
         with st.expander("📜 사건 개요", expanded=True):
-            st.markdown(st.session_state.game_controller.message_list[0]["content"])
+            st.markdown(st.session_state.game_controller.state.messages[0]["content"])
         with st.expander("🕵️ 등장인물", expanded=True):
-            st.markdown(st.session_state.game_controller.message_list[1]["content"])
+            st.markdown(st.session_state.game_controller.state.messages[1]["content"])
 
 # 사용자 주장 입력
 if st.session_state.game_controller.mode == "debate" and st.session_state.game_controller.game_phase == "debate":
@@ -68,7 +68,7 @@ if st.session_state.game_controller.mode == "debate" and st.session_state.game_c
         current_role = "검사" if st.session_state.game_controller.turn else "변호사"
         user_input = st.text_input(
             "주장 입력",
-            key=f"chat_input_{st.session_state.game_controller.turn}_{len(st.session_state.game_controller.message_list)}",
+            key=f"chat_input_{st.session_state.game_controller.turn}_{len(st.session_state.game_controller.state.messages)}",
             placeholder=f"{current_role.upper()}의 주장을 입력하세요 (이상입니다 입력 시 종료)",
             label_visibility="collapsed"
         )
