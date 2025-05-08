@@ -179,7 +179,12 @@ if st.session_state.mode == "debate" and st.session_state.game_phase == "debate"
             label_visibility="collapsed"
         )
     with col2:
-        objection = st.button("🚨이의 있음!", key="objection_button", use_container_width=True)
+        objection = st.button(
+            "🚨이의 있음!",
+            key="objection_button",
+            use_container_width=True,
+            disabled=st.session_state.game_phase != "debate" or st.session_state.done_flags["변호사" if st.session_state.turn else "검사"]  # 토론 단계가 아니거나 상대방이 완료했을 때 비활성화
+        )
 
     # 메시지 입력 + 턴 전환 
     if user_input:
@@ -190,14 +195,11 @@ if st.session_state.mode == "debate" and st.session_state.game_phase == "debate"
         
         # "이상입니다" 입력 시에만 턴 전환 로직 실행
         if user_input.rstrip('.').strip().endswith("이상입니다"):
+            st.session_state.turn = not st.session_state.turn  # 턴 전환
             if user_input.rstrip('.').strip() == "이상입니다":
-                st.session_state.turn = not st.session_state.turn  # 턴 전환
                 st.session_state.done_flags[role] = True
-                print("현재 done_flags:", st.session_state.done_flags)
                 if all(st.session_state.done_flags.values()):
-                    print("모든 플레이어가 완료됨:", st.session_state.done_flags)
                     st.session_state.game_phase = "judgement"
-                    print("game_phase 변경됨:", st.session_state.game_phase)
                     st.session_state.phase_changed = True  # phase 변경 플래그 추가
         st.rerun()
 
