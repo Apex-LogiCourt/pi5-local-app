@@ -13,25 +13,41 @@ st.caption("검사와 변호사가 주장하고, AI 판사가 판단합니다.")
 if 'game_controller' not in st.session_state:
     st.session_state.game_controller = GameController()
 
-# 사건 개요 생성 단계
-if st.session_state.game_controller.game_phase == "init":
+def display_message(message):
+    actual_role = message.get("metadata", {}).get("actual_role", message["role"])
+    with st.chat_message(actual_role):
+        st.write(message["content"])
+
+
+def process_user_input(user_input):
+    """사용자 입력을 처리합니다."""
+    result = st.session_state.game_controller.process_input(user_input)
+    st.session_state.game_controller.add_message(result["role"], result["content"])
+    if result["should_change_turn"]:
+        st.session_state.game_controller.change_turn()
+    if result["phase_changed"]:
+        st.session_state.phase_changed = True
+    st.rerun()
+
+def initialize_case():
+    """사건을 초기화합니다."""
     with st.spinner("사건을 생성 중입니다..."):
         placeholder = st.empty()
-        
         def update_ui(content, full_text):
             placeholder.markdown(f"{full_text}▌")
-            
         asyncio.run(st.session_state.game_controller.initialize_case(callback=update_ui))
         placeholder.empty()
-        
     st.success("사건 생성 완료! 검사부터 시작하세요")
     st.session_state.game_controller.game_phase = "debate"
+
+# 사건 개요 생성 단계
+if st.session_state.game_controller.game_phase == "init":
+    initialize_case()
 
 # 메시지 출력
 for i, message in enumerate(st.session_state.game_controller.message_list):
     if i > 1:
-        with st.chat_message(message["role"]):
-            st.write(message["content"])
+        display_message(message)
 
 # 사이드바에 사건 정보 표시
 if (
@@ -67,19 +83,7 @@ if st.session_state.game_controller.mode == "debate" and st.session_state.game_c
 
     # 메시지 입력 처리
     if user_input:
-        result = st.session_state.game_controller.process_input(user_input)
-        
-        with st.chat_message(result["role"]):
-            st.write(result["content"])
-        st.session_state.game_controller.add_message(result["role"], result["content"])
-        
-        if result["should_change_turn"]:
-            st.session_state.game_controller.change_turn()
-            
-        if result["phase_changed"]:
-            st.session_state.phase_changed = True
-            
-        st.rerun()
+        process_user_input(user_input)
 
     # 이의제기 처리
     if objection:

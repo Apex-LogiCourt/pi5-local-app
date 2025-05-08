@@ -133,6 +133,7 @@ class GameController:
         """게임 컨트롤러 초기화"""
         self._initialize_game_state()
         self._initialize_workflow()
+        self.state = GameState()  # 워크플로우 상태를 유지하기 위한 초기화
     
     def _initialize_game_state(self):
         """게임 상태 초기화"""
@@ -192,7 +193,11 @@ class GameController:
     
     def add_message(self, role: str, content: str):
         """메시지 추가"""
-        self.message_list.append({"role": role, "content": content})
+        self.message_list.append({
+            "role": "user",
+            "content": content,
+            "metadata": {"actual_role": role}
+        })
     
     def change_turn(self):
         """턴 변경"""
@@ -210,16 +215,14 @@ class GameController:
         """사용자 입력 처리"""
         current_role = "검사" if self.turn else "변호사"
         
+        # 메시지를 상태에 추가
+        self.state.messages.append({
+            "role": "user",  # LangChain이 허용하는 값으로 고정
+            "content": user_input,
+            "metadata": {"actual_role": current_role}
+        })
         # LangGraph 워크플로우 실행
-        state = GameState(
-            messages=self.message_list,
-            current_role=current_role,
-            game_phase=self.game_phase,
-            done_flags=self.done_flags,
-            objection_count=self.objection_count
-        )
-        
-        result = self.workflow.invoke(state)
+        result = self.workflow.invoke(self.state)
         
         # 결과 처리
         response = {
@@ -270,4 +273,5 @@ class GameController:
     
     def reset(self):
         """게임 상태 초기화"""
-        self.__init__()
+        self._initialize_game_state()
+        self.state = GameState()  # 상태도 초기화
