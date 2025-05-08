@@ -36,7 +36,7 @@ services:
     command: streamlit run core/chat.py
     ports:
       - "8501:8501"  # Streamlit 기본 포트
-      - "3500:3500"  # hardware 통신용 포트
+      - "8000:8000"  # hardware 통신용 포트
     networks:
       - logicourt_network
     # ports 설정 
@@ -60,7 +60,7 @@ services:
   #   volumes:
   #     - data:/data  # 공유 볼륨을 마운트
   #   ports:
-  #     - "3500:3500"  # hardware 통신용 포트
+  #     - "8000:8000"  # hardware 통신용 포트
   #   networks:
   #     - logicourt_network
 
