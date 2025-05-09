@@ -43,24 +43,23 @@ def select_random_characters(num_characters: int = 4) -> List[Dict]:
 
 # ---------------------------- 사건 요약 체인 ----------------------------
 
+def format_gender(gender: str) -> str:
+    return "남성" if gender == "남자" else "여성"
+
 def build_case_chain() -> Tuple[object, Dict[str, str]]:
-    """
-    캐릭터를 랜덤 선택하고, 사건 개요 생성을 위한 LLM 체인과 역할 정보를 반환.
-    """
     selected_characters = select_random_characters(4)
 
-    # 역할 매핑
+    def format_role_info(c):
+        return f"{c['name']} (나이: {c['age']}세 성별: {format_gender(c['gender'])})"
+
     character_roles = {
-        "피고": selected_characters[0]['name'],
-        "피해자": selected_characters[1]['name'],
-        "증인1": selected_characters[2]['name'],
-        "증인2": selected_characters[3]['name'],
+        "피고": format_role_info(selected_characters[0]),
+        "피해자": format_role_info(selected_characters[1]),
+        "증인1": format_role_info(selected_characters[2]),
+        "증인2": format_role_info(selected_characters[3]),
     }
 
-    # 템플릿 포맷팅
     formatted_template = CASE_SUMMARY_TEMPLATE.format(**character_roles)
-
-    # 체인 구성
     llm = get_llm()
     prompt = ChatPromptTemplate.from_template(formatted_template)
     chain = prompt | llm | StrOutputParser()
