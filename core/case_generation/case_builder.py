@@ -46,17 +46,29 @@ def select_random_characters(num_characters: int = 4) -> List[Dict]:
 def format_gender(gender: str) -> str:
     return "남성" if gender == "남자" else "여성"
 
-def build_case_chain() -> Tuple[object, Dict[str, str]]:
+def build_case_chain():
+    """
+    캐릭터를 랜덤 선택하고, 사건 개요 생성을 위한 LLM 체인 반환.
+    """
     selected_characters = select_random_characters(4)
 
-    def format_role_info(c):
-        return f"{c['name']} (나이: {c['age']}세 성별: {format_gender(c['gender'])})"
-
+    # 캐릭터 정보 템플릿 변수에 개별적으로 매핑
     character_roles = {
-        "피고": format_role_info(selected_characters[0]),
-        "피해자": format_role_info(selected_characters[1]),
-        "증인1": format_role_info(selected_characters[2]),
-        "증인2": format_role_info(selected_characters[3]),
+        "피고_이름": selected_characters[0]['name'],
+        "피고_나이": selected_characters[0]['age'],
+        "피고_성별": format_gender(selected_characters[0]['gender']),
+        
+        "피해자_이름": selected_characters[1]['name'],
+        "피해자_나이": selected_characters[1]['age'],
+        "피해자_성별": format_gender(selected_characters[1]['gender']),
+        
+        "증인1_이름": selected_characters[2]['name'],
+        "증인1_나이": selected_characters[2]['age'],
+        "증인1_성별": format_gender(selected_characters[2]['gender']),
+        
+        "증인2_이름": selected_characters[3]['name'],
+        "증인2_나이": selected_characters[3]['age'],
+        "증인2_성별": format_gender(selected_characters[3]['gender']),
     }
 
     formatted_template = CASE_SUMMARY_TEMPLATE.format(**character_roles)
@@ -83,7 +95,31 @@ def build_character_chain(case_summary: str):
     """
     사건 개요를 기반으로 인물 소개 생성 체인 반환.
     """
-    formatted_template = CHARACTER_TEMPLATE.format(case_summary=case_summary)
+    # 캐릭터를 선택하여 정보 가져오기
+    selected_characters = select_random_characters(4)
+    
+    # 캐릭터 정보 템플릿 변수에 개별적으로 매핑
+    template_vars = {
+        "case_summary": case_summary,
+        
+        "피고_이름": selected_characters[0]['name'],
+        "피고_나이": selected_characters[0]['age'],
+        "피고_성별": format_gender(selected_characters[0]['gender']),
+        
+        "피해자_이름": selected_characters[1]['name'],
+        "피해자_나이": selected_characters[1]['age'],
+        "피해자_성별": format_gender(selected_characters[1]['gender']),
+        
+        "증인1_이름": selected_characters[2]['name'],
+        "증인1_나이": selected_characters[2]['age'],
+        "증인1_성별": format_gender(selected_characters[2]['gender']),
+        
+        "증인2_이름": selected_characters[3]['name'],
+        "증인2_나이": selected_characters[3]['age'],
+        "증인2_성별": format_gender(selected_characters[3]['gender']),
+    }
+    
+    formatted_template = CHARACTER_TEMPLATE.format(**template_vars)
     llm = get_llm(temperature=0.7)
     prompt = ChatPromptTemplate.from_template(formatted_template)
     chain = prompt | llm | StrOutputParser()
@@ -95,10 +131,32 @@ def build_case_behind_chain(case_summary: str, character: str):
     """
     사건 개요와 특정 인물을 바탕으로 사건의 진실을 생성하는 체인.
     """
-    formatted_template = CASE_BEHIND_TEMPLATE.format(
-        case_summary=case_summary,
-        character=character
-    )
+    # 캐릭터를 선택하여 정보 가져오기
+    selected_characters = select_random_characters(4)
+    
+    # 템플릿 변수 준비
+    template_vars = {
+        "case_summary": case_summary,
+        "character": character,
+        
+        "피고_이름": selected_characters[0]['name'],
+        "피고_나이": selected_characters[0]['age'],
+        "피고_성별": format_gender(selected_characters[0]['gender']),
+        
+        "피해자_이름": selected_characters[1]['name'],
+        "피해자_나이": selected_characters[1]['age'],
+        "피해자_성별": format_gender(selected_characters[1]['gender']),
+        
+        "증인1_이름": selected_characters[2]['name'],
+        "증인1_나이": selected_characters[2]['age'],
+        "증인1_성별": format_gender(selected_characters[2]['gender']),
+        
+        "증인2_이름": selected_characters[3]['name'],
+        "증인2_나이": selected_characters[3]['age'],
+        "증인2_성별": format_gender(selected_characters[3]['gender']),
+    }
+    
+    formatted_template = CASE_BEHIND_TEMPLATE.format(**template_vars)
     llm = get_llm(temperature=0.5)
     prompt = ChatPromptTemplate.from_template(formatted_template)
     chain = prompt | llm | StrOutputParser()
