@@ -65,7 +65,7 @@ def build_case_chain() -> Tuple[object, Dict[str, str]]:
     prompt = ChatPromptTemplate.from_template(formatted_template)
     chain = prompt | llm | StrOutputParser()
 
-    return chain, character_roles
+    return chain
 
 
 
