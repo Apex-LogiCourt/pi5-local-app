@@ -5,6 +5,9 @@ from langchain_core.output_parsers import (
     StrOutputParser
 )
 from pydantic import BaseModel, Field
+import replicate.exceptions
+import replicate.exceptions
+import replicate.exceptions
 from data_models import Case, Profile, Evidence, CaseData
 from typing import List, Literal
 from dotenv import load_dotenv
@@ -129,8 +132,8 @@ def convert_data_class(data: List[dict]) -> List[Evidence]:
     그러나 LLM 특성상 100% 보장은 없으므로, data 타입 확인하고 케이스별 수동 예외처리 필요
     혹은 이 부분에서 에러 발생시 컨트롤러 측에서 다시 generate_evidences 하는 식으로 처리도 가능해 보임(높은 확률로 정상 동작하므로).
     """
-    print("type(data): "+ str(type(data)))
-    print("convert_data_class의 data:", data)
+    print("[Debug/Evidence] type(data): "+ str(type(data)))
+    print("[Debug/Evidence] convert_data_class의 data:", data)
     if isinstance(data, dict):
         if "증거품" in data:
             data = data["증거품"]
@@ -217,62 +220,96 @@ def get_evidence_name_for_prompt(name):
     return res
 
 def create_image_by_ai(name: str):
-    # image create by stable diffusion API
+    import json
     import requests
     import datetime
     from dotenv import dotenv_values
-    import random # 이미지 관리용. 임시 추가
 
     env = dotenv_values()
-    key = env.get("SD_API_KEY")
+    key = env.get("REPLICATE_API_KEY")
     today = datetime.datetime.now()
     formatted_date = today.strftime("%y-%m-%d")
     new_name = name.replace(" ", "-")
 
-    evidence_name = get_evidence_name_for_prompt(name)
-    # save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + ".jpg"
-    save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + str(random.randrange(1,1000)) + ".jpg"
+    prompt_name = get_evidence_name_for_prompt(name)
+    save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + ".jpg"
+    
+    #### replicate 패키지 사용...
+    # import replicate
+    # input = {
+    #     "prompt": "A simple black and white pictogram of a " + prompt_name + ", minimalist design, vector art, flat colors, clean lines, no background, high contrast, clear shapes, centered, bold outline, outlined",
+    #     "aspect_ratio": "1:1",
+    #     "output_format": "jpg"
+    # }
+
+    # try:
+    #     output = replicate.run(
+    #         "stability-ai/stable-diffusion-3.5-large-turbo",
+    #         input=input
+    #     )
+    #     for index, item in enumerate(output):
+    #         with open(f"output_{index}.webp", "wb") as file:
+    #             file.write(item.read())
+
+    # except replicate.exceptions.ReplicateError as e:
+    #     print("Replicate API Error:", str(e))
+    #     return -1
+    
+    # except Exception as e:
+    #     print("Unexpected error:", str(e))
+    #     return -2
+        
+    #### json 출력 받아오려면 일반 http 호출...
+    payload = {
+        "input": {
+            "prompt": "A simple black and white pictogram of a " + prompt_name + ", minimalist design, vector art, flat colors, clean lines, no background, high contrast, clear shapes, centered, bold outline, outlined",
+            "aspect_ratio": "1:1",
+            "output_format": "jpg"
+        }
+    }
 
     response = requests.post(
-        f"https://api.stability.ai/v2beta/stable-image/generate/sd3",
+        "https://api.replicate.com/v1/models/stability-ai/stable-diffusion-3.5-large-turbo/predictions",
         headers={
-            "authorization": key,
-            "accept": "image/*"
+            "Authorization": key,
+            "Content-Type": "application/json",
+            "Prefer": "wait"
         },
-        files={"none": ''},
-        data={
-            "prompt": "A simple black and white pictogram of a " + evidence_name + ", minimalist design, vector art, flat colors, clean lines, no background, high contrast, clear shapes, centered, bold outline, outlined,",
-            "model" : "sd3.5-large",
-            "mode" : "text-to-image",
-            "aspect_ratio" : "1:1",
-            "output_format": "jpeg",
-        },
+        json=payload
     )
 
     if response.status_code == 200:
-        with open(save_path, 'wb') as file:
-            file.write(response.content)
+        output = response.json()
+        print(json.dumps(output, indent=2))  # TEST
+        with open(save_path + ".json", "w") as f:
+            json.dump(output, f, indent=2)
+
+        if "output" in output and output["output"]:
+            image_url = output["output"][0]
+            image_data = requests.get(image_url).content
+            with open(save_path, 'wb') as file:
+                file.write(image_data)
     else:
+        print(f"Error {response.status_code}: {response.text}")
         return response.status_code
-    
     return save_path
 
 
 ### TEST CODE ###
 if __name__ == "__main__":
-    # res = create_image_by_ai("메시지 기록")
-    # print(res)
+    res = create_image_by_ai("메시지 기록")
+    print(res)
 
     # CaseDataManager import 한 뒤에 테스트 할 때만 돌려보세용  
 
-    from controller import CaseDataManager #테스트 할 때만 돌려보세용 
-    import asyncio #여기도 주석해제
-    asyncio.run(CaseDataManager.initialize())  # CaseDataManager 초기화 
-    asyncio.run(CaseDataManager.generate_case_stream())  # case 생성 
-    asyncio.run(CaseDataManager.generate_profiles_stream())  # 프로필 생성
-    res = make_evidence(case_data=CaseDataManager.get_case(), 
-                        profiles=CaseDataManager.get_profiles())
-    print("\n\n", res)
+    # from controller import CaseDataManager #테스트 할 때만 돌려보세용 
+    # import asyncio #여기도 주석해제
+    # asyncio.run(CaseDataManager.initialize())  # CaseDataManager 초기화 
+    # asyncio.run(CaseDataManager.generate_case_stream())  # case 생성 
+    # asyncio.run(CaseDataManager.generate_profiles_stream())  # 프로필 생성
+    # res = make_evidence(case_data=CaseDataManager.get_case(), 
+    #                     profiles=CaseDataManager.get_profiles())
+    # print("\n\n", res)
 
     # c = Case(
     #     outline="""
