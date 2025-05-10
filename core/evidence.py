@@ -280,9 +280,9 @@ def create_image_by_ai(name: str):
 
     if response.status_code == 200:
         output = response.json()
-        print(json.dumps(output, indent=2))  # TEST
+        print(json.dumps(output, indent=4))  # TEST
         with open(save_path + ".json", "w") as f:
-            json.dump(output, f, indent=2)
+            json.dump(output, f, indent=4)
 
         if "output" in output and output["output"]:
             image_url = output["output"][0]
