@@ -8,6 +8,7 @@ from ui.resizable_image import ResizableImage, _get_image_path
 from ui.style_constants import (
     ROLE_TITLE_STYLE, DEFAULT_BUTTON_STYLE, DARK_BG_COLOR, WHITE_TEXT
 )
+from core.controller import CaseDataManager  # ✅ 증거 데이터 가져오기 위해 import
 
 class ProsecutorScreen(QWidget):
     def __init__(self, case_summary="", profiles="", on_next=None):
@@ -16,7 +17,8 @@ class ProsecutorScreen(QWidget):
         self.profiles = profiles
         self.on_next = on_next
 
-        self.mic_on = False  # ← 마이크 상태 초기화
+        self.evidences = CaseDataManager.get_evidences() or []  # ✅ 증거 저장
+        self.mic_on = False
         self.init_ui()
 
     def init_ui(self):
@@ -75,7 +77,6 @@ class ProsecutorScreen(QWidget):
             """)
             return btn
 
-        # 마이크 버튼
         self.btn_mic = QPushButton()
         self.btn_mic.setFixedSize(100, 100)
         self.btn_mic.setIcon(QIcon(_get_image_path("mike.png")))
@@ -90,7 +91,6 @@ class ProsecutorScreen(QWidget):
         self.btn_mic.enterEvent = lambda event: self.btn_mic.setIconSize(QSize(90, 90) if self.mic_on else QSize(65, 65))
         self.btn_mic.leaveEvent = lambda event: self.btn_mic.setIconSize(QSize(80, 80) if self.mic_on else QSize(55, 55))
 
-        # 텍스트 입력 버튼 정렬
         text_input = make_input_button("텍스트 입력")
         text_input_wrapper = QHBoxLayout()
         text_input_wrapper.addStretch(1)
@@ -100,9 +100,9 @@ class ProsecutorScreen(QWidget):
         grid_layout = QGridLayout()
         grid_layout.setSpacing(35)
         grid_layout.addWidget(make_invisible_button("사건개요", self.show_case_dialog), 0, 0)
-        grid_layout.addWidget(make_invisible_button("검사측 증거품"), 0, 1)
+        grid_layout.addWidget(make_invisible_button("검사측 증거품", self.show_prosecutor_evidence), 0, 1)
         grid_layout.addWidget(make_invisible_button("등장인물", self.show_profiles_dialog), 1, 0)
-        grid_layout.addWidget(make_invisible_button("변호사측 증거품"), 1, 1)
+        grid_layout.addWidget(make_invisible_button("변호사측 증거품", self.show_attorney_evidence), 1, 1)
         grid_layout.addLayout(text_input_wrapper, 2, 0)
         grid_layout.addWidget(self.btn_mic, 2, 1, alignment=Qt.AlignCenter)
 
@@ -150,25 +150,32 @@ class ProsecutorScreen(QWidget):
 
     def toggle_mic_icon(self):
         self.mic_on = not self.mic_on
-        if self.mic_on:
-            self.btn_mic.setIcon(QIcon(_get_image_path("mike_on.png")))
-            self.btn_mic.setIconSize(QSize(80, 80))  # 기본 크기 (hover 아님)
-        else:
-            self.btn_mic.setIcon(QIcon(_get_image_path("mike.png")))
-            self.btn_mic.setIconSize(QSize(55, 55))  # 기본 크기 (hover 아님)
+        icon_path = "mike_on.png" if self.mic_on else "mike.png"
+        size = QSize(80, 80) if self.mic_on else QSize(55, 55)
+        self.btn_mic.setIcon(QIcon(_get_image_path(icon_path)))
+        self.btn_mic.setIconSize(size)
 
     def proceed_to_next(self):
         if self.on_next:
             self.on_next()
 
     def show_case_dialog(self):
+        # 인트로와 동일하게 피고/피해자/증인 정보는 제거
+        lines = self.case_summary.strip().split('\n')
+        filtered_lines = [
+            line for line in lines
+            if not any(tag in line for tag in ["[피고", "[피해자", "[증인1", "[증인2"])
+        ]
+        clean_text = "\n".join(filtered_lines)
+
         dlg = QMessageBox(self)
         dlg.setWindowTitle("사건 개요")
-        dlg.setText(self.case_summary)
+        dlg.setText(clean_text)
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setMaximumSize(800, 500)
         dlg.setStyleSheet("QLabel { font-size: 14px; }")
         dlg.exec_()
+
 
     def show_profiles_dialog(self):
         dlg = QMessageBox(self)
@@ -178,3 +185,13 @@ class ProsecutorScreen(QWidget):
         dlg.setMaximumSize(800, 500)
         dlg.setStyleSheet("QLabel { font-size: 14px; }")
         dlg.exec_()
+
+    def show_prosecutor_evidence(self):
+        items = [f"{e.name}: {e.description[0]}" for e in self.evidences if e.type == "prosecutor"]
+        text = "\n\n".join(items) if items else "검사측 증거물이 없습니다."
+        QMessageBox.information(self, "검사측 증거품", text, QMessageBox.Ok)
+
+    def show_attorney_evidence(self):
+        items = [f"{e.name}: {e.description[0]}" for e in self.evidences if e.type == "attorney"]
+        text = "\n\n".join(items) if items else "변호사측 증거물이 없습니다."
+        QMessageBox.information(self, "변호사측 증거품", text, QMessageBox.Ok)

@@ -1,8 +1,3 @@
-# 전체 코드가 길어지므로 요약하여 상단 주석을 표시합니다
-# ※ 코드 전체에 대해 리사이즈 비율 자동 조절되도록 조정됨
-# ※ IntroScreen 기능 및 게임 설명 화면 통합됨
-# ※ 비동기 데이터 로딩 및 화면 전환 로직 개선
-# ※ 리팩토링: 중복 코드 및 미사용 코드 정리, 상수 활용
 
 import sys
 import os
@@ -20,6 +15,7 @@ from PyQt5.QtCore import Qt
 
 from qasync import QEventLoop
 from core.controller import CaseDataManager, get_judge_result_wrapper  # type: ignore
+
 
 from ui.intro import IntroScreen
 from ui.prosecutor import ProsecutorScreen
@@ -71,17 +67,18 @@ class MainWindow(QWidget):
 
         CaseDataManager._case = None
         CaseDataManager._profiles = None
+        CaseDataManager._evidences = None
 
         try:
             print("Preloading case data...")
             self.case_summary_data = await CaseDataManager.generate_case_stream(callback=dummy_callback)
             self.profiles_data = await CaseDataManager.generate_profiles_stream(callback=dummy_callback)
+            self.evidence_data = await CaseDataManager.generate_evidences()  # ✅ 증거 불러오기
             print("Case data preloaded.")
             self._update_start_button("시작하기", True)
         except Exception as e:
             print(f"Error preloading case data: {e}")
             self._update_start_button("데이터 로드 실패 (재시도)", False)
-
     def create_start_screen(self):
         screen = QWidget()
         layout = QHBoxLayout()
@@ -171,7 +168,7 @@ class MainWindow(QWidget):
         print("텍스트모드 버튼 클릭됨 (현재 미구현 상태)")
 
     def start_intro_sequence(self):
-        if not self.case_summary_data or not self.profiles_data:
+        if not self.case_summary_data or not self.profiles_data or not self.evidence_data:
             asyncio.ensure_future(self.preload_case_data())
             return
 
@@ -182,11 +179,11 @@ class MainWindow(QWidget):
         self.intro_screen_instance = IntroScreen(
             summary=self.case_summary_data,
             profiles=self.profiles_data,
+            evidences=self.evidence_data,  # ✅ 증거 전달
             on_intro_finished_callback=self.show_prosecutor_screen
         )
         self.stacked_layout.addWidget(self.intro_screen_instance)
         self.stacked_layout.setCurrentWidget(self.intro_screen_instance)
-
     def show_prosecutor_screen(self):
         if self.intro_screen_instance:
             if self.stacked_layout.indexOf(self.intro_screen_instance) != -1:

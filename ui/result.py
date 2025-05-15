@@ -85,9 +85,10 @@ class ResultScreen(QWidget):
             self.result_text_display.setPlainText(current_text + "...")
             QApplication.processEvents()
 
+            # ✅ 메시지 형식 수정
             judgement_summary = get_judge_result_wrapper([
-                {"role": "system", "content": "다음 사건의 판결을 내려주세요."},
-                {"role": "user", "content": full_case_context}
+                {"role": "검사", "content": full_case_context},
+                {"role": "변호사", "content": "(변호인 측 주장 요약이 여기에 들어갈 수 있습니다.)"}
             ])
 
             current_text += judgement_summary.strip() + "\n\n🕵️ 사건의 진실:\n"
@@ -103,7 +104,6 @@ class ResultScreen(QWidget):
                 QApplication.processEvents()
 
             await CaseDataManager.generate_case_behind(callback=update_behind_callback)
-
             self.result_text_display.setPlainText(current_text + accumulated_behind.strip())
 
         except Exception as e:
