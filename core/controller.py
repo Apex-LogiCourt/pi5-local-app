@@ -6,6 +6,7 @@ from .case_generation.case_builder import build_case_chain, build_character_chai
 from .evidence import make_evidence
 from .data_models import CaseData, Case, Profile, Evidence
 import asyncio
+from core.verdict import get_judge_result
 
 
 # 싱글톤 패턴 적용
@@ -205,7 +206,7 @@ def ask_defendant_wrapper(question, defendant_name, case_summary):
 #==============================================  
 
 def get_judge_result_wrapper(message_list):
-    from verdict import get_judge_result
+    from core.verdict import get_judge_result 
     return get_judge_result(message_list)
 
 
