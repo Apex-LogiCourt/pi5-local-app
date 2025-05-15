@@ -3,9 +3,11 @@
 # ※ IntroScreen 기능 및 게임 설명 화면 통합됨
 # ※ 비동기 데이터 로딩 및 화면 전환 로직 개선
 # ※ 리팩토링: 중복 코드 및 미사용 코드 정리, 상수 활용
+
 import sys
 import os
 import asyncio
+import platform
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -13,10 +15,10 @@ from PyQt5.QtWidgets import (
     QApplication, QWidget, QPushButton, QLabel,
     QVBoxLayout, QHBoxLayout, QStackedLayout, QFrame, QTextEdit
 )
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QFontDatabase
 from PyQt5.QtCore import Qt
 
-from qasync import QEventLoop 
+from qasync import QEventLoop
 from core.controller import CaseDataManager, get_judge_result_wrapper  # type: ignore
 
 from ui.intro import IntroScreen
@@ -26,6 +28,7 @@ from ui.result import ResultScreen
 from ui.resizable_image import ResizableImage, _get_image_path
 from ui.game_description import GameDescriptionScreen
 from ui.style_constants import *
+
 
 
 class MainWindow(QWidget):
@@ -227,6 +230,7 @@ class MainWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
     window = MainWindow()
@@ -237,3 +241,4 @@ if __name__ == "__main__":
         print("Program interrupted")
     finally:
         loop.close()
+
