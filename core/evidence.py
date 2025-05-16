@@ -144,13 +144,14 @@ def convert_data_class(data: List[dict]) -> List[Evidence]:
 
 def make_evidence_image(name):
     try:
-        path = get_naver_image(name)
+        # path = get_naver_image(name)
+        path = create_image_by_ai(name)
         resize_img(path, path, 200)
     except:
         return -1
     return path
 
-def get_naver_image(name): #create_image_by_ai()로 대체. API Credit 부족으로 인한 임시 사용 ㅜㅜ
+def get_naver_image(name): #create_image_by_ai()로 대체
     import urllib.parse
     import urllib.request
     import requests
