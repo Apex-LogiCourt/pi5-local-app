@@ -5,9 +5,6 @@ from langchain_core.output_parsers import (
     StrOutputParser
 )
 from pydantic import BaseModel, Field
-import replicate.exceptions
-import replicate.exceptions
-import replicate.exceptions
 from data_models import Case, Profile, Evidence, CaseData
 from typing import List, Literal
 from dotenv import load_dotenv
@@ -139,63 +136,15 @@ def convert_data_class(data: List[dict]) -> List[Evidence]:
             data = data["증거품"]
         elif "evidence" in data:
             data = data["evidence"]
-
     return [Evidence.from_dict(item) for item in data]
 
 def make_evidence_image(name):
     try:
-        # path = get_naver_image(name)
         path = create_image_by_ai(name)
         resize_img(path, path, 200)
     except:
         return -1
     return path
-
-def get_naver_image(name): #create_image_by_ai()로 대체
-    import urllib.parse
-    import urllib.request
-    import requests
-    import xml.etree.ElementTree as xmlET
-    from dotenv import dotenv_values
-    
-    env = dotenv_values()
-    client_id = env.get("X_NAVER_CLIENT_ID")
-    client_secret = env.get("X_NAVER_CLIENT_SECRET")
-
-    params = {
-        'query': name,
-        'display': "10",
-    }
-    query_string = urllib.parse.urlencode(params)
-    url = "https://openapi.naver.com/v1/search/image.xml?" + query_string
-    urlRequest = urllib.request.Request(url)
-    urlRequest.add_header("X-Naver-Client-Id", client_id)
-    urlRequest.add_header("X-Naver-Client-Secret", client_secret)
-    
-    response = urllib.request.urlopen(urlRequest)
-    res_code = response.getcode()
-    if(res_code == 200):
-        response_body = response.read().decode('UTF-8')
-    else:
-        print("Error Code: " + res_code)
-        return -1
-    img_urls = xmlET.fromstring(response_body).findall('channel/item/link')
-    
-    for i in range(10):
-        my_save_path = "data/evidence_resource/" + name + ".jpg"
-        img_res = requests.get(img_urls[i].text, stream=True)
-
-        with open(my_save_path, "wb") as file:
-            for chunk in img_res.iter_content(1024):
-                file.write(chunk)
-            try:
-                f = open(my_save_path, "rt")
-                c = f.readlines()
-                continue
-            except:
-                f.close()
-                return my_save_path
-    return img_res
 
 def resize_img(input_path, output_path, target_size):
     from PIL import Image
@@ -217,7 +166,6 @@ def get_evidence_name_for_prompt(name):
     res = chain.invoke({
         "evidence_name": name,
     })
-    print(res) #test
     return res
 
 def create_image_by_ai(name: str):
@@ -225,84 +173,92 @@ def create_image_by_ai(name: str):
     import requests
     import datetime
     from dotenv import dotenv_values
-
+    
     env = dotenv_values()
+    # key = "Token " + env.get("REPLICATE_API_KEY") # 직접 요청시 사용하는 키
     key = env.get("REPLICATE_API_KEY")
     today = datetime.datetime.now()
     formatted_date = today.strftime("%y-%m-%d")
     new_name = name.replace(" ", "-")
 
     prompt_name = get_evidence_name_for_prompt(name)
-    save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + ".jpg"
-    
-    #### replicate 패키지 사용...
-    # import replicate
-    # input = {
-    #     "prompt": "A simple black and white pictogram of a " + prompt_name + ", minimalist design, vector art, flat colors, clean lines, no background, high contrast, clear shapes, centered, bold outline, outlined",
-    #     "aspect_ratio": "1:1",
-    #     "output_format": "jpg"
+    save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + ".png"
+
+    import replicate
+    client = replicate.Client(api_token=key)
+    model = "stability-ai/stable-diffusion-3.5-large"
+    inputs = {
+        "prompt": "A vector-style black and white pictogram of " + prompt_name + ", clean and black outlines, white background, minimal detail, symbol-like, high contrast, centered subject, flat design, no shading, no gradients, icon format, simple geometric shapes, digital vector art, Adobe Illustrator style",
+        "aspect_ratio": "1:1",
+        "output_format": "png",
+        # "cfg": 6,                 #TEST
+        # "steps": 40,              #TEST
+        # "output_quality": 95,     #TEST
+        # "prompt_strength": 0.85   #TEST
+    }
+    output = client.run(model, input=inputs)
+
+    if output and isinstance(output, list):
+        image_url = output[0]
+        print(f"[{name}] 이미지 URL: {image_url}")
+
+        response = requests.get(image_url)
+        if response.status_code == 200:
+            with open(save_path, "wb") as f:
+                f.write(response.content)
+            print(f"[{name}] 이미지 저장 성공: {save_path}")
+        else:
+            print(f"[{name}] 이미지 저장 실패: {response.status_code}")
+    else:
+        print(f"[{name}] 이미지 요청 실패")
+
+    # JSON 필요시 아래 코드로 사용
+    # payload = {
+    #     "input": {
+    #         "prompt": "A simple black and white pictogram of a " + prompt_name + ", minimalist design, vector art, flat colors, clean lines, white background, high contrast, clear shapes, centered, bold outline, outlined",
+    #         "aspect_ratio": "1:1",
+    #         "output_format": "png",
+    #         "cfg": 6,
+    #         "prompt_strength": 0.85,
+    #         "output_quality": 95
+    #     }
     # }
 
-    # try:
-    #     output = replicate.run(
-    #         "stability-ai/stable-diffusion-3.5-large-turbo",
-    #         input=input
-    #     )
-    #     for index, item in enumerate(output):
-    #         with open(f"output_{index}.webp", "wb") as file:
-    #             file.write(item.read())
+    # response = requests.post(
+    #     "https://api.replicate.com/v1/models/stability-ai/stable-diffusion-3.5-large/predictions",
+    #     headers={
+    #         "Authorization": key,
+    #         "Content-Type": "application/json",
+    #         "Prefer": "wait"
+    #     },
+    #     json=payload
+    # )
 
-    # except replicate.exceptions.ReplicateError as e:
-    #     print("Replicate API Error:", str(e))
-    #     return -1
-    
-    # except Exception as e:
-    #     print("Unexpected error:", str(e))
-    #     return -2
-        
-    #### json 출력 받아오려면 일반 http 호출...
-    payload = {
-        "input": {
-            "prompt": "A simple black and white pictogram of a " + prompt_name + ", minimalist design, vector art, flat colors, clean lines, no background, high contrast, clear shapes, centered, bold outline, outlined",
-            "aspect_ratio": "1:1",
-            "output_format": "jpg"
-        }
-    }
+    # if response.status_code in [200, 201]:
+    #     output = response.json()
+    #     print(json.dumps(output, indent=4))  # TEST
+    #     with open(save_path + ".json", "w") as f:
+    #         json.dump(output, f, indent=4)
 
-    response = requests.post(
-        "https://api.replicate.com/v1/models/stability-ai/stable-diffusion-3.5-large-turbo/predictions",
-        headers={
-            "Authorization": key,
-            "Content-Type": "application/json",
-            "Prefer": "wait"
-        },
-        json=payload
-    )
-
-    if response.status_code == 200:
-        output = response.json()
-        print(json.dumps(output, indent=4))  # TEST
-        with open(save_path + ".json", "w") as f:
-            json.dump(output, f, indent=4)
-
-        if "output" in output and output["output"]:
-            image_url = output["output"][0]
-            image_data = requests.get(image_url).content
-            with open(save_path, 'wb') as file:
-                file.write(image_data)
-    else:
-        print(f"Error {response.status_code}: {response.text}")
-        return response.status_code
+    #     if "output" in output and output["output"]:
+    #         image_url = output["output"][0]
+    #         image_data = requests.get(image_url).content
+    #         with open(save_path, 'wb') as file:
+    #             file.write(image_data)
+    # else:
+    #     print(f"Error {response.status_code}: {response.text}")
+    #     return response.status_code
     return save_path
 
 
 ### TEST CODE ###
 if __name__ == "__main__":
-    res = create_image_by_ai("메시지 기록")
-    print(res)
+    # res = create_image_by_ai("메시지 기록")
+    # print(res)
+    t = make_evidence_image("test6")
+    print(t)
 
     # CaseDataManager import 한 뒤에 테스트 할 때만 돌려보세용  
-
     # from controller import CaseDataManager #테스트 할 때만 돌려보세용 
     # import asyncio #여기도 주석해제
     # asyncio.run(CaseDataManager.initialize())  # CaseDataManager 초기화 
@@ -311,6 +267,7 @@ if __name__ == "__main__":
     # res = make_evidence(case_data=CaseDataManager.get_case(), 
     #                     profiles=CaseDataManager.get_profiles())
     # print("\n\n", res)
+
 
     # c = Case(
     #     outline="""
