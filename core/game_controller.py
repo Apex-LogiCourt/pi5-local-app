@@ -80,19 +80,23 @@ def check_contextual_relevance2(state: GraphState) -> GraphState:
     print(f"[DEBUG] check_contextual_relevance2 호출됨 : {state_dict}")
     user_input = state_dict["messages"][-1]["content"] if state_dict["messages"] else ""
     case_summary = state_dict["messages"][0]["content"] if state_dict["messages"] else ""
+    print(f"[DEBUG] case_summary: {case_summary}")
+    print(f"[DEBUG] user_input: {user_input}")
     
     prompt = PromptTemplate.from_template("""
     당신은 역할극 기반 재판 시뮬레이션의 조정자입니다.
     사건 개요: {case_summary}
     사용자의 새 발언: "{user_input}"
-    이 발언이 현재 재판 역할극 흐름과 관련이 있습니까?
+    이 발언이 현재 재판 역할극과 관련이 있습니까?
+    사용자는 어쩌면 `제 주장은 이상입니다` 와 같은 말로 발언을 종료하려고 할 수 있습니다.
+    이런 경우에도 관련 있는 것으로 판단하세요.
     관련 있으면 true, 관련 없으면 false로만 답하세요.
     """)
 
     chain = (
         {"case_summary": lambda _: case_summary, "user_input": lambda x: x}
         | prompt
-        | ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
+        | ChatOpenAI(model="gpt-4.1-nano", temperature=0.8)
         | RunnableLambda(lambda output: output.content.strip().lower() == "true")
     )
     
