@@ -1,6 +1,6 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from pydantic import BaseModel, Field
 from typing import List, Dict, Callable
 from controller import CaseDataManager
@@ -26,8 +26,8 @@ from .prompt_templates.ex_witness_templates import (
 
 # ... existing code ...
 
-def get_llm(model="gpt-4o"):
-    llm = ChatOpenAI(model=model)  
+def get_llm(model="gpt-4o-nano", temperature=0.3):
+    llm = ChatOpenAI(model=model, temperature=temperature)  
     return llm
 
 
@@ -174,28 +174,43 @@ class Interrogator:
         """
 
         user_input = state.messages[-1]["content"]
-        input_data = {profile.name: profile.type for profile in state.case_data.profiles}
+        profile_data = {profile.name: profile.type for profile in state.case_data.profiles}
+        print(f"[DEBUG] 현재 프로필 : {profile_data}")
 
         prompt = PromptTemplate.from_template("""
             당신은 법정 역할극을 조정하는 AI입니다. 사용자가 심문을 진행하려고 합니다.
             사용자 발언: {user_input}
-            프로필 : {input_data}
-            사용자가 요청하는 심문 유형을 선택하여 문자열로 출력하세요.
-                                            
-            1. 피고 - 예시출력 : defendant
-            2. 목격자 - 예시출력 : witness
-            3. 참고인 - 예시출력 : reference
-                                              
-            단 피해자는 심문할 수 없음. 만일 위 사례에 해당하지 않는다면 retry 라고 출력.
+            프로필 : {profile_data}
             
+            사용자가 요청하는 심문 유형과 대상을 파악하여 JSON 형식으로 출력하세요. 
+            사용자가 이름을 입력한 경우 프로필과 일치하는 이름인지 반드시 확인하세요.
+            이름 출력은 오로지 프로필 `profile_data`의 name만을 출력하세요.
+                                              
+            1. 피고, 목격자 등 역할이 명시되어 있거나 이름이 일치하는 경우
+                - 피고인 심문: "type": "defendant", "answer": "피고에 대한 심문을 진행하십시오."
+                - 목격자 심문: "type": "witness", "answer": "목격자에 대한 심문을 진행하십시오."
+                - 참고인 심문: "type": "reference", "answer": "참고인에 대한 심문을 진행하십시오."
+                
+            2. 피해자에 대한 심문을 요청하는 경우 
+                - "type": "retry", "answer": "현재 재판에는 피고, 목격자, 참고인만이 출석해있습니다."
+                                              
+            3. 이름이 틀린 경우 
+                - 오타로 예상됨: "type": "retry", "answer": "OOO 씨에 대해 얘기하시는 겁니까?"
+                - 전혀 다른 이름 : "type": "retry", "answer": "그런 인물은 없습니다"
         """)
 
-        chain = prompt | self.llm | StrOutputParser()
-        result = chain.invoke({"user_input": user_input, "input_data": input_data})
-        print(f"check_interrogation_type 결과 : {result}")
+        # JSON 모드를 사용하는 LLM 생성
+        llm = ChatOpenAI(
+            model="gpt-4o-mini", 
+            temperature=0.3,
+            model_kwargs={"response_format": {"type": "json_object"}}
+        )
+        
+        chain = prompt | llm | JsonOutputParser()
+        result = chain.invoke({"user_input": user_input, "profile_data": profile_data})
+        print(f"check_interrogation_type 결과 : {result.get('type')}, {result.get('answer')}")
 
-        state.current_profile = result
-
+        
         return state
     
     
