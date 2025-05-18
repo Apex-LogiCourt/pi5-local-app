@@ -1,0 +1,88 @@
+{
+"characters": [
+    {
+      "name": "우민영",
+      "gender": "여성",
+      "age": 21,
+      "image": "profile/Minyoung_default.png"
+    },
+    {
+      "name": "김소현",
+      "gender": "여성",
+      "age": 28,
+      "image": "profile/Sohyun_default.png"
+    },
+    {
+      "name": "최봄달",
+      "gender": "여성",
+      "age": 30,
+      "image": "profile/Bomdal_default.png"
+    },
+    {
+      "name": "정영화",
+      "gender": "여성",
+      "age": 32,
+      "image": "profile/Younghwa_default.png"
+    },
+    {
+      "name": "민은영",
+      "gender": "여성",
+      "age": 63,
+      "image": "profile/Eunyoung_default.png"
+    },
+    {
+      "name": "이선희",
+      "gender": "여성",
+      "age": 68,
+      "image": "profile/Seonhee_default.png"
+    },
+    {
+      "name": "안기서",
+      "gender": "여성",
+      "age": 29,
+      "image": "profile/Giseo_default.png"
+    },
+    {
+      "name": "남기효",
+      "gender": "남자",
+      "age": 31,
+      "image": "profile/Gihyeo_default.png"
+    },
+    {
+      "name": "유승표",
+      "gender": "남자",
+      "age": 70,
+      "image": "profile/Seungpyo_default.png"
+    },
+    {
+      "name": "도원탁",
+      "gender": "남자",
+      "age": 75,
+      "image": "profile/Dowon_default.png"
+    },
+    {
+      "name": "성이안",
+      "gender": "남자",
+      "age": 35,
+      "image": "profile/Sung_default.png"
+    },
+    {
+      "name": "강주안",
+      "gender": "남자",
+      "age": 45,
+      "image": "profile/Jooan_default.png"
+    },
+    {
+      "name": "최지훈",
+      "gender": "남자",
+      "age": 47,
+      "image": "profile/Jihun_default.png"
+    },
+    {
+      "name": "최상도",
+      "gender": "남자",
+      "age": 38,
+      "image": "profile/Sangdo_default.png"
+    }
+  ]
+}
