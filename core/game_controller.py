@@ -60,7 +60,7 @@ def check_contextual_relevance2(state: GraphState) -> GraphState:
 
     user_input = state_dict["messages"][-1]["content"] if state_dict["messages"] else ""
     case_summary = state_dict["messages"][0]["content"] if state_dict["messages"] else ""
-    print(f"[DEBUG] case_summary: {case_summary}")
+    # print(f"[DEBUG] case_summary: {case_summary}")
     print(f"[DEBUG] user_input: {user_input}")
     
     prompt = PromptTemplate.from_template("""
@@ -210,10 +210,21 @@ class GameController:
             """심문을 진행할 때 호출됩니다.
 
             Args:
-                subject: 질문 대상 (예: "피고인", "참고인")
-                question: 질문 내용
+                state: 현재 게임 상태
             """
             print(f"[DEBUG] handle_interrogation() 호출됨")
+            
+            # Interrogator 인스턴스 생성 및 메시지 업데이트
+            from interrogation.interrogator import Interrogator
+            interrogator = Interrogator()
+            interrogator.process_interrogation(self.state.messages, self.case_data)
+            
+            # add_message 콜백 설정
+            interrogator.set_message_callback(self.add_message)
+            
+            # 여기서 심문 로직 실행
+            # 예: interrogator.ask_witness() 또는 interrogator.ask_defendant() 호출
+            
             return state
 
 
@@ -257,10 +268,12 @@ class GameController:
             self.case_initialized = True
             
             # 사건 개요 생성
-            self.case_summary = await CaseDataManager.generate_case_stream(callback=callback)
-            self.profiles = await CaseDataManager.generate_profiles_stream(callback=callback)
-            self.evidences = await CaseDataManager.generate_evidences()
-
+            await CaseDataManager.generate_case_stream(callback=callback)
+            await CaseDataManager.generate_profiles_stream(callback=callback)
+            await CaseDataManager.generate_evidences()
+            
+            self.case_data = CaseDataManager.get_case_data()
+            self.case_summary = self.case_data.case.outline
             
             # 메시지 리스트에 추가
             self.add_message("system", self.case_summary)
@@ -344,10 +357,13 @@ if __name__ == "__main__":
     game_controller = GameController()
     asyncio.run(game_controller.initialize_case())
 
-    time.sleep(20)
+    print(f"참고인 프로필 : {game_controller.profiles}")
 
     # game_controller.process_input("나는 아주 많이 배고픕니다")
-    game_controller.process_input("피해자의 행동 패턴을 보면 알 수 있습니다.")
+
+    # 심문 요청 테스트 
+    game_controller.process_input("이주현 씨를 심문하겠습니다")
+    game_controller.process_input("피고를 심문하겠습니다")
 
 
     
