@@ -45,8 +45,14 @@ class GraphState(BaseModel):
     case_summary: str = ""
     messages: List[Dict] = Field(default_factory=list)
     context_correct: bool = False
-    check: str = ""
+    check: str = "pass" # tunr_end, interrogation, pass
     phase: Phase = Phase.TURN
+    done_flags: Dict[str, bool] = Field(default_factory=lambda: {"검사": False, "변호사": False})
+    objection_count: Dict[str, int] = Field(default_factory=lambda: {"검사": 0, "변호사": 0})
+    mode : str = "debate"
+
+    
+
 # ==============================================
 # Game Tools
 # ==============================================
@@ -63,16 +69,27 @@ def check_contextual_relevance2(state: GraphState) -> GraphState:
     # print(f"[DEBUG] case_summary: {case_summary}")
     print(f"[DEBUG] user_input: {user_input}")
     
+    # prompt = PromptTemplate.from_template("""
+    #     당신은 역할극 기반 재판 시뮬레이션의 조정자입니다.
+    #     사건 개요: {case_summary}
+    #     사용자의 새 발언: "{user_input}"
+    #     이 발언이 현재 재판 역할극과 관련이 있습니까?
+    #     사용자는 어쩌면 `제 주장은 이상입니다` 와 같은 말로 발언을 종료하려고 할 수 있습니다.
+    #     이런 경우에도 관련 있는 것으로 판단하세요.
+    #     당신의 주된 역할은 재판 역할극 중의 사용자의 부적절한 발언을 감지하는 것입니다.
+    #     관련 있으면 true, 관련 없으면 false로만 답하세요.
+    #     """)
     prompt = PromptTemplate.from_template("""
-        당신은 역할극 기반 재판 시뮬레이션의 조정자입니다.
-        사건 개요: {case_summary}
-        사용자의 새 발언: "{user_input}"
-        이 발언이 현재 재판 역할극과 관련이 있습니까?
-        사용자는 어쩌면 `제 주장은 이상입니다` 와 같은 말로 발언을 종료하려고 할 수 있습니다.
-        이런 경우에도 관련 있는 것으로 판단하세요.
-        당신의 주된 역할은 재판 역할극 중의 사용자의 부적절한 발언을 감지하는 것입니다.
-        관련 있으면 true, 관련 없으면 false로만 답하세요.
-        """)
+    당신은 역할극 기반 재판 시뮬레이션의 조정자입니다.
+    사용자의 새 발언: "{user_input}"
+    이 발언이 현재 재판 역할극과 관련이 있습니까?
+    사용자는 어쩌면 `제 주장은 이상입니다` 와 같은 말로 발언을 종료하려고 할 수 있습니다.
+    이런 경우에도 관련 있는 것으로 판단하세요.
+    당신의 주된 역할은 재판 역할극 중의 사용자의 부적절한 발언을 감지하는 것입니다.
+    관련 있으면 true, 관련 없으면 false로만 답하세요.
+    """)
+    
+
 
     chain = (
         {"case_summary": lambda _: case_summary, "user_input": lambda x: x}
@@ -159,9 +176,11 @@ class GameController:
                 GraphState: 현재 상태
             """
             user_input = state.messages[-1]["content"]
+            
+            
             prompt = PromptTemplate.from_template("""
             당신은 법정 역할극을 조정하는 AI입니다. 사용자 발언을 보고 아래 세 가지 도구 중 **정확히 하나만** 선택하여 해당 도구의 이름만 문자열로 출력하세요.
-
+            
             현재 사용자 발언: {user_input}
             도구 목록:
             1. `"turn_end"`  
@@ -169,13 +188,12 @@ class GameController:
                 - 예: "이상입니다", "더 이상 없습니다", "발언을 마치겠습니다"
 
             2. `"interrogation"`  
-                - 참고인 또는 피고인에게 질문하려는 경우. 
-                - 예: "참고인을 심문하겠습니다", "피고인에게 묻겠습니다", "심문을 요청합니다"
+                - 참고인, 목격자, 피고인 심문을 요청하는 경우
+                - 예: "참고인을 심문하겠습니다", "심문을 요청합니다"
 
             3. `"pass"`
                 - 위 상황에 해당하지 않는 경우.
                 - 사용자가 자신의 주장을 이어나가는 경우입니다.
-
 
             지침:
             - 반드시 아래 값 중 **하나만** 문자열로 출력하세요: `turn_end`, `interrogation`, `pass`
@@ -183,7 +201,24 @@ class GameController:
             - 결과는 문자열 하나만 출력하세요.
 
             예시 출력 (정확히 이렇게): turn_end
+            """) if state.phase != Phase.INTERROGATION else PromptTemplate.from_template("""
+            당신은 법정 역할극을 조정하는 AI입니다. 사용자 발언을 보고 아래 세 가지 도구 중 **정확히 하나만** 선택하여 해당 도구의 이름만 문자열로 출력하세요.
+            현재 사용자 발언: {user_input}
+            도구 목록:  
+            1. `"turn_end"`  
+                - 발언을 마치거나 턴을 종료하려는 의도가 감지.
+                - 예: "이상입니다", "더 이상 없습니다", "발언을 마치겠습니다"
+            2. `"pass"`
+                - 위 상황에 해당하지 않는 경우.
+                - 사용자가 계속해서 참고인을 심문하거나 자신의 주장을 이어나가는 경우입니다.
+
+            지침:
+            - 반드시 아래 값 중 **하나만** 문자열로 출력하세요: `turn_end`, `pass`
+            - 절대로 설명이나 문장을 추가하지 마세요.
+            - 결과는 문자열 하나만 출력하세요.
+            예시 출력 (정확히 이렇게): turn_end
             """)
+            
             chain = (
                 prompt
                 | ChatOpenAI(model="gpt-4.1-nano", temperature=0.7)
@@ -192,7 +227,14 @@ class GameController:
             # return GraphState(check_user_input=chain.invoke(user_input))
             result = chain.invoke(user_input)
             print(f"[DEBUG] check_user_input 결과: {result}")
-            return GraphState(check=result)  # action_type으로 변경
+            
+            if result == "interrogation":
+                state.phase = Phase.INTERROGATION
+            else :
+                state.phase = Phase.TURN
+            state.check = result  
+            print(f"[DEBUG] check_user_input() 호출됨 : {state}")
+            return state
             
         
         def handle_turn_end(state: GraphState) -> GraphState:
@@ -206,8 +248,8 @@ class GameController:
             return GraphState(phase=Phase.END)
 
 
-        def handle_interrogation(state: GraphState) -> GraphState:
-            """심문을 진행할 때 호출됩니다.
+        def handle_interrogation_request(state: GraphState) -> GraphState:
+            """심문을 요청할 때 호출됩니다.
 
             Args:
                 state: 현재 게임 상태
@@ -217,10 +259,11 @@ class GameController:
             # Interrogator 인스턴스 생성 및 메시지 업데이트
             from interrogation.interrogator import Interrogator
             interrogator = Interrogator()
-            interrogator.process_interrogation(self.state.messages, self.case_data)
+            messeage = interrogator.process_interrogation(self.state.messages, self.case_data)
+            print(f"[DEBUG] handle_interrogation() 메시지: {messeage}")
             
             # add_message 콜백 설정
-            interrogator.set_message_callback(self.add_message)
+            # interrogator.set_message_callback(self.add_message)
             
             # 여기서 심문 로직 실행
             # 예: interrogator.ask_witness() 또는 interrogator.ask_defendant() 호출
@@ -233,7 +276,7 @@ class GameController:
         workflow.add_node("ck", check_contextual_relevance2)
         workflow.add_node("action_checker", check_user_input)
         workflow.add_node("handle_turn_end", handle_turn_end)
-        workflow.add_node("handle_interrogation", handle_interrogation)
+        workflow.add_node("handle_interrogation_request", handle_interrogation_request)
 
 
         workflow.add_edge(START, "ck")
@@ -251,13 +294,13 @@ class GameController:
             RunnableLambda(lambda x: x.check, name="check_action"),
             {
                 "turn_end": "handle_turn_end",
-                "interrogation": "handle_interrogation",
+                "interrogation": "handle_interrogation_request",
                 "pass": END
             }
         )
 
         workflow.add_edge("handle_turn_end", END)
-        workflow.add_edge("handle_interrogation", END)
+        workflow.add_edge("handle_interrogation_request", END)
 
         return workflow.compile()
     
@@ -284,18 +327,17 @@ class GameController:
     
     def add_message(self, role: str, content: str):
         """메시지 추가 - state.messages에 메시지 추가"""
-
-        if role == "검사" or role == "변호사":
-            message = {
-                "role": "user",  # LangChain이 허용하는 값으로 고정
+        if role == "system":
+            message = { 
+                "role": "system",
                 "content": content,
                 "metadata": {"actual_role": role}
             }
-        if role == "system":
+        else : 
             message = {
-                "role": "system",
+                "role": role,
                 "content": content,
-                "metadata": {"actual_role": "판사"}
+                "metadata": {"actual_role": role}
             }
         self.state.messages.append(message)
     
@@ -362,8 +404,8 @@ if __name__ == "__main__":
     # game_controller.process_input("나는 아주 많이 배고픕니다")
 
     # 심문 요청 테스트 
-    game_controller.process_input("이주현 씨를 심문하겠습니다")
-    game_controller.process_input("피고를 심문하겠습니다")
+    game_controller.process_input("이주헌 씨를 심문하겠습니다")
+    # game_controller.process_input("피고를 심문하겠습니다")
 
 
     
