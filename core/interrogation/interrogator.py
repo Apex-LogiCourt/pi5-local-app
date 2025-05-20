@@ -9,6 +9,8 @@ from langchain.prompts import PromptTemplate
 from langgraph.graph import StateGraph, END, START
 from langchain_core.runnables import RunnableLambda
 from langchain.memory import ConversationBufferMemory
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from langchain_core.runnables.history import RunnableWithMessageHistory
 from enum import Enum
 
 # 템플릿 임포트
@@ -115,34 +117,15 @@ class Interrogator:
             profiles=[],
             evidences=[]
         )
-        # self.workflow = self._create_workflow()
         self.add_message_callback = None  # 메시지 추가 콜백 함수
+        
+        # memory와 memory_chain 초기화
+        self.memory = None
+        self.memory_chain = None
+        self.system_msg = None
+        
         self._initialized = True
     
-    def set_message_callback(self, callback: Callable[[str, str], None]):
-        """메시지 추가 콜백 함수를 설정합니다.
-        
-        Args:
-            callback: 메시지를 추가하는 함수 (role: str, content: str) -> None
-        """
-        self.add_message_callback = callback
-    
-    # def _create_workflow(self):
-    #     """LangGraph 워크플로우 생성"""
-    #     # 워크플로우 그래프 생성
-    #     workflow = StateGraph(InterrogationState)
-        
-    #     # 노드 추가
-    #     workflow.add_node("check_interrogation_type", self.check_interrogation_type)
-        
-    #     # START에서 check_interrogation_type으로 가는 엣지 추가
-    #     workflow.add_edge(START, "check_interrogation_type")
-        
-    #     # check_interrogation_type에서 END로 가는 엣지 추가
-    #     workflow.add_edge("check_interrogation_type", END)
-        
-    #     # 컴파일
-    #     return workflow.compile()
     
     
     def process_interrogation(self,  messages: List[Dict], case_data: CaseData) -> Dict:
@@ -175,7 +158,7 @@ class Interrogator:
 
 
 
-    def check_interrogation_type(self, state: InterrogationState) -> List[Dict]:
+    def check_interrogation_type(self, state: InterrogationState) -> Dict:
         """심문 유형을 확인하는 노드
 
         Args:
@@ -225,181 +208,77 @@ class Interrogator:
             "role": "system",
             "content": result.get("answer")
         }
-        message_list.append(message)
 
-        if result.get("retry"):
-            return message_list
-        else :
-            current_type = result.get("type")
-            state.current_type = current_type
-            state.current_profile = next((p for p in state.profiles if p.type == result.get("type")), None)
-            prompt = PromptTemplate.from_template("""
-                당신은 이 사건에 {current_type}로 출석한 인물입니다.
-                사건 개요: {case_summary}
-                사건 인물: {profiles}
-                사건 증거: {evidences}
-                                                    
-                당신은 정보는 이렇습니다 {current_profile}            
-                자기 소개를 2~3줄로 간단하게 부탁합니다           
-            """)
-            
-            chain = prompt | get_llm() | StrOutputParser()
-            answer = chain.invoke({
-                "current_type": current_type,
-                "case_summary": state.case_summary,
-                "profiles": state.profiles,
-                "evidences": state.evidences,
-                "current_profile": state.current_profile
-            })
-            message = {
-                "role": _TYPE.get(current_type),
-                "content": answer
-            }
-        return message_list + [message]
-    
-
-    def setup_interrogation_context(self, state: InterrogationState, result: dict) -> Dict:
         current_type = result["type"]
         state.current_type = current_type
         state.current_profile = next((p for p in state.profiles if p.type == current_type), None)
 
-        prompt = PromptTemplate.from_template("""
-            당신은 이 사건에 {current_type}로 출석한 인물입니다.
-            사건 개요: {case_summary}
-            사건 인물: {profiles}
-            사건 증거: {evidences}
+        return message
 
-            당신은 정보는 이렇습니다: {current_profile}
-            자기 소개를 2~3줄로 간단하게 부탁합니다
-        """)
 
-        # ✅ RunnableWithMessageHistory 적용
-        base_chain = prompt | get_llm() | StrOutputParser()
+    def setup_interrogation_context(self) -> Dict:
+        # 사건 개요/인물/증거를 system 메시지로 딱 1회만 입력
+        self.system_msg = SystemMessage(content=(
+            f"사건 개요: {self.state.case_summary}\n"
+            f"인물: {self.state.profiles}\n"
+            f"증거: {self.state.evidences}\n"
+            f"심문 대상: {self.state.current_profile}"
+        ))
 
-        memory = ConversationBufferMemory(
+        #  memory 객체 초기화
+        self.memory = ConversationBufferMemory(
             return_messages=True,
             memory_key="history"
         )
 
-        from langchain_core.runnables.history import RunnableWithMessageHistory
-        memory_chain = RunnableWithMessageHistory(
-            base_chain,
-            lambda session_id: memory,
-            input_messages_key="current_profile",  # context든 뭐든 일치시켜야 함
-            history_messages_key="history"
-        )
+        # 대화 시작 질문 (항상 HumanMessage로)
+        question = "자기 소개를 2~3줄로 간단하게 부탁합니다."
 
-        # chain.invoke 대신 runnable 사용
-        answer = memory_chain.invoke({
-            "current_type": current_type,
-            "case_summary": state.case_summary,
-            "profiles": state.profiles,
-            "evidences": state.evidences,
-            "current_profile": state.current_profile
-        }, config={"configurable": {"session_id": state.session_id}})
+        # 프롬프트는 오직 {question}만!
+        prompt = PromptTemplate.from_template("""
+        {question}
+        """)
+
+        # runnable chain: (question -> 답변)
+        base_chain = prompt | get_llm() | StrOutputParser()
+
+        # memory-chain 설정 (session_id 제거)
+        self.memory_chain = base_chain
+
+        # 첫 history만 세팅: system message + 자기소개 질문
+        history = [self.system_msg, HumanMessage(content=question)]
+
+        # memory에 수동으로 기록
+        self.memory.chat_memory.messages = history
+
+        # 첫 답변 생성
+        answer = self.memory_chain.invoke({
+            "question": question
+        })
 
         return {
-            "role": _TYPE.get(current_type),
+            "role": _TYPE.get(self.state.current_type),
             "content": answer
         }
 
-    
-    # def check_interrogation_type(self, state: InterrogationState) -> InterrogationState:
-    #     """심문 유형을 확인하는 노드
 
-    #     Args:
-    #         state: 현재 상태
-            
-    #     Returns:
-    #         InterrogationState: 업데이트된 상태
-    #     """
-
-    #     user_input = state.messages[-1]["content"]
-    #     profile_data = {profile.name: profile.type for profile in state.case_data.profiles}
-    #     print(f"[DEBUG] 현재 프로필 : {profile_data}")
-
-    #     prompt = PromptTemplate.from_template("""
-    #         당신은 법정 역할극을 조정하는 AI입니다. 사용자가 심문을 진행하려고 합니다.
-    #         사용자 발언: {user_input}
-    #         프로필 : {profile_data}
-            
-    #         사용자가 요청하는 심문 유형과 대상을 파악하여 JSON 형식으로 출력하세요. 
-    #         사용자가 이름을 입력한 경우 프로필과 일치하는 이름인지 반드시 확인하세요.
-    #         이름 출력은 오로지 프로필 `profile_data`의 name만을 출력하세요.
-                                              
-    #         1. 피고, 목격자 등 역할이 명시되어 있거나 이름이 일치하는 경우
-    #             - 피고인 심문: "type": "defendant", "answer": "피고에 대한 심문을 진행하십시오."
-    #             - 목격자 심문: "type": "witness", "answer": "목격자에 대한 심문을 진행하십시오."
-    #             - 참고인 심문: "type": "reference", "answer": "참고인에 대한 심문을 진행하십시오."
-                
-    #         2. 피해자에 대한 심문을 요청하는 경우 
-    #             - "type": "retry", "answer": "현재 재판에는 피고, 목격자, 참고인만이 출석해있습니다."
-                                              
-    #         3. 이름이 틀린 경우 
-    #             - 오타로 예상됨: "type": "retry", "answer": "OOO 씨에 대해 얘기하시는 겁니까?"
-    #             - 전혀 다른 이름 : "type": "retry", "answer": "그런 인물은 없습니다"
-    #     """)
-
-    #     # JSON 모드를 사용하는 LLM 생성
-    #     llm = ChatOpenAI(
-    #         model="gpt-4o-mini", 
-    #         temperature=0.3,
-    #         model_kwargs={"response_format": {"type": "json_object"}}
-    #     )
+    def interrogate_witness(self, question: str) -> Dict:
+        """참고인(혹은 대상)의 답변 생성 (질문 처리)"""
+        # 메모리에 질문 추가
+        self.memory.chat_memory.add_user_message(question)
         
-    #     chain = prompt | llm | JsonOutputParser()
-    #     result = chain.invoke({"user_input": user_input, "profile_data": profile_data})
-    #     print(f"check_interrogation_type 결과 : {result.get('type')}, {result.get('answer')}")
-
-    #     if result.get("retry"):
-    #         # 재시도 요청
-    #         state.messages.append({"role": "system", "content": result.get("answer")})
-    #         self.set_message_callback("system", result.get("answer"))
-    #         return state
-    #     else :
-    #         current_type = result.get("type")
-    #         state.current_type = current_type
-    #         proflies = state.case_data.profiles
-    #         current_profile = next((p for p in proflies if p.type == result.get("type")), None)
-    #         prompt = PromptTemplate.from_template("""
-    #             당신은 이 사건에 {current_type}로 출석한 인물입니다.
-    #             사건 개요: {case_summary}
-    #             사건 인물: {profiles}
-    #             사건 증거: {evidences}
-                                                  
-    #             당신은 정보는 이렇습니다 {current_profile}            
-    #             자기 소개를 부탁합니다           
-    #         """)
+        # 답변 생성
+        answer = self.memory_chain.invoke({
+            "question": question
+        })
         
-    #     return state
+        # 메모리에 답변 추가
+        self.memory.chat_memory.add_ai_message(answer)
 
+        # 메시지 기록 추가
+        self.state.messages.append({"role": "reference", "content": answer})
 
-    def interrogate_witness(state: InterrogationState) -> InterrogationState:
-        """참고인의 답변 생성 (질문 처리)"""
-        last_question = state.messages[-1]['content']
-        case = state.case_data
-
-        context = f"사건 개요: {case.case.outline}\n\n" + \
-                f"인물 목록: {[f'{p.name}({p.type})' for p in case.profiles]}"
-
-        prompt = PromptTemplate.from_template("""
-        다음은 참고인에 대한 심문입니다.
-        사건 정보: {context}
-        질문: {question}
-
-        참고인의 자연스러운 답변을 생성하세요.
-        """)
-        chain = prompt | get_llm() | StrOutputParser()
-        answer = chain.invoke({"question": last_question, "context": context})
-
-        state.messages.append({"role": "reference", "content": answer})
-        return state
-
-
-    
-    
-    
-    """
-    현재 재판장에는 
-    
-    """
+        return {
+            "role": "reference",
+            "content": answer
+        }
