@@ -6,6 +6,8 @@ from case_generation.case_builder import build_case_chain, build_character_chain
 from evidence import make_evidence
 from data_models import CaseData, Case, Profile, Evidence
 import asyncio
+import json
+from pathlib import Path
 
 
 # 싱글톤 패턴 적용
@@ -83,6 +85,12 @@ class CaseDataManager:
     def _parse_character_template(template: str) -> List[Profile]:
         profiles = []
         
+        # profil.json에서 캐릭터 정보 로드
+        profile_path = Path(__file__).parent / "assets" / "profile" / "profil.json"
+        with open(profile_path, 'r', encoding='utf-8') as f:
+            profile_data = json.load(f)
+            characters = profile_data['characters']
+        
         # 각 인물 블록을 분리
         character_blocks = template.strip().split('--------------------------------')
         
@@ -101,15 +109,18 @@ class CaseDataManager:
             # 프로필 객체 생성
             profile_type = "defendant" if "피고" in name_line else "victim" if "피해자" in name_line else "witness" if "목격자" in name_line else "reference"
             
-            profile = Profile(
-                type=profile_type,
-                name=name,
-                gender=gender,  # 실제로는 profil.json 등에서 가져오면 더 정확
-                age=age,  # 나이도 랜덤 (또는 외부 데이터 기반)
-                context=background_line.split(':')[1].strip()
-            )       
+            # profil.json에서 해당 이름의 캐릭터 정보 찾기
+            character_info = next((char for char in characters if char['name'] == name), None)
             
-            profiles.append(profile)
+            if character_info:
+                profile = Profile(
+                    type=profile_type,
+                    name=name,
+                    gender=character_info['gender'],
+                    age=character_info['age'],
+                    context=background_line.split(':')[1].strip()
+                )
+                profiles.append(profile)
         
         return profiles
     
