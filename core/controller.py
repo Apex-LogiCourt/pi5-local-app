@@ -26,9 +26,9 @@ class CaseDataManager:
     
     @classmethod
     async def initialize(cls) -> CaseData:
-        asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
-        asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
-        asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
+        await CaseDataManager.generate_case_stream()  # 비동기 호출
+        await CaseDataManager.generate_profiles_stream()  # 비동기 호출  
+        await CaseDataManager.generate_evidences()  # 비동기 호출
         return cls._case_data
     
     #==============================================
@@ -228,8 +228,10 @@ def get_judge_result_wrapper(message_list):
 
 
 if __name__ == "__main__":
-    asyncio.run(CaseDataManager.initialize())  # 비동기 호출
-    asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
-    asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
-    asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
-    print(CaseDataManager.get_case_data())
+    # asyncio.run(CaseDataManager.initialize())  # 비동기 호출
+    # asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
+    # asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
+    # asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
+    # print(CaseDataManager.get_case_data())
+
+    asyncio.run(CaseDataManager.initialize())

@@ -3,8 +3,9 @@ from data_models import CaseData, Evidence, Profile, Case, GameState, Phase, Rol
 from controller import CaseDataManager
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 import asyncio
+import time
 
-class GameController:
+class GameController(QObject):
     _instance = None
     _isInitialized = False
     _state : GameState = None
@@ -12,6 +13,7 @@ class GameController:
     _evidences : List[Evidence] = None
     _profiles : List[Profile] = None
     _case_data : CaseData = None
+    _signal = pyqtSignal(str, object)
 
     
     @classmethod
@@ -25,6 +27,7 @@ class GameController:
         GameController 초기화.
         - data_service: CaseDataService 인스턴스 (데이터 로드/저장 담당)
         """
+        super().__init__()  # QObject 초기화
         if GameController._instance is not None:
             raise Exception("싱글톤 클래스는 직접 생성할 수 없습니다. get_instance() 메서드를 사용하세요.")
             
@@ -40,15 +43,17 @@ class GameController:
     async def initialize(cls) -> None:
         """게임 초기화 및 데이터 로드"""
         cls._state = GameState()
-        cls._case_data = asyncio.run(CaseDataManager.initialize())
+        cls._case_data = await CaseDataManager.initialize()
         cls._profiles = cls._case_data.profiles
         cls._case = cls._case_data.case
         cls._evidences = cls._case_data.evidences
         cls._isInitialized = True
 
         cls._state.messages.append({"role":"system", "content": cls._case_data.case.outline})
-        cls._state.messages.append({"role":"system", "content": cls._profiles.asdict()})
-        cls._state.messages.append({"role":"system", "content": cls._evidences.asdict()})
+        cls._state.messages.append({"role":"system", "content": cls._profiles.__str__()})
+        cls._state.messages.append({"role":"system", "content": cls._evidences.__str__()})
+
+        print(f"{cls._state.messages}")
 
         return cls._case_data
 
@@ -78,12 +83,12 @@ class GameController:
             bool: True면 턴 전환, False면 턴 전환 없음
         """
         cls._state.record_state = False
-        should_switch_turn = True  # 실제 구현에서는 조건에 따라 결정
-        
-        if should_switch_turn:
-            cls._switch_turn()
-            return True
-        return False
+
+        """
+        녹음 종료 후에 no_context 인지 interrogation_accepted 인지 확인 
+        """
+
+        return True
     
     @classmethod
     def user_input(cls, text: str) -> bool:
@@ -114,8 +119,8 @@ class GameController:
         
         if all(cls._state.done_flags.values()):
             cls._state.phase = Phase.JUDGEMENT
-            # cls._send_signal("judgement_start", "최종 판결이 시작됩니다")
-        else:
+            cls._send_signal("judgement", {"role": "판사", "message": "최종 판결을 내리겠습니다."})
+            cls._add_message("판사", "최종 판결을 내리겠습니다.")
             cls._switch_turn()
 
     @classmethod
@@ -128,9 +133,9 @@ class GameController:
 # 내부 함수
 #==============================================
 
-    def _send_signal(self, code, msg):
+    def _send_signal(self, code, arg):
         """ 신호 전송"""
-        pass
+        self._signal.emit(code, arg)
 
     
     @classmethod
@@ -140,6 +145,7 @@ class GameController:
         - objection_count 증가, 메시지 추가, 턴 전환
         """
         cls._state.objection_count[cls._state.turn] += 1
+        cls._send_signal("objection", {"role": cls._state.turn.label, "message": "이의 있음!"})
         cls._switch_turn()
 
     @classmethod
@@ -167,3 +173,34 @@ class GameController:
     #     self._add_message("user", f"[참고인:{witness_name}] {question}")
     #     # resp = self._ask_witness(question, witness_name)
     #     # self._add_message("witness", resp)
+
+
+
+
+if __name__ == "__main__":
+    class DummyReceiver(QObject):
+        @pyqtSlot(str, object)
+        def receive(self, code, arg):
+            print(f"[Signal Received] code: {code}, arg: {arg}")
+
+    import sys
+    from PyQt5.QtWidgets import QApplication
+
+    app = QApplication(sys.argv)
+
+    gc = GameController.get_instance()
+    receiver = DummyReceiver()
+    gc._signal.connect(receiver.receive)
+
+    # 테스트 시그널 발신
+    gc._send_signal("test_code", {"key": "value"})
+    gc._send_signal("verdict", "유죄입니다.")
+
+    cd = asyncio.run(gc.initialize())
+    # gc._send_signal("case_data", cd)
+
+    gc.start_game()
+
+
+
+    sys.exit(0)
