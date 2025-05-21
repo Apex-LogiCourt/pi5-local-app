@@ -1,5 +1,7 @@
-from dataclasses import dataclass
-from typing import List, Literal
+from dataclasses import dataclass, asdict
+from typing import List, Literal, Dict
+from enum import Enum, auto
+from pydantic import BaseModel, Field
 
 #==============================================
 # 데이터만 저장하기 위한 데이터클래스 선언 
@@ -37,8 +39,6 @@ class Evidence:
             picture=None
         )
 
-# Controller에서 최종적으로 다른 모듈로 념겨줄 데이터 형식이에용
-# 아직 구현이 안 됐지만 이렇게 넘어올거라고 믿고 작업해주세요 
 @dataclass
 class CaseData:
     case: Case
@@ -46,4 +46,43 @@ class CaseData:
     evidences: List[Evidence]
 
 
+#==============================================
+# 게임 상태 변수
+#==============================================
 
+class Phase(Enum):
+    INIT = auto()
+    DEBATE = auto()
+    INTERROGATE = auto()
+    JUDGEMENT = auto()
+    END = auto()
+
+class Role(Enum):
+    PROSECUTOR = "prosecutor"
+    ATTORNEY = "attorney"  
+
+    def next(self):
+        return Role.ATTORNEY if self == Role.PROSECUTOR else Role.PROSECUTOR
+
+    def label(self) -> str:
+        return {
+            "prosecutor": "검사",
+            "attorney": "벌호사"
+        }[self.value]
+
+
+class GameState(BaseModel):
+    phase: Phase = Phase.INIT
+    role: Role = Role.PROSECUTOR
+    messages: List[Dict] = Field(default_factory=list)
+    record_state : bool = False
+    done_flags: Dict[Role, bool] = Field(default_factory=lambda: {
+        Role.PROSECUTOR: False,
+        Role.ATTORNEY: False
+    })
+    objection_count: Dict[Role, int] = Field(default_factory=lambda: {
+        Role.PROSECUTOR: 0,
+        Role.ATTORNEY: 0
+    })
+    current_profile: Profile = Field(default=None)
+    tagged_evidence: Evidence = Field(default=None)
