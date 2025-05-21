@@ -215,3 +215,111 @@ if __name__ == "__main__":
     asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
     asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
     print(CaseDataManager.get_case_data())
+
+
+if __name__ == "__main__":
+    print("\n===== 법정 시뮬레이터 테스트 =====")
+    
+    # 초기화
+    print("\n[1] 컨트롤러 초기화 중...")
+    asyncio.run(CaseDataManager.initialize())
+    print("✅ 초기화 완료")
+    
+    # 사건 생성 테스트
+    print("\n[2] 사건 생성 테스트 중...")
+    try:
+        case_summary = asyncio.run(CaseDataManager.generate_case_stream())
+        print("✅ 사건 생성 성공")
+        print("\n📄 생성된 사건:")
+        print("-" * 50)
+        print(case_summary)
+        print("-" * 50)
+    except Exception as e:
+        print(f"❌ 사건 생성 실패: {e}")
+    
+    # 프로필 생성 테스트
+    print("\n[3] 프로필 생성 테스트 중...")
+    try:
+        profiles_text = asyncio.run(CaseDataManager.generate_profiles_stream())
+        print("✅ 프로필 생성 성공")
+        print("\n📄 생성된 프로필 텍스트:")
+        print("-" * 50)
+        print(profiles_text)
+        print("-" * 50)
+    except Exception as e:
+        print(f"❌ 프로필 생성 실패: {e}")
+    
+    # 프로필 파싱 테스트
+    print("\n[4] 프로필 파싱 테스트 중...")
+    try:
+        profiles = CaseDataManager.get_profiles()
+        if profiles and len(profiles) > 0:
+            print(f"✅ 프로필 파싱 성공: {len(profiles)}개의 프로필 발견")
+            print("\n📄 파싱된 프로필:")
+            print("-" * 50)
+            for i, profile in enumerate(profiles):
+                print(f"프로필 {i+1}:")
+                print(f"  이름: {profile.name}")
+                print(f"  유형: {profile.type}")
+                print(f"  맥락: {profile.context[:50]}..." if len(profile.context) > 50 else f"  맥락: {profile.context}")
+                if hasattr(profile, 'gender'):
+                    print(f"  성별: {profile.gender}")
+                if hasattr(profile, 'age'):
+                    print(f"  나이: {profile.age}")
+                print()
+            print("-" * 50)
+        else:
+            print("❌ 프로필 파싱 실패: 프로필이 없거나 비어 있습니다")
+    except Exception as e:
+        print(f"❌ 프로필 파싱 실패: {e}")
+    
+    # 증거 생성 테스트
+    print("\n[5] 증거 생성 테스트 중...")
+    try:
+        evidences = asyncio.run(CaseDataManager.generate_evidences())
+        if evidences and len(evidences) > 0:
+            print(f"✅ 증거 생성 성공: {len(evidences)}개의 증거 발견")
+            print("\n📄 생성된 증거:")
+            print("-" * 50)
+            for i, evidence in enumerate(evidences):
+                print(f"증거 {i+1}:")
+                print(f"  이름: {evidence.name}")
+                print(f"  유형: {evidence.type}")
+                print(f"  설명: {evidence.description}")
+                print()
+            print("-" * 50)
+        else:
+            print("❌ 증거 생성 실패: 증거가 없거나 비어 있습니다")
+    except Exception as e:
+        print(f"❌ 증거 생성 실패: {e}")
+    
+    # 종합 데이터 테스트
+    print("\n[6] 종합 데이터 테스트 중...")
+    try:
+        case_data = CaseDataManager.get_case_data()
+        if case_data:
+            print("✅ 종합 데이터 생성 성공")
+            print("\n📄 종합 데이터 요약:")
+            print("-" * 50)
+            
+            # 문제가 되는 f-string 부분을 별도 변수로 분리
+            newline = "\n"
+            title_marker = "[사건 제목]:"
+            
+            # 사건 제목 추출
+            if title_marker in case_data.case.outline:
+                title_part = case_data.case.outline.split(title_marker)[1]
+                title = title_part.split(newline)[0].strip()
+            else:
+                title = "제목 없음"
+                
+            print(f"사건 제목: {title}")
+            print(f"프로필 수: {len(case_data.profiles)}")
+            print(f"증거 수: {len(case_data.evidences)}")
+            print("-" * 50)
+        else:
+            print("❌ 종합 데이터 생성 실패: 데이터가 없습니다")
+    except Exception as e:
+        print(f"❌ 종합 데이터 생성 실패: {e}")
+    
+    print("\n===== 테스트 완료 =====")
