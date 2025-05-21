@@ -226,3 +226,11 @@ def ask_defendant_wrapper(question, defendant_name, case_summary):
 def get_judge_result_wrapper(message_list):
     from verdict import get_judge_result
     return get_judge_result(message_list)
+
+
+if __name__ == "__main__":
+    asyncio.run(CaseDataManager.initialize())  # 비동기 호출
+    asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
+    asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
+    asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
+    print(CaseDataManager.get_case_data())
