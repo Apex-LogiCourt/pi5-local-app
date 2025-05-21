@@ -226,33 +226,3 @@ def ask_defendant_wrapper(question, defendant_name, case_summary):
 def get_judge_result_wrapper(message_list):
     from verdict import get_judge_result
     return get_judge_result(message_list)
-
-
-if __name__ == "__main__":
-    print("\n=== 실제 케이스 생성 및 프로필 파싱 테스트 ===")
-    
-    # 1. 케이스 생성
-    print("\n1. 케이스 생성 중...")
-    case_summary = asyncio.run(CaseDataManager.generate_case_stream())
-    print("\n생성된 케이스:")
-    print(case_summary)
-    
-    # 2. 프로필 생성
-    print("\n2. 프로필 생성 중...")
-    profiles_text = asyncio.run(CaseDataManager.generate_profiles_stream())
-    print("\n생성된 프로필 텍스트:")
-    print(profiles_text)
-    
-    # 3. 프로필 파싱 테스트
-    print("\n3. 프로필 파싱 결과:")
-    profiles = CaseDataManager._parse_character_template(profiles_text)
-    
-    if profiles:
-        for profile in profiles:
-            print(f"\n이름: {profile.name}")
-            print(f"유형: {profile.type}")
-            print(f"성별: {profile.gender}")
-            print(f"나이: {profile.age}")
-            print(f"맥락: {profile.context}")
-    else:
-        print("파싱된 프로필이 없습니다.")
