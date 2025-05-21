@@ -12,10 +12,12 @@ class Case:
 
 @dataclass
 class Profile:
+    type: Literal["witness", "reference", "defendant", "victim"]  # 참고인 유형
     name: str  # 사람 이름
-    type: Literal["witness", "reference", "defendant"]  # 참고인 유형
+    gender: Literal["남자", "여성"]  # 성별
+    age: int                     # 나이
     context: str  # 출석 맥락 -- 어떤 사연으로 여기 출석하게 되었는지
-
+    
 @dataclass
 class Evidence:
     name: str  # 증거품 이름(명사형) 

@@ -6,6 +6,9 @@ from case_generation.case_builder import build_case_chain, build_character_chain
 from evidence import make_evidence
 from data_models import CaseData, Case, Profile, Evidence
 import asyncio
+import json
+from pathlib import Path
+import re
 
 
 # 싱글톤 패턴 적용
@@ -82,33 +85,49 @@ class CaseDataManager:
     @staticmethod
     def _parse_character_template(template: str) -> List[Profile]:
         profiles = []
-        
-        # 각 인물 블록을 분리
+        profile_path = Path(__file__).parent / "assets" / "profile" / "profil.json"
+        with open(profile_path, 'r', encoding='utf-8') as f:
+            profile_data = json.load(f)
+            characters = profile_data['characters']
+
         character_blocks = template.strip().split('--------------------------------')
-        
         for block in character_blocks:
-            lines = block.strip().split('\n')
-            if len(lines) < 4: 
+            lines = [line.strip() for line in block.strip().split('\n') if line.strip()]
+            if not lines:
                 continue
 
-            # 이름, 직업, 성격, 배경 추출
-            name_line = lines[0].strip()
-            background_line = lines[3].strip()
-            
-            # 이름 추출 (예: "피고: 이정우" -> "이정우")
-            name = name_line.split(':')[1].strip()
-            
-            # 프로필 객체 생성
-            profile_type = "defendant" if "피고" in name_line else "victim" if "피해자" in name_line else "witness" if "목격자" in name_line else "reference"
-            
-            profile = Profile(
-                name=name,
+            # 첫 줄에서 이름, 나이, 성별 추출
+            m = re.match(r'(피고|피해자|목격자|참고인) *: *([^(]+) *\(나이: *([0-9]+)세?, *성별: *([^)]+)\)', lines[0])
+            if not m:
+                continue
+            role_kor, name, age, gender = m.groups()
+            profile_type = {
+                "피고": "defendant",
+                "피해자": "victim",
+                "목격자": "witness",
+                "참고인": "reference"
+            }[role_kor]
+
+            # 배경 추출
+            context = ""
+            for line in lines:
+                if line.startswith("- 배경") or line.startswith("배경"):
+                    context = line.split(":", 1)[1].strip()
+                    break
+
+            # profil.json에서 정보 보정
+            character_info = next((char for char in characters if char['name'] == name), None)
+            if character_info:
+                gender = character_info['gender']
+                age = character_info['age']
+
+            profiles.append(Profile(
                 type=profile_type,
-                context=background_line.split(':')[1].strip()  # 배경에서 필요한 정보 추출
-            )
-            
-            profiles.append(profile)
-        
+                name=name,
+                gender=gender,
+                age=int(age),
+                context=context
+            ))
         return profiles
     
     @staticmethod
@@ -207,11 +226,3 @@ def ask_defendant_wrapper(question, defendant_name, case_summary):
 def get_judge_result_wrapper(message_list):
     from verdict import get_judge_result
     return get_judge_result(message_list)
-
-
-if __name__ == "__main__":
-    asyncio.run(CaseDataManager.initialize())  # 비동기 호출
-    asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
-    asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
-    asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
-    print(CaseDataManager.get_case_data())
