@@ -73,7 +73,7 @@ class Role(Enum):
 
 class GameState(BaseModel):
     phase: Phase = Phase.INIT
-    role: Role = Role.PROSECUTOR
+    turn: Role = Role.PROSECUTOR
     messages: List[Dict] = Field(default_factory=list)
     record_state : bool = False
     done_flags: Dict[Role, bool] = Field(default_factory=lambda: {
