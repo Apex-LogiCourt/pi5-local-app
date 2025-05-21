@@ -91,7 +91,7 @@ class CaseDataManager:
             if len(lines) < 4: 
                 continue
 
-            # 이름, 직업, 성격, 배경 추출
+            # 이름, 나이, 성별, 배경 추출
             name_line = lines[0].strip()
             background_line = lines[3].strip()
             
@@ -102,10 +102,12 @@ class CaseDataManager:
             profile_type = "defendant" if "피고" in name_line else "victim" if "피해자" in name_line else "witness" if "목격자" in name_line else "reference"
             
             profile = Profile(
-                name=name,
                 type=profile_type,
-                context=background_line.split(':')[1].strip()  # 배경에서 필요한 정보 추출
-            )
+                name=name,
+                gender=gender,  # 실제로는 profil.json 등에서 가져오면 더 정확
+                age=age,  # 나이도 랜덤 (또는 외부 데이터 기반)
+                context=background_line.split(':')[1].strip()
+            )       
             
             profiles.append(profile)
         
