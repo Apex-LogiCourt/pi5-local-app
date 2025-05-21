@@ -118,22 +118,6 @@ class GameController:
         else:
             cls._switch_turn()
 
-
-
-    @classmethod
-    def objection(cls) -> None:
-        """
-        이의 제기.
-        - objection_count 증가, 메시지 추가, 턴 전환
-        """
-        cls._state.objection_count[cls._state.turn] += 1
-        cls._switch_turn()
-
-    @classmethod
-    def get_judgement(cls) -> str:
-        """판결 단계에서 최종 결과를 얻어와 메시지에 추가하고 반환."""
-        pass
-
     @classmethod
     def get_state(cls) -> GameState:
         """GameState 객체 반환."""
@@ -146,6 +130,21 @@ class GameController:
 
     def _send_signal(self, code, msg):
         """ 신호 전송"""
+        pass
+
+    
+    @classmethod
+    def _objection(cls) -> None:
+        """
+        이의 제기.
+        - objection_count 증가, 메시지 추가, 턴 전환
+        """
+        cls._state.objection_count[cls._state.turn] += 1
+        cls._switch_turn()
+
+    @classmethod
+    def _get_judgement(cls) -> str:
+        """판결 단계에서 최종 결과를 얻어와 메시지에 추가하고 반환."""
         pass
 
     @classmethod
