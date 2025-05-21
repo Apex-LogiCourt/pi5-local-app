@@ -26,10 +26,9 @@ class CaseDataManager:
     
     @classmethod
     async def initialize(cls) -> CaseData:
-        if cls._case_data is None:
-            print("controller 초기화 실행")
-            # cls._case_data = CaseData(cls._case, cls._profiles, cls._evidences)
-            # print('case_data :', cls._case_data)
+        asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
+        asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
+        asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
         return cls._case_data
     
     #==============================================
