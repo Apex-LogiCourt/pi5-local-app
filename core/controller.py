@@ -100,6 +100,7 @@ class CaseDataManager:
             if not m:
                 continue
             role_kor, name, age, gender = m.groups()
+            name = name.strip()  # 이름 앞뒤 공백 제거
             profile_type = {
                 "피고": "defendant",
                 "피해자": "victim",
@@ -115,17 +116,20 @@ class CaseDataManager:
                     break
 
             # profil.json에서 정보 보정
-            character_info = next((char for char in characters if char['name'] == name), None)
+            character_info = next((char for char in characters if char['name'].strip() == name.strip()), None)
+            voice = ""  # 기본값 설정
             if character_info:
                 gender = character_info['gender']
                 age = character_info['age']
+                voice = character_info.get('voice', "")  # voice 정보 가져오기 (.get으로 안전하게)
 
             profiles.append(Profile(
                 type=profile_type,
                 name=name,
                 gender=gender,
                 age=int(age),
-                context=context
+                context=context,
+                voice=voice
             ))
         return profiles
     
@@ -227,11 +231,49 @@ def get_judge_result_wrapper(message_list):
     return get_judge_result(message_list)
 
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     # asyncio.run(CaseDataManager.initialize())  # 비동기 호출
     # asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
     # asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
     # asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
     # print(CaseDataManager.get_case_data())
 
+    # asyncio.run(CaseDataManager.initialize())
+    
+if __name__ == "__main__":
+    print("\n===== 프로필 속성 테스트 =====")
+    
+    # 초기화 및 데이터 생성
+    print("데이터 생성 중...")
     asyncio.run(CaseDataManager.initialize())
+    
+    # 프로필 확인
+    profiles = CaseDataManager.get_profiles()
+    
+    if profiles and len(profiles) > 0:
+        print(f"\n✅ {len(profiles)}개의 프로필이 생성됨\n")
+        
+        print("=" * 50)
+        print("프로필 상세 정보")
+        print("=" * 50)
+        
+        for i, profile in enumerate(profiles):
+            print(f"\n[프로필 {i+1}]")
+            print(f"유형(type): {profile.type}")
+            print(f"이름(name): {profile.name}")
+            print(f"성별(gender): {profile.gender}")
+            print(f"나이(age): {profile.age}")
+            print(f"배경(context): {profile.context[:100]}..." if len(profile.context) > 100 else f"배경(context): {profile.context}")
+            print(f"음성(voice): {profile.voice}")
+            print("-" * 50)
+    else:
+        print("❌ 프로필이 생성되지 않았습니다.")
+    
+    # 증거 정보도 확인
+    evidences = CaseDataManager.get_evidences()
+    if evidences and len(evidences) > 0:
+        print(f"\n✅ {len(evidences)}개의 증거가 생성됨")
+    else:
+        print("\n❌ 증거가 생성되지 않았습니다.")
+    
+    print("\n===== 테스트 완료 =====")

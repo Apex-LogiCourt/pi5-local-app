@@ -19,6 +19,7 @@ class Profile:
     gender: Literal["남자", "여성"]  # 성별
     age: int                     # 나이
     context: str  # 출석 맥락 -- 어떤 사연으로 여기 출석하게 되었는지
+    voice: str  # 음성
     
 @dataclass
 class Evidence:
