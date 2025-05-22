@@ -1,6 +1,6 @@
 # routers/press_router.py
 from fastapi import APIRouter, HTTPException
-from manager import state_manager
+from api.manager import state_manager
 
 router = APIRouter(prefix="/press", tags=["Turn Control"])
 
@@ -9,5 +9,5 @@ async def handle_button_press(press_id: str):
     if press_id not in ["prosecutor", "attorney"]:
         raise HTTPException(status_code=400, detail="Invalid ID")
     
-    state_manager.set_current_turn(press_id)
-    return {"status": "ok", "turn": state_manager.get_current_turn()}
+    state_manager.set_current_pressed(press_id)
+    return {"status": "ok", "role": state_manager.get_current_pressed()}
