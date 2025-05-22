@@ -43,8 +43,8 @@ from .prompt_templates.ex_case_templates import (
     CASE_BEHIND_TEMPLATE,
 )
 
-#=============기존 코드 보관========================
-#========================================(테스트종료후 복구)
+# #=============기존 코드 보관========================
+# #========================================(테스트종료후 복구)
 # def get_llm(model="gpt-4o-mini", temperature=1.0):
 #     llm = ChatOpenAI(model=model, temperature=temperature)  
 #     return llm
@@ -202,10 +202,7 @@ def build_case_chain():
 
 [사건 개요]: 사건 당일, 최지훈은 술에 취해 김소현과 언쟁을 벌였다. 상황이 격해지면서 최지훈이 갑자기 쓰러졌고, 병원으로 이송되었으나 사망했다. 부검 결과 그의 체내에서 독성 물질이 발견되었고, 김소현이 그에게 제공한 음료가 의심받고 있다.
 
-[피고]: 김소현 (나이: 28세, 성별: 여성)
-[피해자]: 최지훈 (나이: 42세, 성별: 남성)
-[증인1]: 남기효 (나이: 35세, 성별: 남성)
-[증인2]: 우민영 (나이: 24세, 성별: 여성)"""
+"""
     )
     return dummy_chain
 
@@ -259,42 +256,42 @@ def build_case_behind_chain(case_summary: str, character: str):
 #=======================================여기까지 더미코드
 
 # 테스트 코드 (컨트롤러 호출 예시) 
-# if __name__ == "__main__":
-#     story = {} # 사건 개요 저장
+if __name__ == "__main__":
+    story = {} # 사건 개요 저장
     
-#     # 1. 사건 개요 생성
-#     print("사건 개요 생성 중...\n")
-#     case_summary_chain = build_case_chain()
-#     case_summary = ""
+    # 1. 사건 개요 생성
+    print("사건 개요 생성 중...\n")
+    case_summary_chain = build_case_chain()
+    case_summary = ""
     
-#     # 스트리밍으로 사건 개요 생성
-#     for chunk in case_summary_chain.stream({}):
-#         if hasattr(chunk, 'content'):
-#             print(chunk.content, end='', flush=True)
-#             case_summary += chunk.content
-#         else:
-#             print(chunk, end='', flush=True)
-#             case_summary += chunk
+    # 스트리밍으로 사건 개요 생성
+    for chunk in case_summary_chain.stream({}):
+        if hasattr(chunk, 'content'):
+            print(chunk.content, end='', flush=True)
+            case_summary += chunk.content
+        else:
+            print(chunk, end='', flush=True)
+            case_summary += chunk
 
-#     print('\n\n---------------')  
+    print('\n\n---------------')  
     
-#     # 등장인물 추출 테스트
-#     character_chain = build_character_chain(case_summary)
-#     character = character_chain.invoke({})
-#     print(character)
+    # 등장인물 추출 테스트
+    character_chain = build_character_chain(case_summary)
+    character = character_chain.invoke({})
+    print(character)
     
     
-#     print('\n\n---------------')
-#     # 사건의 진실 생성
-#     print("사건의 진실 생성 중...\n")
+    print('\n\n---------------')
+    # 사건의 진실 생성
+    print("사건의 진실 생성 중...\n")
 
-#     case_truth = ""
-#     for chunk in build_case_behind_chain(case_summary, character).stream({}):
-#         if hasattr(chunk, 'content'):
-#             print(chunk.content, end='', flush=True)
-#             case_truth += chunk.content
-#         else:
-#             print(chunk, end='', flush=True)
-#             case_truth += chunk
+    case_truth = ""
+    for chunk in build_case_behind_chain(case_summary, character).stream({}):
+        if hasattr(chunk, 'content'):
+            print(chunk.content, end='', flush=True)
+            case_truth += chunk.content
+        else:
+            print(chunk, end='', flush=True)
+            case_truth += chunk
 
     
