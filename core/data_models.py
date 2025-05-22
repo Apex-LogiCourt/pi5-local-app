@@ -22,17 +22,22 @@ class Profile:
     
 @dataclass
 class Evidence:
+    id: int  # 증거 ID (자동 증가)
     name: str  # 증거품 이름(명사형) 
     type: Literal["attorney", "prosecutor"]  # 제출 주체 
     description: List[str]  # 증거 설명 (추가 가능)
     picture: str  # 사진 경로 (향후 구현)
 
+    _cnt : int = 0  
+
     @classmethod
     def from_dict(cls, data: dict) -> 'Evidence':
+        cls._cnt += 1
         desc = data.get("description", [])
         if isinstance(desc, str):
             desc = [desc]  # str to List
         return cls(
+            id=cls._cnt,  # 자동 증가
             name=data["name"],
             type=data["type"],
             description=desc,
