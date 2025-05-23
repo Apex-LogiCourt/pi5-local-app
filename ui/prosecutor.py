@@ -1,23 +1,114 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout,
-    QSizePolicy, QMessageBox, QGridLayout
+    QSizePolicy, QMessageBox, QGridLayout, QDialog
 )
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QPixmap
 from ui.resizable_image import ResizableImage, _get_image_path
-from ui.style_constants import (
-    ROLE_TITLE_STYLE, DEFAULT_BUTTON_STYLE, DARK_BG_COLOR, WHITE_TEXT
-)
-from core.controller import CaseDataManager  # ✅ 증거 데이터 가져오기 위해 import
+from ui.style_constants import DARK_BG_COLOR, WHITE_TEXT
+from core.controller import CaseDataManager
+import re
 
+# --- HoverButton (메뉴 및 등장인물용) ---
+class HoverButton(QPushButton):
+    def __init__(self, text, min_height=80, max_height=110):
+        super().__init__(text)
+        self.default_font_size = 26
+        self.hover_font_size = 34
+        self.default_min_height = min_height
+        self.hover_min_height = max_height
+        self.setStyleSheet(self.get_stylesheet(self.default_font_size))
+        self.setMinimumHeight(self.default_min_height)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+
+    def enterEvent(self, event):
+        self.setStyleSheet(self.get_stylesheet(self.hover_font_size))
+        self.setMinimumHeight(self.hover_min_height)
+        self.resize(self.sizeHint())
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.setStyleSheet(self.get_stylesheet(self.default_font_size))
+        self.setMinimumHeight(self.default_min_height)
+        self.resize(self.sizeHint())
+        super().leaveEvent(event)
+
+    def get_stylesheet(self, font_size):
+        return f"""
+        QPushButton {{
+            background-color: transparent;
+            color: white;
+            font-size: {font_size}px;
+            font-weight: bold;
+            border: none;
+            padding: 16px;
+            text-align: left;
+        }}
+        """
+
+# --- MicButton (아이콘만 확대, 배경 고정) ---
+class MicButton(QPushButton):
+    def __init__(self, icon_path, on_icon_path):
+        super().__init__()
+        self.icon_path = icon_path
+        self.on_icon_path = on_icon_path
+        self.default_icon_size = QSize(80, 80)
+        self.hover_icon_size = QSize(95, 95)
+        self.fixed_box_size = QSize(120, 120)
+
+        self.setFixedSize(self.fixed_box_size)
+        self.setIcon(QIcon(_get_image_path(self.icon_path)))
+        self.setIconSize(self.default_icon_size)
+
+        self.setStyleSheet("""
+            QPushButton {
+                background-color: #2f5a68;
+                border-radius: 12px;
+            }
+        """)
+
+    def enterEvent(self, event):
+        self.setIconSize(self.hover_icon_size)
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.setIconSize(self.default_icon_size)
+        super().leaveEvent(event)
+
+    def set_icon_on(self, is_on):
+        icon_file = self.on_icon_path if is_on else self.icon_path
+        self.setIcon(QIcon(_get_image_path(icon_file)))
+
+# --- 이름 한글→영문 변환 맵 ---
+KOREAN_TO_ENGLISH_MAP = {
+    "은영": "Eunyoung", "봄달": "Bomdal", "지훈": "Jihoon", "소현": "Sohyun",
+    "영화": "Younghwa", "성일": "Sungil", "기효": "Kihyo", "승표": "Seungpyo",
+    "주안": "Jooahn", "선희": "Sunhee", "민영": "Minyoung", "상도": "Sangdo",
+    "기서": "Kiseo", "원탁": "Wontak", "이안": "Ian"
+}
+
+def get_profile_pixmap(name: str):
+    romanized = KOREAN_TO_ENGLISH_MAP.get(name)
+    if not romanized and len(name) >= 2:
+        romanized = KOREAN_TO_ENGLISH_MAP.get(name[1:])
+    if romanized:
+        return QPixmap(_get_image_path(f"profile/{romanized}.png"))
+    return None
+
+def extract_name_and_role(title_line):
+    match = re.search(r"(피고|피해자|목격자|참고인)\s*:\s*(\S+)", title_line)
+    if match:
+        return match.group(2), match.group(1)
+    return None, None
+
+# --- ProsecutorScreen ---
 class ProsecutorScreen(QWidget):
     def __init__(self, case_summary="", profiles="", on_next=None):
         super().__init__()
         self.case_summary = case_summary
-        self.profiles = profiles
+        self.profiles_text = profiles
         self.on_next = on_next
-
-        self.evidences = CaseDataManager.get_evidences() or []  # ✅ 증거 저장
+        self.evidences = CaseDataManager.get_evidences() or []
         self.mic_on = False
         self.init_ui()
 
@@ -42,94 +133,66 @@ class ProsecutorScreen(QWidget):
         title_wrapper.addStretch(1)
 
         def make_invisible_button(text, handler=None):
-            btn = QPushButton(text)
-            btn.setStyleSheet("""
-                QPushButton {
-                    background-color: transparent;
-                    color: white;
-                    font-size: 30px;
-                    font-weight: bold;
-                    border: none;
-                }
-                QPushButton:hover {
-                    font-size: 33px;
-                }
-            """)
-            btn.setMinimumSize(300, 100)
+            btn = HoverButton(text)
             if handler:
                 btn.clicked.connect(handler)
             return btn
 
-        def make_input_button(text):
-            btn = QPushButton(text)
-            btn.setFixedSize(210, 100)
-            btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #2f5a68;
-                    color: white;
-                    font-size: 30px;
-                    font-weight: bold;
-                    border-radius: 15px;
-                }
-                QPushButton:hover {
-                    font-size: 33px;
-                }
-            """)
-            return btn
+        menu_layout = QVBoxLayout()
+        menu_layout.setSpacing(15)
+        menu_layout.addWidget(make_invisible_button("사건개요", self.show_case_dialog))
+        menu_layout.addWidget(make_invisible_button("증거품 확인", self.show_evidences))
+        menu_layout.addWidget(make_invisible_button("텍스트입력", self.show_text_input_placeholder))
+        menu_layout.addStretch()
 
-        self.btn_mic = QPushButton()
-        self.btn_mic.setFixedSize(100, 100)
-        self.btn_mic.setIcon(QIcon(_get_image_path("mike.png")))
-        self.btn_mic.setIconSize(QSize(55, 55))
-        self.btn_mic.setStyleSheet("""
+        summary_lines = ["등장인물"]
+        for part in self.profiles_text.split('--------------------------------'):
+            part = part.strip()
+            if not part:
+                continue
+            lines = part.split('\n')
+            title = lines[0]
+            name, role = extract_name_and_role(title)
+            if name and role:
+                summary_lines.append(f"• {name} : {role}")
+        summary_text = "\n".join(summary_lines)
+
+        profile_button = HoverButton(summary_text, min_height=100, max_height=130)
+        profile_button.clicked.connect(self.show_full_profiles_dialog)
+
+        self.btn_mic = MicButton("mike.png", "mike_on.png")
+        self.btn_mic.clicked.connect(self.toggle_mic_icon)
+
+        btn_next = QPushButton("주장종료")
+        btn_next.setFixedSize(250, 100)
+        btn_next.setStyleSheet("""
             QPushButton {
                 background-color: #2f5a68;
+                color: white;
                 border-radius: 12px;
+                font-size: 26px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                font-size: 30px;
             }
         """)
-        self.btn_mic.clicked.connect(self.toggle_mic_icon)
-        self.btn_mic.enterEvent = lambda event: self.btn_mic.setIconSize(QSize(90, 90) if self.mic_on else QSize(65, 65))
-        self.btn_mic.leaveEvent = lambda event: self.btn_mic.setIconSize(QSize(80, 80) if self.mic_on else QSize(55, 55))
-
-        text_input = make_input_button("텍스트 입력")
-        text_input_wrapper = QHBoxLayout()
-        text_input_wrapper.addStretch(1)
-        text_input_wrapper.addWidget(text_input)
-        text_input_wrapper.addStretch(1)
-
-        grid_layout = QGridLayout()
-        grid_layout.setSpacing(35)
-        grid_layout.addWidget(make_invisible_button("사건개요", self.show_case_dialog), 0, 0)
-        grid_layout.addWidget(make_invisible_button("검사측 증거품", self.show_prosecutor_evidence), 0, 1)
-        grid_layout.addWidget(make_invisible_button("등장인물", self.show_profiles_dialog), 1, 0)
-        grid_layout.addWidget(make_invisible_button("변호사측 증거품", self.show_attorney_evidence), 1, 1)
-        grid_layout.addLayout(text_input_wrapper, 2, 0)
-        grid_layout.addWidget(self.btn_mic, 2, 1, alignment=Qt.AlignCenter)
-
-        btn_next = QPushButton("다음 단계로")
-        btn_next.setStyleSheet(DEFAULT_BUTTON_STYLE)
-        btn_next.setFixedWidth(220)
-        btn_next.setMinimumHeight(40)
         btn_next.clicked.connect(self.proceed_to_next)
 
-        button_block = QVBoxLayout()
-        button_block.setSpacing(30)
-        button_block.addLayout(grid_layout)
-        button_block.addSpacing(40)
-        button_block.addWidget(btn_next, alignment=Qt.AlignLeft)
+        left_button_grid = QGridLayout()
+        left_button_grid.setSpacing(30)
+        left_button_grid.addLayout(menu_layout, 0, 0)
+        left_button_grid.addWidget(profile_button, 0, 1)
+        left_button_grid.addWidget(self.btn_mic, 1, 0, alignment=Qt.AlignCenter)
+        left_button_grid.addWidget(btn_next, 1, 1, alignment=Qt.AlignLeft)
 
-        button_block_wrapper = QHBoxLayout()
-        button_block_wrapper.addStretch(1)
-        button_block_wrapper.addLayout(button_block)
-        button_block_wrapper.addStretch(1)
-
-        left = QVBoxLayout()
-        left.setContentsMargins(40, 30, 20, 30)
-        left.setSpacing(30)
-        left.addLayout(title_wrapper)
-        left.addStretch(1)
-        left.addLayout(button_block_wrapper)
-        left.addStretch(2)
+        left_wrapper = QVBoxLayout()
+        left_wrapper.setContentsMargins(40, 30, 20, 30)
+        left_wrapper.setSpacing(20)
+        left_wrapper.addLayout(title_wrapper)
+        left_wrapper.addStretch(1)
+        left_wrapper.addLayout(left_button_grid)
+        left_wrapper.addStretch(2)
 
         image_label = ResizableImage(_get_image_path("profile/Prosecutor.png"))
         image_label.setMaximumWidth(420)
@@ -143,55 +206,83 @@ class ProsecutorScreen(QWidget):
         main_layout = QHBoxLayout()
         main_layout.setContentsMargins(40, 30, 100, 30)
         main_layout.setSpacing(30)
-        main_layout.addLayout(left, 3)
+        main_layout.addLayout(left_wrapper, 3)
         main_layout.addLayout(right_layout, 2)
 
         self.setLayout(main_layout)
 
     def toggle_mic_icon(self):
         self.mic_on = not self.mic_on
-        icon_path = "mike_on.png" if self.mic_on else "mike.png"
-        size = QSize(80, 80) if self.mic_on else QSize(55, 55)
-        self.btn_mic.setIcon(QIcon(_get_image_path(icon_path)))
-        self.btn_mic.setIconSize(size)
+        self.btn_mic.set_icon_on(self.mic_on)
 
     def proceed_to_next(self):
         if self.on_next:
             self.on_next()
 
     def show_case_dialog(self):
-        # 인트로와 동일하게 피고/피해자/증인 정보는 제거
         lines = self.case_summary.strip().split('\n')
-        filtered_lines = [
-            line for line in lines
-            if not any(tag in line for tag in ["[피고", "[피해자", "[증인1", "[증인2"])
-        ]
+        filtered_lines = [line for line in lines if not any(tag in line for tag in ["[피고", "[피해자", "[증인1", "[증인2"])]
         clean_text = "\n".join(filtered_lines)
+        QMessageBox.information(self, "사건 개요", clean_text, QMessageBox.Ok)
 
-        dlg = QMessageBox(self)
-        dlg.setWindowTitle("사건 개요")
-        dlg.setText(clean_text)
-        dlg.setStandardButtons(QMessageBox.Ok)
-        dlg.setMaximumSize(800, 500)
-        dlg.setStyleSheet("QLabel { font-size: 14px; }")
-        dlg.exec_()
+    def show_evidences(self):
+        prosecutors = []
+        attorneys = []
 
+        for e in self.evidences:
+            summary = f"• {e.name}: {e.description[0]}"
+            if e.type == "prosecutor":
+                prosecutors.append(summary)
+            elif e.type == "attorney":
+                attorneys.append(summary)
 
-    def show_profiles_dialog(self):
-        dlg = QMessageBox(self)
-        dlg.setWindowTitle("등장인물 정보")
-        dlg.setText(self.profiles)
-        dlg.setStandardButtons(QMessageBox.Ok)
-        dlg.setMaximumSize(800, 500)
-        dlg.setStyleSheet("QLabel { font-size: 14px; }")
-        dlg.exec_()
+        parts = []
+        if prosecutors:
+            parts.append("🔷 검사 측 증거품\n" + "\n".join(prosecutors))
+        if attorneys:
+            parts.append("🔶 변호사 측 증거품\n" + "\n".join(attorneys))
 
-    def show_prosecutor_evidence(self):
-        items = [f"{e.name}: {e.description[0]}" for e in self.evidences if e.type == "prosecutor"]
-        text = "\n\n".join(items) if items else "검사측 증거물이 없습니다."
-        QMessageBox.information(self, "검사측 증거품", text, QMessageBox.Ok)
+        text = "\n\n".join(parts) if parts else "등록된 증거물이 없습니다."
+        QMessageBox.information(self, "모든 증거품", text, QMessageBox.Ok)
 
-    def show_attorney_evidence(self):
-        items = [f"{e.name}: {e.description[0]}" for e in self.evidences if e.type == "attorney"]
-        text = "\n\n".join(items) if items else "변호사측 증거물이 없습니다."
-        QMessageBox.information(self, "변호사측 증거품", text, QMessageBox.Ok)
+    def show_text_input_placeholder(self):
+        QMessageBox.information(self, "텍스트입력", "입력 기능은 추후 구현 예정입니다.", QMessageBox.Ok)
+
+    def show_full_profiles_dialog(self):
+        dialog = QDialog(self)
+        dialog.setWindowTitle("등장인물 정보")
+        dialog.setStyleSheet("background-color: #0f2a45; color: white; font-size: 14px;")
+        layout = QVBoxLayout()
+
+        for part in self.profiles_text.split('--------------------------------'):
+            part = part.strip()
+            if not part:
+                continue
+            lines = part.split('\n')
+            title = lines[0]
+            info_text = "\n".join(lines[1:])
+
+            row_layout = QHBoxLayout()
+            left = QVBoxLayout()
+            left.addWidget(QLabel(f"<b>{title}</b>"))
+            info_label = QLabel(info_text)
+            info_label.setWordWrap(True)
+            left.addWidget(info_label)
+
+            name_match = re.search(r":\s*(.+?)\s*[\(\[]", title)
+            if name_match:
+                name = name_match.group(1)
+                pixmap = get_profile_pixmap(name)
+                if pixmap:
+                    img_label = QLabel()
+                    img_label.setPixmap(pixmap.scaledToWidth(150, Qt.SmoothTransformation))
+                    row_layout.addLayout(left, 3)
+                    row_layout.addWidget(img_label, 1)
+                    layout.addLayout(row_layout)
+                    continue
+
+            layout.addLayout(left)
+
+        dialog.setLayout(layout)
+        dialog.setMinimumWidth(500)
+        dialog.exec_()

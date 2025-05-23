@@ -1,5 +1,9 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QTextEdit, QFrame, QVBoxLayout, QLabel, QPushButton, QSizePolicy,QApplication
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
+    QWidget, QHBoxLayout, QTextEdit, QFrame, QVBoxLayout, QLabel, QPushButton,
+    QSizePolicy, QApplication, QDialog
+)
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QMovie
 import asyncio
 
 from ui.resizable_image import ResizableImage, _get_image_path
@@ -8,6 +12,27 @@ from ui.style_constants import (
     COMMON_PANEL_LABEL_STYLE
 )
 from core.controller import get_judge_result_wrapper, CaseDataManager
+
+
+class LoadingDialog(QDialog):
+    def __init__(self, message="로딩 중입니다...", parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("로딩 중")
+        self.setModal(True)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        self.setFixedSize(200, 100)
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(20, 20, 20, 20)
+
+        label = QLabel(message)
+        label.setAlignment(Qt.AlignCenter)
+        label.setStyleSheet("color: white; font-size: 16px;")  # ✅ 흰색 + 글자 크기 조정
+
+        layout.addWidget(label)
+        self.setLayout(layout)
+
+
 
 
 class ResultScreen(QWidget):
@@ -57,7 +82,7 @@ class ResultScreen(QWidget):
             "border-radius: 8px; padding: 12px;"
         )
         retry_button.setFixedHeight(50)
-        retry_button.clicked.connect(lambda: asyncio.ensure_future(self.on_restart()))
+        retry_button.clicked.connect(self.handle_restart_clicked)
 
         right_layout.addWidget(label_ai_judge, 0, Qt.AlignTop | Qt.AlignHCenter)
         right_layout.addSpacing(20)
@@ -69,6 +94,18 @@ class ResultScreen(QWidget):
         layout.addWidget(self.result_text_display, 2)
         layout.addWidget(right_frame, 1)
         self.setLayout(layout)
+
+    def handle_restart_clicked(self):
+        loading_dialog = LoadingDialog(parent=self)
+        loading_dialog.show()
+
+        async def restart_and_close():
+            try:
+                await self.on_restart()  # ✅ 기존 로직 유지
+            finally:
+                loading_dialog.accept()  # 로딩 창 닫기
+
+        asyncio.ensure_future(restart_and_close())
 
     async def show_result(self):
         self.result_text_display.setPlainText("AI 판사의 판결을 생성 중입니다...")
@@ -85,7 +122,6 @@ class ResultScreen(QWidget):
             self.result_text_display.setPlainText(current_text + "...")
             QApplication.processEvents()
 
-            # ✅ 메시지 형식 수정
             judgement_summary = get_judge_result_wrapper([
                 {"role": "검사", "content": full_case_context},
                 {"role": "변호사", "content": "(변호인 측 주장 요약이 여기에 들어갈 수 있습니다.)"}

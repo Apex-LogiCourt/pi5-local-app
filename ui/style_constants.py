@@ -16,7 +16,7 @@ COMMON_PANEL_LABEL_STYLE = (
     f"padding: 12px; border-radius: 12px;"
 )
 DEFAULT_BUTTON_STYLE = (
-    f"background-color: {PRIMARY_BLUE}; color: {WHITE_TEXT}; "
+    f"background-color: {SECONDARY_BLUE}; color: {WHITE_TEXT}; "
     f"font-size: 18px; border-radius: 10px;"
 )
 TEXT_EDIT_STYLE_TRANSPARENT_BG = (
