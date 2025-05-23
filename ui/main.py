@@ -1,22 +1,20 @@
+# ✅ 전체 MainWindow 클래스 포함한 main.py 수정본
 
 import sys
 import os
 import asyncio
-import platform
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QPushButton, QLabel,
-    QVBoxLayout, QHBoxLayout, QStackedLayout, QFrame, QTextEdit
+    QVBoxLayout, QHBoxLayout, QStackedLayout, QFrame
 )
-from PyQt5.QtGui import QFont, QFontDatabase
+from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
-
 from qasync import QEventLoop
-from core.controller import CaseDataManager, get_judge_result_wrapper  # type: ignore
 
-
+from core.game_controller import GameController
 from ui.intro import IntroScreen
 from ui.prosecutor import ProsecutorScreen
 from ui.lawyer import LawyerScreen
@@ -25,18 +23,24 @@ from ui.resizable_image import ResizableImage, _get_image_path
 from ui.game_description import GameDescriptionScreen
 from ui.style_constants import *
 
-
-
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Logicourt AI")
         self.resize(1280, 720)
 
-        self.case_summary_data = ""
-        self.profiles_data = ""
-        self.intro_screen_instance = None
+        self.type_map = {
+            "defendant": "피고",
+            "victim": "피해자",
+            "witness": "목격자",
+            "reference": "참고인"
+        }
+        self.gender_map = {
+            "남자": "남성",
+            "여성": "여성"
+        }
 
+        self.intro_screen_instance = None
         self.init_ui()
         asyncio.ensure_future(self.preload_case_data())
 
@@ -62,23 +66,15 @@ class MainWindow(QWidget):
             self.start_button_on_start_screen.setEnabled(enabled)
 
     async def preload_case_data(self):
-        def dummy_callback(chunk, accumulated):
-            pass
-
-        CaseDataManager._case = None
-        CaseDataManager._profiles = None
-        CaseDataManager._evidences = None
-
         try:
-            print("Preloading case data...")
-            self.case_summary_data = await CaseDataManager.generate_case_stream(callback=dummy_callback)
-            self.profiles_data = await CaseDataManager.generate_profiles_stream(callback=dummy_callback)
-            self.evidence_data = await CaseDataManager.generate_evidences()  # ✅ 증거 불러오기
-            print("Case data preloaded.")
+            print("Preloading case data via GameController...")
+            await GameController.initialize()
+            print("GameController initialized.")
             self._update_start_button("시작하기", True)
         except Exception as e:
-            print(f"Error preloading case data: {e}")
+            print(f"Error initializing GameController: {e}")
             self._update_start_button("데이터 로드 실패 (재시도)", False)
+
     def create_start_screen(self):
         screen = QWidget()
         layout = QHBoxLayout()
@@ -167,42 +163,52 @@ class MainWindow(QWidget):
     def enter_text_mode(self):
         print("텍스트모드 버튼 클릭됨 (현재 미구현 상태)")
 
-    def start_intro_sequence(self):
-        if not self.case_summary_data or not self.profiles_data or not self.evidence_data:
-            asyncio.ensure_future(self.preload_case_data())
-            return
+    def _generate_profiles_text(self):
+        return "\n--------------------------------\n".join(
+            f"이름: {p.name} ({self.type_map.get(p.type, p.type)})\n"
+            f"성별: {self.gender_map.get(p.gender, p.gender)}, 나이: {p.age}세\n"
+            f"사연: {p.context}"
+            for p in GameController._profiles
+        )
 
-        if self.intro_screen_instance and self.stacked_layout.indexOf(self.intro_screen_instance) != -1:
-            self.stacked_layout.removeWidget(self.intro_screen_instance)
-            self.intro_screen_instance.deleteLater()
+    def start_intro_sequence(self):
+        summary = GameController._case.outline
+        profiles_text = self._generate_profiles_text()
+        evidences = GameController._evidences
 
         self.intro_screen_instance = IntroScreen(
-            summary=self.case_summary_data,
-            profiles=self.profiles_data,
-            evidences=self.evidence_data,  # ✅ 증거 전달
+            summary=summary,
+            profiles=profiles_text,
+            evidences=evidences,
             on_intro_finished_callback=self.show_prosecutor_screen
         )
         self.stacked_layout.addWidget(self.intro_screen_instance)
         self.stacked_layout.setCurrentWidget(self.intro_screen_instance)
+
     def show_prosecutor_screen(self):
-        if self.intro_screen_instance:
-            if self.stacked_layout.indexOf(self.intro_screen_instance) != -1:
-                self.stacked_layout.removeWidget(self.intro_screen_instance)
-            self.intro_screen_instance.deleteLater()
-            self.intro_screen_instance = None
+        summary = GameController._case.outline
+        profiles_text = self._generate_profiles_text()
 
         self.prosecutor_screen = ProsecutorScreen(
-            case_summary=self.case_summary_data,
-            profiles=self.profiles_data,
+            case_summary=summary,
+            profiles=profiles_text,
             on_next=self.show_lawyer_screen
         )
         self.stacked_layout.addWidget(self.prosecutor_screen)
         self.stacked_layout.setCurrentWidget(self.prosecutor_screen)
 
+        if self.intro_screen_instance:
+            self.stacked_layout.removeWidget(self.intro_screen_instance)
+            self.intro_screen_instance.deleteLater()
+            self.intro_screen_instance = None
+
     def show_lawyer_screen(self):
+        summary = GameController._case.outline
+        profiles_text = self._generate_profiles_text()
+
         self.lawyer_screen = LawyerScreen(
-            case_summary=self.case_summary_data,
-            profiles=self.profiles_data,
+            case_summary=summary,
+            profiles=profiles_text,
             on_next=lambda: asyncio.ensure_future(self.show_judgement())
         )
         self.stacked_layout.addWidget(self.lawyer_screen)
@@ -213,13 +219,13 @@ class MainWindow(QWidget):
             self.prosecutor_screen.deleteLater()
 
     async def show_judgement(self):
-        self.result_screen.set_case_data(self.case_summary_data, self.profiles_data)
+        summary = GameController._case.outline
+        profiles_text = self._generate_profiles_text()
+        self.result_screen.set_case_data(summary, profiles_text)
         self.stacked_layout.setCurrentWidget(self.result_screen)
         await self.result_screen.show_result()
 
     async def restart_game_flow(self):
-        self.case_summary_data = ""
-        self.profiles_data = ""
         self._update_start_button("데이터 로딩 중...", False)
         self.stacked_layout.setCurrentWidget(self.start_screen)
         await self.preload_case_data()
@@ -227,7 +233,6 @@ class MainWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
     window = MainWindow()
@@ -238,4 +243,3 @@ if __name__ == "__main__":
         print("Program interrupted")
     finally:
         loop.close()
-

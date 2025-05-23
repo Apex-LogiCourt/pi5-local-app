@@ -96,10 +96,11 @@ def get_profile_pixmap(name: str):
     return None
 
 def extract_name_and_role(title_line):
-    match = re.search(r"(피고|피해자|목격자|참고인)\s*:\s*(\S+)", title_line)
+    match = re.search(r"이름\s*:\s*(\S+)\s*\((피고|피해자|목격자|참고인)\)", title_line)
     if match:
-        return match.group(2), match.group(1)
+        return match.group(1), match.group(2)
     return None, None
+
 
 # LawyerScreen
 class LawyerScreen(QWidget):

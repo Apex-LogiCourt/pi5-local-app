@@ -32,8 +32,11 @@ KOREAN_TO_ENGLISH_MAP = {
 
 # 제목 문자열에서 이름 추출
 def extract_name_from_title(title: str) -> str:
-    match = re.search(r":\s*(.+?)\s*\(", title)
-    return match.group(1) if match else ""
+    match = re.search(r"이름\s*:\s*(\S+)", title)
+    if match:
+        full_name = match.group(1)
+        return full_name[-2:]  # 예: '김소현' → '소현'
+    return ""
 
 # 이름에 해당하는 프로필 이미지 QLabel 생성
 def get_profile_image_label(name: str) -> QLabel:

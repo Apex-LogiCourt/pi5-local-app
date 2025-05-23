@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional
-from data_models import CaseData, Evidence, Profile, Case, GameState, Phase, Role
-from controller import CaseDataManager
+from core.data_models import CaseData, Evidence, Profile, Case, GameState, Phase, Role
+from core.controller import CaseDataManager
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 import asyncio
 import time
