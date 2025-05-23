@@ -31,16 +31,17 @@ services:
       - base
       # - qemu # Mac에서 qemu 관련 주석 처리
     volumes:
-      - ./core:/app # ✅ core 폴더 전체를 /app으로 마운트
+      - ./core:/app 
       - data:/data  # 공유 볼륨을 마운트
-    command: streamlit run chat.py ### <--- 이부분 수정 [원본]command: streamlit run core/chat.py
+    # command: streamlit run chat.py 
+    command: uvicorn api.api:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8501:8501"  # Streamlit 기본 포트
       - "8000:8000"  # hardware 통신용 포트
     networks:
       - logicourt_network
-    # ports 설정 
-
+    expose:
+      - "8000"
 
   # rag:
   #   build:
@@ -60,9 +61,11 @@ services:
   #   volumes:
   #     - data:/data  # 공유 볼륨을 마운트
   #   ports:
-  #     - "8000:8000"  # hardware 통신용 포트
+  #     - "8300:8300"  # hardware 통신용 포트
   #   networks:
   #     - logicourt_network
+  #   expose:
+  #     - "8300"
 
 volumes:
   data:

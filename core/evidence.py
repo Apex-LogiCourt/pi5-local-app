@@ -21,23 +21,29 @@ CREATE_EVIDENCE_TEMPLATE = """
 단, 모든 증거는 재판에 참석한 인원과 연관이 있어야 합니다.
 증거품의 종류에는 제한이 없으나 답변은 다음의 형식을 따라야 합니다.
 
-name: 증거품 이름(명사), "한 단어"만 사용하세요. (예시: 카세트 테이프, 식칼 등)
-type: 증거 제출 주체(attorney, prosecutor)
-description: 증거에 대한 설명. 한 문장으로 설명하세요.
+기본 증거품의 형식: {format_instructions}
 
-제공된 세 개의 키워드명을 기준으로 JSON 형식으로 답하세요.
+다음 형식의 JSON 배열로 6개의 증거를 출력하세요:
+[
+  {{ "name": "증거명", "type": "attorney", "description": ["한 문장 설명"] }},
+  ...
+]
+
+"type" 필드를 기준으로 attorney 3개, prosecutor 3개를 포함해야 합니다.
+그러나 출력은 하나의 리스트 형태로 제공해야 하며, "attorney": [...], "prosecutor": [...] 같은 형식은 사용하지 마세요.
 """
 
-## make_evidence(Case, List[Profile]) -> List[Evidence]: 최초 증거 생성, 3개 생성되는 듯.
+## make_evidence(Case, List[Profile]) -> List[Evidence]: 최초 증거 생성
 ## update_evidence_description(Evidence, CaseData) -> Evidence: 넘겨준 Evidence의 설명 추가
 
 class EvidenceModel(BaseModel):
-    name: str = Field(description="증거품 이름(명사형)")
+    name: str = Field(description="한 단어의 증거품 이름(명사형)")
     type: Literal["attorney", "prosecutor"] = Field(description="제출 주체")
-    description: List[str] = Field(description="증거 설명")
+    description: List[str] = Field(description="한 문장의 증거 설명")
 
 def get_llm():
-    return ChatOpenAI(model="gpt-4o-mini", temperature=1.0)
+    # return ChatOpenAI(model="gpt-4o-mini", temperature=1.0)
+    return ChatOpenAI(model="gpt-4o-mini")
 
 def make_evidence(case_data: Case, profiles: List[Profile]) -> List[Evidence]:
     str_case_data = format_case(case_data)
@@ -117,69 +123,28 @@ def convert_data_class(data: List[dict]) -> List[Evidence]:
     AttributeError: 'str' object has no attribute 'get'
     이 부분에서 가끔씩 뻑남 에러처리 해줘야 할듯 data가 리스트 타입이 아니고 str로 잡히네 
     data 찍어보니까 data["증거품"] 이렇게 내려올 때가 있음 계속 테스팅 하면서 예외처리 잡아줘야 될듯 
+    
+    >> 2025-05-04::youngho
+    메인 템플릿 수정 후 혼자 테스트 보았을 때 문제없이 동작.
+    그러나 LLM 특성상 100% 보장은 없으므로, data 타입 확인하고 케이스별 수동 예외처리 필요
+    혹은 이 부분에서 에러 발생시 컨트롤러 측에서 다시 generate_evidences 하는 식으로 처리도 가능해 보임(높은 확률로 정상 동작하므로).
     """
-    print("convert_data_class의 data:", data)
+    print("[Debug/Evidence] type(data): "+ str(type(data)))
+    print("[Debug/Evidence] convert_data_class의 data:", data)
     if isinstance(data, dict):
         if "증거품" in data:
             data = data["증거품"]
         elif "evidence" in data:
             data = data["evidence"]
-
     return [Evidence.from_dict(item) for item in data]
 
 def make_evidence_image(name):
     try:
-        path = get_naver_image(name)
+        path = create_image_by_ai(name)
         resize_img(path, path, 200)
     except:
         return -1
     return path
-
-def get_naver_image(name): #이미지 처리 로직 개선 필요... 엉뚱한 이미지는 어떻게 처리??
-    import urllib.parse
-    import urllib.request
-    import requests
-    import xml.etree.ElementTree as xmlET
-    from dotenv import dotenv_values
-    
-    env = dotenv_values()
-    client_id = env.get("X_NAVER_CLIENT_ID")
-    client_secret = env.get("X_NAVER_CLIENT_SECRET")
-
-    params = {
-        'query': name,
-        'display': "10",
-    }
-    query_string = urllib.parse.urlencode(params)
-    url = "https://openapi.naver.com/v1/search/image.xml?" + query_string
-    urlRequest = urllib.request.Request(url)
-    urlRequest.add_header("X-Naver-Client-Id", client_id)
-    urlRequest.add_header("X-Naver-Client-Secret", client_secret)
-    
-    response = urllib.request.urlopen(urlRequest)
-    res_code = response.getcode()
-    if(res_code == 200):
-        response_body = response.read().decode('UTF-8')
-    else:
-        print("Error Code: " + res_code)
-        return -1
-    img_urls = xmlET.fromstring(response_body).findall('channel/item/link')
-    
-    for i in range(10):
-        my_save_path = "data/evidence_resource/" + name + ".jpg"
-        img_res = requests.get(img_urls[i].text, stream=True)
-
-        with open(my_save_path, "wb") as file:
-            for chunk in img_res.iter_content(1024):
-                file.write(chunk)
-            try:
-                f = open(my_save_path, "rt")
-                c = f.readlines()
-                continue
-            except:
-                f.close()
-                return my_save_path
-    return img_res
 
 def resize_img(input_path, output_path, target_size):
     from PIL import Image
@@ -191,46 +156,148 @@ def resize_img(input_path, output_path, target_size):
         return -1
     return 0
 
+def get_evidence_name_for_prompt(name):
+    llm = get_llm()
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a language assistant that rewrites Korean terms into simple English phrases or keywords that can be visualized easily as pictograms. Avoid literal translation and aim for intuitive, visual concepts. Output only 1–3 words with no explanations."),
+        ("human", "input: {evidence_name}")
+    ])
+    chain = prompt | llm | StrOutputParser()
+    res = chain.invoke({
+        "evidence_name": name,
+    })
+    return res
+
+def create_image_by_ai(name: str):
+    import json
+    import requests
+    import datetime
+    from dotenv import dotenv_values
+    
+    env = dotenv_values()
+    # key = "Token " + env.get("REPLICATE_API_KEY") # 직접 요청시 사용하는 키
+    key = env.get("REPLICATE_API_KEY")
+    today = datetime.datetime.now()
+    formatted_date = today.strftime("%y-%m-%d")
+    new_name = name.replace(" ", "-")
+
+    prompt_name = get_evidence_name_for_prompt(name)
+    save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + ".png"
+
+    import replicate
+    client = replicate.Client(api_token=key)
+    model = "stability-ai/stable-diffusion-3.5-large"
+    inputs = {
+        "prompt": "A vector-style black and white pictogram of " + prompt_name + ", clean and black outlines, white background, minimal detail, symbol-like, high contrast, centered subject, flat design, no shading, no gradients, icon format, simple geometric shapes, digital vector art, Adobe Illustrator style",
+        "aspect_ratio": "1:1",
+        "output_format": "png",
+        # "cfg": 6,                 #TEST
+        # "steps": 40,              #TEST
+        # "output_quality": 95,     #TEST
+        # "prompt_strength": 0.85   #TEST
+    }
+    output = client.run(model, input=inputs)
+
+    if output and isinstance(output, list):
+        image_url = output[0]
+        print(f"[{name}] 이미지 URL: {image_url}")
+
+        response = requests.get(image_url)
+        if response.status_code == 200:
+            with open(save_path, "wb") as f:
+                f.write(response.content)
+            print(f"[{name}] 이미지 저장 성공: {save_path}")
+        else:
+            print(f"[{name}] 이미지 저장 실패: {response.status_code}")
+    else:
+        print(f"[{name}] 이미지 요청 실패")
+
+    # JSON 필요시 아래 코드로 사용
+    # payload = {
+    #     "input": {
+    #         "prompt": "A simple black and white pictogram of a " + prompt_name + ", minimalist design, vector art, flat colors, clean lines, white background, high contrast, clear shapes, centered, bold outline, outlined",
+    #         "aspect_ratio": "1:1",
+    #         "output_format": "png",
+    #         "cfg": 6,
+    #         "prompt_strength": 0.85,
+    #         "output_quality": 95
+    #     }
+    # }
+
+    # response = requests.post(
+    #     "https://api.replicate.com/v1/models/stability-ai/stable-diffusion-3.5-large/predictions",
+    #     headers={
+    #         "Authorization": key,
+    #         "Content-Type": "application/json",
+    #         "Prefer": "wait"
+    #     },
+    #     json=payload
+    # )
+
+    # if response.status_code in [200, 201]:
+    #     output = response.json()
+    #     print(json.dumps(output, indent=4))  # TEST
+    #     with open(save_path + ".json", "w") as f:
+    #         json.dump(output, f, indent=4)
+
+    #     if "output" in output and output["output"]:
+    #         image_url = output["output"][0]
+    #         image_data = requests.get(image_url).content
+    #         with open(save_path, 'wb') as file:
+    #             file.write(image_data)
+    # else:
+    #     print(f"Error {response.status_code}: {response.text}")
+    #     return response.status_code
+    return save_path
 
 
 ### TEST CODE ###
 if __name__ == "__main__":
+    # res = create_image_by_ai("메시지 기록")
+    # print(res)
+    t = make_evidence_image("test6")
+    print(t)
+
     # CaseDataManager import 한 뒤에 테스트 할 때만 돌려보세용  
+    # from controller import CaseDataManager #테스트 할 때만 돌려보세용 
+    # import asyncio #여기도 주석해제
     # asyncio.run(CaseDataManager.initialize())  # CaseDataManager 초기화 
     # asyncio.run(CaseDataManager.generate_case_stream())  # case 생성 
     # asyncio.run(CaseDataManager.generate_profiles_stream())  # 프로필 생성
     # res = make_evidence(case_data=CaseDataManager.get_case(), 
     #                     profiles=CaseDataManager.get_profiles())
-    # print(res)
-    c = Case(
-        outline="""
-        피해자 김현수는 성공한 사업가로, 최근 은퇴 후 유산을 정리하고 있었습니다. 그의 조카 김민준은 김현수와 가까운 사이였으며, 유산 상속에 큰 관심을 보이고 있었습니다.
-        김현수는 자신의 저택에서 의식불명 상태로 발견되었고, 이틀 후 사망했습니다. 경찰은 김현수의 죽음이 단순한 사고가 아니라 누군가에 의해 계획된 범죄일 가능성을 제기했습니다. 사건 당일, 김민준은 저택을 방문했던 것으로 확인되었으며, 김현수의 유산에 관한 논의가 있었던 것으로 밝혀졌습니다.
-        """,
-        behind=""
-    )
-    plist = []
-    plist.append(
-        Profile(
-            name="김민준",
-            type="suspect",
-            context="32세, 김현수의 조카로 현재 중소기업에서 근무 중입니다. 그는 평소 삼촌의 유산을 통해 사업 확장을 꿈꾸고 있었습니다. 사건 발생 시점에 김민준은 저택을 방문했으나 이후 친구들과 저녁 식사 모임이 있었다고 주장합니다."
-        )
-    )
-    plist.append(
-        Profile(
-            name="이상훈",
-            type="witness",
-            context="사건 당일 저녁, 김민준이 친구와 함께 있었으며, 그의 행동에 의심스러운 점이 없었다는 증언입니다."
-        )
-    )
-    cd = CaseData(
-        case = c,
-        profiles=plist,
-        evidences=None
-    )
-    res = make_evidence(case_data=c, profiles=plist)
-    print("\n\n")
-    update_evidence_description(res[0], cd)
-    print(res[0].description)
+    # print("\n\n", res)
+
+
+    # c = Case(
+    #     outline="""
+    #     피해자 김현수는 성공한 사업가로, 최근 은퇴 후 유산을 정리하고 있었습니다. 그의 조카 김민준은 김현수와 가까운 사이였으며, 유산 상속에 큰 관심을 보이고 있었습니다.
+    #     김현수는 자신의 저택에서 의식불명 상태로 발견되었고, 이틀 후 사망했습니다. 경찰은 김현수의 죽음이 단순한 사고가 아니라 누군가에 의해 계획된 범죄일 가능성을 제기했습니다. 사건 당일, 김민준은 저택을 방문했던 것으로 확인되었으며, 김현수의 유산에 관한 논의가 있었던 것으로 밝혀졌습니다.
+    #     """,
+    #     behind=""
+    # )
+    # plist = []
+    # plist.append(
+    #     Profile(
+    #         name="김민준",
+    #         type="suspect",
+    #         context="32세, 김현수의 조카로 현재 중소기업에서 근무 중입니다. 그는 평소 삼촌의 유산을 통해 사업 확장을 꿈꾸고 있었습니다. 사건 발생 시점에 김민준은 저택을 방문했으나 이후 친구들과 저녁 식사 모임이 있었다고 주장합니다."
+    #     )
+    # )
+    # plist.append(
+    #     Profile(
+    #         name="이상훈",
+    #         type="witness",
+    #         context="사건 당일 저녁, 김민준이 친구와 함께 있었으며, 그의 행동에 의심스러운 점이 없었다는 증언입니다."
+    #     )
+    # )
+    # cd = CaseData(
+    #     case = c,
+    #     profiles=plist,
+    #     evidences=None
+    # )
+    # res = make_evidence(case_data=c, profiles=plist)
+    # print("\n\n")
+    # update_evidence_description(res[0], cd)
+    # print(res[0].description)
 

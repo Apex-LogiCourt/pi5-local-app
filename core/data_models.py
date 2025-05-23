@@ -1,5 +1,7 @@
-from dataclasses import dataclass
-from typing import List, Literal
+from dataclasses import dataclass, asdict
+from typing import List, Literal, Dict
+from enum import Enum, auto
+from pydantic import BaseModel, Field
 
 #==============================================
 # 데이터만 저장하기 위한 데이터클래스 선언 
@@ -12,31 +14,36 @@ class Case:
 
 @dataclass
 class Profile:
+    type: Literal["witness", "reference", "defendant", "victim"]  # 참고인 유형
     name: str  # 사람 이름
-    type: Literal["witness", "reference", "defendant"]  # 참고인 유형
+    gender: Literal["남자", "여성"]  # 성별
+    age: int                     # 나이
     context: str  # 출석 맥락 -- 어떤 사연으로 여기 출석하게 되었는지
-
+    
 @dataclass
 class Evidence:
+    id: int  # 증거 ID (자동 증가)
     name: str  # 증거품 이름(명사형) 
     type: Literal["attorney", "prosecutor"]  # 제출 주체 
     description: List[str]  # 증거 설명 (추가 가능)
     picture: str  # 사진 경로 (향후 구현)
 
+    _cnt : int = 0  
+
     @classmethod
     def from_dict(cls, data: dict) -> 'Evidence':
+        cls._cnt += 1
         desc = data.get("description", [])
         if isinstance(desc, str):
             desc = [desc]  # str to List
         return cls(
+            id=cls._cnt,  # 자동 증가
             name=data["name"],
             type=data["type"],
             description=desc,
             picture=None
         )
 
-# Controller에서 최종적으로 다른 모듈로 념겨줄 데이터 형식이에용
-# 아직 구현이 안 됐지만 이렇게 넘어올거라고 믿고 작업해주세요 
 @dataclass
 class CaseData:
     case: Case
@@ -44,4 +51,43 @@ class CaseData:
     evidences: List[Evidence]
 
 
+#==============================================
+# 게임 상태 변수
+#==============================================
 
+class Phase(Enum):
+    INIT = auto()
+    DEBATE = auto()
+    INTERROGATE = auto()
+    JUDGEMENT = auto()
+    END = auto()
+
+class Role(Enum):
+    PROSECUTOR = "prosecutor"
+    ATTORNEY = "attorney"  
+
+    def next(self):
+        return Role.ATTORNEY if self == Role.PROSECUTOR else Role.PROSECUTOR
+
+    def label(self) -> str:
+        return {
+            "prosecutor": "검사",
+            "attorney": "벌호사"
+        }[self.value]
+
+
+class GameState(BaseModel):
+    phase: Phase = Phase.INIT
+    turn: Role = Role.PROSECUTOR
+    messages: List[Dict] = Field(default_factory=list)
+    record_state : bool = False
+    done_flags: Dict[Role, bool] = Field(default_factory=lambda: {
+        Role.PROSECUTOR: False,
+        Role.ATTORNEY: False
+    })
+    objection_count: Dict[Role, int] = Field(default_factory=lambda: {
+        Role.PROSECUTOR: 0,
+        Role.ATTORNEY: 0
+    })
+    current_profile: Profile = Field(default=None)
+    tagged_evidence: Evidence = Field(default=None)
