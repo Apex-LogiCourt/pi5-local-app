@@ -110,10 +110,14 @@ class CaseDataManager:
 
             # 배경 추출
             context = ""
+            # 성격 추출
+            personality = ""
+            
             for line in lines:
                 if line.startswith("- 배경") or line.startswith("배경"):
                     context = line.split(":", 1)[1].strip()
-                    break
+                elif line.startswith("- 성격") or line.startswith("성격"):
+                    personality = line.split(":", 1)[1].strip()
 
             # profil.json에서 정보 보정
             character_info = next((char for char in characters if char['name'].strip() == name.strip()), None)
@@ -128,6 +132,7 @@ class CaseDataManager:
                 name=name,
                 gender=gender,
                 age=int(age),
+                personality=personality,
                 context=context,
                 voice=voice
             ))
@@ -238,4 +243,4 @@ if __name__ == "__main__":
     # asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
     # print(CaseDataManager.get_case_data())
 
-    asyncio.run(CaseDataManager.initialize())
+     asyncio.run(CaseDataManager.initialize())
