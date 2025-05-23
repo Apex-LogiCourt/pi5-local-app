@@ -65,33 +65,51 @@ def ask_defendant(question, defendant_name, case_summary):
 # Interrogator 클래스
 
 class Interrogator:
+    _instance = None
+    _initialized = False
+    
     _evidences : Evidence = None
     _case : str = None
     _profiles : List[Profile] = None
     _role = None
     _profile : Profile = None
 
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(Interrogator, cls).__new__(cls)
+        return cls._instance
+
     def __init__(self):
-        self.llm = get_llm()
-        self.chat_prompt = ChatPromptTemplate.from_template("""
-            당신은 재판에 참석한 {role}입니다.
-            당신의 역할은 사건에 대한 질문에 인간적으로 답변하는 것입니다.
-            사건 개요: {case}
-            당신의 정보 : {profile}
-            증거 : {evidence}
-            질문: {question}
-                                                         
-            답변:
-        """)
-        self.output_parser = StrOutputParser()
+        if not self._initialized:
+            self.llm = get_llm()
+            self.chat_prompt = ChatPromptTemplate.from_template("""
+                당신은 재판에 참석한 {role}입니다.
+                당신의 역할은 사건에 대한 질문에 인간적으로 답변하는 것입니다.
+                사건 개요: {case}
+                당신의 정보 : {profile}
+                증거 : {evidence}
+                질문: {question}
+                                                             
+                답변:
+            """)
+            self.output_parser = StrOutputParser()
+            Interrogator._initialized = True
     
-    def set_case_data(self) -> bool:
+    @classmethod
+    def get_instance(cls):
+        """싱글톤 인스턴스를 반환합니다."""
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+    
+    @classmethod
+    def set_case_data(cls) -> bool:
         """CaseData 객체를 설정합니다."""
         from core.controller import Controller
         case_data = Controller.get_case_data()
-        self._case = case_data.case
-        self._profiles = case_data.profiles
-        self._evidence = case_data.evidences
+        cls._case = case_data.case
+        cls._profiles = case_data.profiles
+        cls._evidence = case_data.evidences
 
     def build_ask_chain(self, question: str, profile : Profile):
         """질문과 역할에 따라 체인을 구축합니다."""
@@ -100,3 +118,5 @@ class Interrogator:
         self.llm = get_llm()
         chain = prompt | self.llm | self.output_parser
         return chain
+    
+it = Interrogator()

@@ -4,6 +4,7 @@ from controller import CaseDataManager
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 import asyncio
 import time
+from interrogation.interrogator import Interrogator, it
 
 class GameController(QObject):
     _instance = None
@@ -14,6 +15,7 @@ class GameController(QObject):
     _profiles : List[Profile] = None
     _case_data : CaseData = None
     _signal = pyqtSignal(str, object)
+    _interrogator : Interrogator = it.get_instance()
 
     
     @classmethod
@@ -65,6 +67,8 @@ class GameController(QObject):
 
         if cls._isInitialized is True:
             cls._state.phase = Phase.DEBATE
+
+        cls._interrogator.set_case_data()
             
         return True
     
@@ -87,7 +91,7 @@ class GameController(QObject):
         """
         녹음 종료 후에 no_context 인지 interrogation_accepted 인지 확인 
         """
-
+        
         return True
     
     @classmethod
@@ -165,15 +169,6 @@ class GameController(QObject):
         """Role.PROSECUTOR ↔ Role.ATTORNEY 토글."""
         cls._state.turn = cls._state.turn.next()
 
-    # def _question(self, type: str, question: str) -> None:
-    #     """
-    #     참고인 심문 
-    #     - 내부적으로 증인 심문 체인을 호출하고, 응답을 메시지에 추가
-    #     """
-    #     self.state.mode = Mode.WITNESS
-    #     self._add_message("user", f"[참고인:{witness_name}] {question}")
-    #     # resp = self._ask_witness(question, witness_name)
-    #     # self._add_message("witness", resp)
 
 
 
