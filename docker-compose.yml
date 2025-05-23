@@ -33,7 +33,8 @@ services:
     volumes:
       - ./core:/app 
       - data:/data  # 공유 볼륨을 마운트
-    command: streamlit run chat.py 
+    # command: streamlit run chat.py 
+    command: uvicorn api.api:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8501:8501"  # Streamlit 기본 포트
       - "8000:8000"  # hardware 통신용 포트
