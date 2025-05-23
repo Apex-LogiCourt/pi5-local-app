@@ -38,7 +38,7 @@ async def evidence_ack(id: str, status: str):
 
 # ===================
 # WebSocket 클라이언트 
-# ======
+# ===============
 
 import asyncio
 import websockets
@@ -84,7 +84,7 @@ async def receive_messages(websocket):
 #     print("[클라이언트] tts_end 전송")
 
 
-async def main():
+async def websocket_client():
     uri = "ws://localhost:8000/ws/voice-stream"
     async with websockets.connect(uri) as websocket:
         print("[클라이언트] 서버에 연결됨")
