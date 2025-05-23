@@ -108,10 +108,11 @@ class GameController(QObject):
     @classmethod
     def interrogation_end(cls) -> None:
         """심문 화면에서 뒤로 가기 버튼을 눌렀을 때 호출, 심문 종료"""
-        if cls._state.phase == Phase.INTERROGATE:
-            cls._state.phase = Phase.DEBATE
-            cls._state.current_profile = None
-    
+        cls._state.phase = Phase.DEBATE
+        cls._state.current_profile = None
+        if cls._state.record_state is True:
+            cls.record_end()
+
     @classmethod
     def done(cls) -> None:
         """발언 완전 종료 시에 호출, 양쪽 다 됐을 때는 최종 판결 시작"""
