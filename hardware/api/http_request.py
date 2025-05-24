@@ -6,9 +6,9 @@ import json
 # 나중에 도커로 돌릴 때는 host를 localhost가 아닌 도커 컨테이너 core 로 바꿔주세용 
 async def listen_sse_async(press_id: str):
     async with httpx.AsyncClient(timeout=None) as client:
-        async with client.stream("GET", "http://localhost:8000/api/press/{press_id}") as response:
+        async with client.stream("GET", "http://localhost:8000/sse/evidence/stream") as response:
             async for line in response.aiter_lines():
-                if line.startswith("data:"): # 근데 "event" 로 올듯 일단 한번찍어보세용
+                if line.startswith("event:"): # 근데 "event" 로 올듯 일단 한번찍어보세용
                     data = line.removeprefix("data:").strip()
                     print(f"받은 데이터: {data}")
 
@@ -18,7 +18,6 @@ async def handle_button_press(press_id: str):
     data = response.json()
     print(data)
     # 받는 응답: {"status": "ok", "role": "prosecutor"}
-    
     return data
 
 async def handle_nfc(id: str):
@@ -43,31 +42,54 @@ async def evidence_ack(id: str, status: str):
 import asyncio
 import websockets
 import json
+import hardware.devices.TTS_module as tts
 
 async def send_messages(websocket, message: dict):
     """서버로 메시지를 송신""" 
     await websocket.send(json.dumps(message))
-    
     print(f"[클라이언트] 서버로 메시지 송신: {message}")
 
 
 async def receive_messages(websocket):
-    """서버로부터 메시지를 수신"""
     try:
         async for message in websocket:
             print(f"[클라이언트] 서버 메시지 수신: {message}")
-
-            # tts 요청 처리 해야 함
             data = json.loads(message)
-            if data.get("type") == "tts":
-                print("[클라이언트] TTS 메시지 수신", data)
-            #  {
-                #   "type": "tts",
-                #   "data": "사건은 4월 23일에 발생했습니다.",
-                #   "voice": "jinho"
-            #  }
+            await server_event_handler(websocket, data)
     except websockets.exceptions.ConnectionClosed:
         print("[클라이언트] 서버 연결 종료")
+
+async def server_event_handler(websocket, data: dict): #서버에서 받은 메시지 처리
+    event_type = data.get("type") or data.get("event")
+
+    if event_type == "tts_start":
+        print("[클라이언트] TTS 메시지 수신", data)
+        tts_text = data["data"]
+        voice = data.get("voice")
+        print(f"[클라이언트] TTS 시작: '{tts_text}' (voice: {voice})")
+        tts.text_to_speech()
+    
+    elif event_type == "tts_end":
+        print("[클라이언트] TTS 종료")
+        tts.set_playing_state(False)
+
+    elif event_type == "record_start":
+        print("[클라이언트] 녹음 시작")
+        tts.record_audio("stt_temp")
+
+    elif event_type == "record_stop":
+        print("[클라이언트] 녹음 종료")
+        tts.set_rec_state(False)
+        print("[클라이언트] STT 데이터 송신")
+        stt_text = tts.speech_to_text("stt_temp")
+        messages = {
+            "type": "stt",
+            "msg" : stt_text
+        }
+        await send_messages(websocket, messages)
+    else:
+        print("[클라이언트] 알 수 없는 이벤트 수신: ", data)
+
 
 # async def send_tts_start(websocket):
 #     """TTS 음성 출력 시작한다는 신호를 보냄""" 
@@ -86,14 +108,14 @@ async def receive_messages(websocket):
 
 async def websocket_client():
     uri = "ws://localhost:8000/ws/voice-stream"
-    async with websockets.connect(uri) as websocket:
-        print("[클라이언트] 서버에 연결됨")
-
-        # 송신/수신 동시에 처리
-        sender_task = asyncio.create_task(send_messages(websocket))
-        receiver_task = asyncio.create_task(receive_messages(websocket))
-
-        await asyncio.gather(sender_task, receiver_task)
+    while True:
+        try:
+            async with websockets.connect(uri) as websocket:
+                print("[클라이언트] 서버에 연결됨")
+                await receive_messages(websocket)
+        except Exception as e:
+            print(f"[클라이언트] 웹소켓 연결 오류: {e}, 3초 후 재시도")
+            await asyncio.sleep(3)
 
 if __name__ == "__main__":
     pass
