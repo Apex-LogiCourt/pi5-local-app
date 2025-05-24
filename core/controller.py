@@ -19,16 +19,34 @@ class CaseDataManager:
     _evidences : List[Evidence] = None
     _profiles : List[Profile] = None
     _case_data : CaseData = None
+
+
+    def __new__(cls):   
+        """싱글톤 인스턴스를 생성하는 메서드"""
+        if cls._instance is None:
+            cls._instance = super(CaseDataManager, cls).__new__(cls)
+            cls._instance.__init__()
+        return cls._instance
+
     
     def __init__(self):
-        # 새로운 인스턴스 생성 방지
-        raise RuntimeError('이 클래스의 인스턴스를 직접 생성할 수 없습니다')
+        # 이미 초기화된 경우 다시 초기화하지 않음
+        if hasattr(self, '_initialized'):
+            return
+        self._initialized = True
     
     @classmethod
+    def get_instance(cls):
+        """싱글톤 인스턴스를 반환하는 클래스 메서드"""
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
+    @classmethod
     async def initialize(cls) -> CaseData:
-        await CaseDataManager.generate_case_stream()  # 비동기 호출
-        await CaseDataManager.generate_profiles_stream()  # 비동기 호출  
-        await CaseDataManager.generate_evidences()  # 비동기 호출
+        await cls.generate_case_stream()  # 비동기 호출
+        await cls.generate_profiles_stream()  # 비동기 호출  
+        await cls.generate_evidences()  # 비동기 호출
         return cls._case_data
     
     #==============================================
@@ -38,6 +56,8 @@ class CaseDataManager:
     async def generate_case_stream(cls, callback=None):
         chain = build_case_chain()
         result = cls._handle_stream(chain, callback)
+        # from tools.service import run_chain_streaming
+        # result = run_chain_streaming(chain)
         cls._case = Case(outline=result, behind="")
         return result
     
