@@ -98,14 +98,12 @@ class Interrogator:
     
     @classmethod
     def get_instance(cls):
-        """싱글톤 인스턴스를 반환합니다."""
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
     
     @classmethod
     def set_case_data(cls) -> bool:
-        """CaseData 객체를 설정합니다."""
         from controller import CaseDataManager
         case_data = CaseDataManager.get_case_data()
         cls._case = case_data.case
@@ -113,7 +111,6 @@ class Interrogator:
         cls._evidence = case_data.evidences
 
     def build_ask_chain(self, question: str, profile : Profile):
-        """질문과 역할에 따라 체인을 구축합니다."""
         prompt = self.chat_prompt.format(role=profile.type, case=self._case.outline, 
             profile=profile.__str__(), evidence=self._evidence.__str__(), question=question)
         self.llm = get_llm()
@@ -121,7 +118,7 @@ class Interrogator:
         return chain
     
     def check_request(self, user_input: str) -> Optional[Dict]:
-
+        """사용자의 심문 요청을 분석하여 JSON 형식으로 반환합니다."""
         prompt = PromptTemplate.from_template("""
         당신은 법정 역할극을 조정하는 AI입니다. 사용자가 심문을 진행하려고 합니다.
         사용자 발언: {user_input}
@@ -129,7 +126,7 @@ class Interrogator:
         
         사용자가 요청하는 심문 유형과 대상을 파악하여 JSON 형식으로 출력하세요. 
         사용자가 이름을 입력한 경우 프로필과 일치하는 이름인지 반드시 확인하세요.
-        이름 출력은 오로지 프로필 `profile_data`의 name만을 출력하세요.
+        이름 출력은 오로지 프로필에 있는 이름만을 출력하세요.
                                             
         1. 피고, 목격자 등 역할이 명시되어 있거나 이름이 일치하는 경우
             - 피고인 심문: {{"type": "defendant", "answer": "피고에 대한 심문을 진행하십시오."}}
@@ -144,7 +141,10 @@ class Interrogator:
             - 전혀 다른 이름 : {{"type": "retry", "answer": "그런 인물은 없습니다"}}
         """)
 
+        prompt.format(profile_data=self.profiles.__str__(), user_input=user_input)
+        chain = prompt | self.llm | JsonOutputParser()
 
+        return chain.invoke({"user_input": user_input})
 
 
 # 싱글톤 인스턴스 생성
