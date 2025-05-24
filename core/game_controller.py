@@ -100,7 +100,7 @@ class GameController(QObject):
         return True
     
     @classmethod
-    def user_input(cls, text: str) -> bool:
+    async def user_input(cls, text: str) -> bool:
         """
         사용자의 수동 입력, 텍스트를 전송
         Args:
@@ -110,23 +110,26 @@ class GameController(QObject):
         """
         if not text.strip():
             return False
+        cls._add_message(cls._state.turn, text)
+        if cls._state.phase == Phase.DEBATE:
+            return await cls._handle_user_input_validation(text)
         
-        result = CaseDataManager.get_instance().check_contextual_relevance(text)
- 
-        if result.get("relevant") == "false":
-            cls._send_signal("no_context", {"role": "판사", "message": result.get("answer")})
-            from tools.service import handler_tts_service
-            handler_tts_service(result.get("answer"))
-            return False
-
-   
-        if result.get("relevant") == "true" :     
-            cls._add_message(cls._state.turn, text)
+        if cls._state.phase == Phase.INTERROGATE:
+            from tools.service import run_chain_streaming
+            cls._state.current_profile = it._current_profile
             
-        """
-        여기에서 no_context, interogation 처리 해야겠음 
-        """
-        return True
+            def handle_response(sentence):
+                # 심문 응답을 처리하는 콜백
+                cls._send_signal("interrogation_response", {
+                    "role": cls._state.current_profile.name if cls._state.current_profile else "증인",
+                    "message": sentence
+                })
+                cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", sentence)
+            
+            run_chain_streaming(it.build_ask_chain(text, cls._state.current_profile), handle_response)
+
+        
+
     
     @classmethod
     def interrogation_end(cls) -> None:
@@ -151,6 +154,38 @@ class GameController(QObject):
     def get_state(cls) -> GameState:
         """GameState 객체 반환."""
         return cls._state
+    
+
+    @classmethod
+    async def _handle_user_input_validation(cls, text: str) -> bool:
+
+        async def request_speak_judge(cls, msg: dict, code:str) -> bool:
+            """판사의 발언을 음성으로 출력. return False 는 턴 전환 없음."""
+            cls._send_signal(code, msg)
+            cls._add_message("판사", msg.get("message"))  # 판사 메시지 추가
+            from tools.service import handler_tts_service
+            await handler_tts_service(text)
+            return False
+
+        result = CaseDataManager.get_instance().check_contextual_relevance(text)
+ 
+        if result.get("relevant") == "false": # 문맥 관련 없음
+            return await request_speak_judge(cls, {"role": "판사", "message": result.get("answer")}, "no_context")
+   
+        if result.get("relevant") == "true" :
+            if result.get("answer") == "interrogation":
+                # 심문 세팅
+                temp = it.check_request(text)
+                type_ = temp.get("type")
+                if type_ == "retry": 
+                    return await request_speak_judge(cls, {"role": "판사", "message": temp.get("answer")}, "no_context")
+                else : 
+                    cls._state.phase = Phase.INTERROGATE 
+                    return await request_speak_judge(cls, {"role": "판사", "message": temp.get("answer"), "type":type_}, "interrogation_accepted")
+            else :
+                cls._add_message(cls._state.turn, text)
+                return True
+
     
 
 #==============================================

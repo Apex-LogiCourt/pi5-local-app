@@ -57,21 +57,49 @@ def handler_question(question: str, profile : Profile) :
 
 #============================================
 
-def run_chain_streaming(chain):
-    stream = chain.stream({})
+# def run_chain_streaming(chain):
+#     stream = chain.stream({})
     
-    def on_sentence_ready(sentence):
-        print(f"[문장 수신] {sentence}")
+#     def on_sentence_ready(sentence):
+#         print(f"[문장 수신] {sentence}")
     
-    sentence_streamer(stream, on_sentence_ready)
+#     sentence_streamer(stream, on_sentence_ready)
 
 
-def run_str_streaming(text: str):
+def run_chain_streaming(chain, callback=None):
+    # chain이 문자열인 경우 run_str_streaming 사용
+    if isinstance(chain, str):
+        run_str_streaming(chain, callback)
+        return
+    
+    # chain이 None인 경우 처리
+    if chain is None:
+        print("[WARNING] Chain is None, skipping")
+        return
+    
+    try:
+        stream = chain.stream({})
+        
+        def on_sentence_ready(sentence):
+            if callback:
+                callback(sentence)
+            return sentence
+        
+        sentence_streamer(stream, on_sentence_ready)
+    except Exception as e:
+        print(f"[ERROR] Failed to stream chain: {e}")
+        if callback:
+            callback(f"스트리밍 중 오류가 발생했습니다: {str(e)}")
+
+
+def run_str_streaming(text: str, callback=None):
     def text_generator():
         yield text  # 전체 문자열 한 번에 줌
 
     def on_sentence_ready(sentence):
-        print(f"[문장 수신] {sentence}")
+        # print(f"[문장 수신] {sentence}")
+        if callback:
+            callback(sentence)
     
     sentence_streamer(text_generator(), on_sentence_ready)
 

@@ -73,17 +73,9 @@ class Interrogator:
     _case : str = None
     _profiles : List[Profile] = None
     _role = None
-    _profile : Profile = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(Interrogator, cls).__new__(cls)
-        return cls._instance
-
-    def __init__(self):
-        if not self._initialized:
-            self.llm = get_llm()
-            self.chat_prompt = ChatPromptTemplate.from_template("""
+    _current_profile : Profile = None
+    llm = get_llm("gpt-4o-mini", temperature=0.5)  # 기본 LLM 설정
+    chat_prompt = ChatPromptTemplate.from_template("""
                 당신은 재판에 참석한 {role}입니다.
                 당신의 역할은 사건에 대한 질문에 인간적으로 답변하는 것입니다.
                 사건 개요: {case}
@@ -93,7 +85,14 @@ class Interrogator:
                                                              
                 답변:
             """)
-            self.output_parser = StrOutputParser()
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(Interrogator, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        if not self._initialized:
             Interrogator._initialized = True
     
     @classmethod
@@ -110,14 +109,29 @@ class Interrogator:
         cls._profiles = case_data.profiles
         cls._evidence = case_data.evidences
 
-    def build_ask_chain(self, question: str, profile : Profile):
-        prompt = self.chat_prompt.format(role=profile.type, case=self._case.outline, 
-            profile=profile.__str__(), evidence=self._evidence.__str__(), question=question)
-        self.llm = get_llm()
-        chain = prompt | self.llm | self.output_parser
+    @classmethod
+    def build_ask_chain(cls, question: str, profile : Profile):
+        # 모든 변수를 미리 포맷팅된 텍스트로 준비
+        formatted_prompt = f"""
+                당신은 재판에 참석한 {profile.type}입니다.
+                당신의 역할은 사건에 대한 질문에 인간적으로 답변하는 것입니다.
+                사건 개요: {cls._case.outline}
+                당신의 정보 : {profile.__str__()}
+                증거 : {cls._evidence.__str__()}
+                질문: {question}
+                                                             
+                답변:
+            """
+        
+        # 단순한 프롬프트 템플릿 생성
+        prompt = ChatPromptTemplate.from_template(formatted_prompt)
+        cls.llm = get_llm()
+        chain = prompt | cls.llm | StrOutputParser()
+        
         return chain
     
-    def check_request(self, user_input: str) -> Optional[Dict]:
+    @classmethod
+    def check_request(cls, user_input: str) -> Optional[Dict]:
         """사용자의 심문 요청을 분석하여 JSON 형식으로 반환합니다."""
         prompt = PromptTemplate.from_template("""
         당신은 법정 역할극을 조정하는 AI입니다. 사용자가 심문을 진행하려고 합니다.
@@ -141,10 +155,19 @@ class Interrogator:
             - 전혀 다른 이름 : {{"type": "retry", "answer": "그런 인물은 없습니다"}}
         """)
 
-        prompt.format(profile_data=self.profiles.__str__(), user_input=user_input)
-        chain = prompt | self.llm | JsonOutputParser()
+        llm = get_llm()
+        chain = prompt | llm | JsonOutputParser()
+        result = chain.invoke({"profile_data": cls._profiles.__str__(), "user_input": user_input})
+        type = result.get("type")
 
-        return chain.invoke({"user_input": user_input})
+        if type != "retry":
+            # 심문 요청이 유효한 경우, 프로필 리스트에서 해당 타입과 일치하는 프로필 찾기
+            for profile in cls._profiles:
+                if profile.type == type:
+                    cls._current_profile = profile
+                    break
+
+        return result
 
 
 # 싱글톤 인스턴스 생성

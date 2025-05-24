@@ -62,16 +62,14 @@ class PyQtApp(QWidget):
         self.label = QLabel("대기 중...")
         self.signal_label = QLabel("Signal: 없음")  # GameController signal 표시용
         self.button = QPushButton("🎤 녹음 시작")
-        self.test_button = QPushButton("🧪 테스트 입력")  # 테스트 버튼 추가
         
         self.button.clicked.connect(self.handle_record)
-        self.test_button.clicked.connect(self.handle_test_input)
+        # self.test_button.clicked.connect(self.handle_test_input)
 
         layout = QVBoxLayout()
         layout.addWidget(self.label)
         layout.addWidget(self.signal_label)
         layout.addWidget(self.button)
-        layout.addWidget(self.test_button)
         self.setLayout(layout)
 
         self.signal = SignalEmitter()
@@ -90,22 +88,6 @@ class PyQtApp(QWidget):
             self.signal_label.setText(f"Signal: {code} - {arg['message']}")
         else:
             self.signal_label.setText(f"Signal: {code} - {str(arg)}")
-
-    def handle_test_input(self):
-        """테스트 입력을 GameController에 전송"""
-        test_inputs = [
-            "이 사건의 피해자는 누구인가요?",
-            "갈비찜 레시피 알려주세요",
-            "피고인을 심문하고 싶습니다"
-        ]
-        
-        import random
-        test_input = random.choice(test_inputs)
-        print(f"[테스트 입력] {test_input}")
-        
-        # GameController의 user_input 메서드 호출
-        result = self.gc.user_input(test_input)
-        print(f"[테스트 결과] {result}")
 
     def handle_record(self):
         print(f"[버튼] 클릭됨 - 현재 상태: {'녹음중' if self.is_recording else '대기중'}")

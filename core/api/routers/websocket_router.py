@@ -43,7 +43,7 @@ async def _receive_handler(websocket: WebSocket):
                 print(f"STT 수신: {text}")
 
                 # ➡ GameController 에 전달
-                GameController.get_instance().user_input(text)
+                await GameController.get_instance().user_input(text)
 
     except Exception as e:
         print(f"WebSocket 오류: {e}")
