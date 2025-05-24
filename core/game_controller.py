@@ -55,12 +55,15 @@ class GameController(QObject):
         cls._state.messages.append({"role":"system", "content": cls._profiles.__str__()})
         cls._state.messages.append({"role":"system", "content": cls._evidences.__str__()})
 
-        print(f"{cls._state.messages}")
+        from tools.service import handler_send_initial_evidence
+        handler_send_initial_evidence(cls._evidences)
+        print(f"[GameController] initialize() ended")
+        
 
         return cls._case_data
 
     @classmethod
-    def start_game(cls) -> bool :
+    async def start_game(cls) -> bool :
         """게임을 INIT → DEBATE 상태로 시작하고, system 메시지 초기화."""
         if cls._isInitialized is False:
             return False
@@ -69,25 +72,30 @@ class GameController(QObject):
             cls._state.phase = Phase.DEBATE
 
         cls._interrogator.set_case_data()
-            
+
         return True
     
 
     @classmethod
-    def record_start(cls) -> None:
-        """녹음 시작 후에 controller에서 호출 API 호출"""
+    async def record_start(cls) -> None:
+        """녹음 시작 후에 API 호출"""
         cls._state.record_state = True
+        # from tools.service import handler_record_start
+        # await handler_record_start()
 
     
     @classmethod
-    def record_end(cls) -> bool:
+    async def record_end(cls) -> bool:
         """
         녹음 종료 버튼을 누름
         Returns:
             bool: True면 턴 전환, False면 턴 전환 없음
         """
+        print(f"[debug] record_end() called")
         cls._state.record_state = False
-
+        # from tools.service import handler_record_stop
+        # await handler_record_stop()
+    
         """
         녹음 종료 후에 no_context 인지 interrogation_accepted 인지 확인 
         """
@@ -105,7 +113,7 @@ class GameController(QObject):
         """
         if not text.strip():
             return False
-            
+        
         cls._add_message(cls._state.turn, text)
         return True
     
@@ -163,6 +171,7 @@ class GameController(QObject):
         """messages 리스트에 (role, content) 추가."""
         role_str = role.value if isinstance(role, Role) else role
         cls._state.messages.append({"role": role_str, "content": content})
+        print(f"[GameController] _add_message() called: {cls._state.messages[-1]}")
 
     @classmethod
     def _switch_turn(cls) -> None:

@@ -7,6 +7,7 @@ from threading import Lock
 from typing import Dict, List, Optional, Generator, AsyncGenerator
 from contextlib import contextmanager
 import time
+import uuid
 
 
 app = FastAPI()
@@ -26,17 +27,16 @@ class SSEManager:
         self.subscribers: List[asyncio.Queue] = []
         self.evidence_lock = Lock()
         self.initial_evidence: List[Dict] = [  # 초기 증거 데이터 더미로 넣었음
-            {
-                "id": 1,
-                "name": "흉기 사진",
-                "type": "prosecutor",
-                "description": ["현장에서 발견된 칼"],
-                "picture": "/data/weapon.jpg"
-            }
+            # {
+            #     "id": 1,
+            #     "name": "흉기 사진",
+            #     "type": "prosecutor",
+            #     "description": ["현장에서 발견된 칼"],
+            #     "picture": "/data/weapon.jpg"
+            # }
         ]
 
     async def add_subscriber(self, queue: asyncio.Queue):
-        print(self.initial_evidence)
         with self.evidence_lock:
             # 초기 증거 데이터 전송
             for evidence in self.initial_evidence:
@@ -45,6 +45,7 @@ class SSEManager:
         self.subscribers.append(queue)
 
     async def broadcast(self, event_type: str, data: Dict):
+        # print(f"[sse_manger] 인스턴스 id : {str(uuid.uuid4())}")
         for queue in self.subscribers:
             await queue.put((event_type, data))
 
@@ -60,12 +61,21 @@ class SSEManager:
         except asyncio.CancelledError:
             self.remove_subscriber(queue)
 
+    async def add_evidence(self, evidence: Dict):
+        """새로운 증거를 저장하고 모든 구독자에게 즉시 브로드캐스트"""
+        # 초기 증거 목록에 저장
+        with self.evidence_lock:
+            self.initial_evidence.append(evidence)
+        # 구독자들에게 전송
+        await self.broadcast('evidence', evidence)
+
 # WebSocket 관리 클래스
 class WebSocketManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
         self.connection_lock = Lock()
         self.queues: Dict[WebSocket, asyncio.Queue] = {}
+        self.received_msg: str = None
         
 
     async def connect(self, websocket: WebSocket):
@@ -120,6 +130,10 @@ class WebSocketManager:
             "data": text,
             "voice": voice
         }))
+    
+    def received_stt_result(self, text: str = None) -> str:
+        """STT 결과를 수신하여 저장"""
+        self.received_msg = text
 
 # 상태 관리 클래스
 class StateManager:

@@ -3,6 +3,7 @@ from fastapi import APIRouter, WebSocket
 import json
 import asyncio
 from api.manager import websocket_manager
+from game_controller import GameController
 
 router = APIRouter(prefix="/ws", tags=["WebSocket"])
 
@@ -35,14 +36,15 @@ async def _receive_handler(websocket: WebSocket):
         while True:
             data = await websocket.receive_text()
             message = json.loads(data)
-            
-            # STT 메시지 수신 (HW -> Core)
+
+            # HW → Core : STT 결과 수신
             if message.get("type") == "stt":
-                print(f"STT 수신: {message['msg']}")
-                await websocket_manager.broadcast(json.dumps({
-                    "type": "stt_broadcast",
-                    "msg": message['msg']
-                }))
+                text = message.get("msg")
+                print(f"STT 수신: {text}")
+
+                # ➡ GameController 에 전달
+                GameController.get_instance().user_input(text)
+
     except Exception as e:
         print(f"WebSocket 오류: {e}")
         await websocket_manager.disconnect(websocket)
