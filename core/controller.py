@@ -100,6 +100,7 @@ class CaseDataManager:
             if not m:
                 continue
             role_kor, name, age, gender = m.groups()
+            name = name.strip()  # 이름 앞뒤 공백 제거
             profile_type = {
                 "피고": "defendant",
                 "피해자": "victim",
@@ -109,23 +110,31 @@ class CaseDataManager:
 
             # 배경 추출
             context = ""
+            # 성격 추출
+            personality = ""
+            
             for line in lines:
                 if line.startswith("- 배경") or line.startswith("배경"):
                     context = line.split(":", 1)[1].strip()
-                    break
+                elif line.startswith("- 성격") or line.startswith("성격"):
+                    personality = line.split(":", 1)[1].strip()
 
             # profil.json에서 정보 보정
-            character_info = next((char for char in characters if char['name'] == name), None)
+            character_info = next((char for char in characters if char['name'].strip() == name.strip()), None)
+            voice = ""  # 기본값 설정
             if character_info:
                 gender = character_info['gender']
                 age = character_info['age']
+                voice = character_info.get('voice', "")  # voice 정보 가져오기 (.get으로 안전하게)
 
             profiles.append(Profile(
                 type=profile_type,
                 name=name,
                 gender=gender,
                 age=int(age),
-                context=context
+                personality=personality,
+                context=context,
+                voice=voice
             ))
         return profiles
     
@@ -234,4 +243,4 @@ if __name__ == "__main__":
     # asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
     # print(CaseDataManager.get_case_data())
 
-    asyncio.run(CaseDataManager.initialize())
+     asyncio.run(CaseDataManager.initialize())
