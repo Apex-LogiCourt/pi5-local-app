@@ -71,6 +71,8 @@ class GameController(QObject):
         if cls._isInitialized is True:
             cls._state.phase = Phase.DEBATE
 
+        from tools.service import handler_tts_service
+        await handler_tts_service(cls._case_data.case.outline)
         cls._interrogator.set_case_data()
 
         return True
@@ -80,8 +82,8 @@ class GameController(QObject):
     async def record_start(cls) -> None:
         """녹음 시작 후에 API 호출"""
         cls._state.record_state = True
-        # from tools.service import handler_record_start
-        # await handler_record_start()
+        from tools.service import handler_record_start
+        await handler_record_start()
 
     
     @classmethod
@@ -91,14 +93,9 @@ class GameController(QObject):
         Returns:
             bool: True면 턴 전환, False면 턴 전환 없음
         """
-        print(f"[debug] record_end() called")
         cls._state.record_state = False
-        # from tools.service import handler_record_stop
-        # await handler_record_stop()
-    
-        """
-        녹음 종료 후에 no_context 인지 interrogation_accepted 인지 확인 
-        """
+        from tools.service import handler_record_stop
+        await handler_record_stop()
         
         return True
     
@@ -114,7 +111,21 @@ class GameController(QObject):
         if not text.strip():
             return False
         
-        cls._add_message(cls._state.turn, text)
+        result = CaseDataManager.get_instance().check_contextual_relevance(text)
+ 
+        if result.get("relevant") == "false":
+            cls._send_signal("no_context", {"role": "판사", "message": result.get("answer")})
+            from tools.service import handler_tts_service
+            handler_tts_service(result.get("answer"))
+            return False
+
+   
+        if result.get("relevant") == "true" :     
+            cls._add_message(cls._state.turn, text)
+            
+        """
+        여기에서 no_context, interogation 처리 해야겠음 
+        """
         return True
     
     @classmethod
@@ -146,18 +157,23 @@ class GameController(QObject):
 # 내부 함수
 #==============================================
 
-    def _send_signal(self, code, arg):
+    @classmethod
+    def _send_signal(cls, code, arg):
         """ 신호 전송"""
-        self._signal.emit(code, arg)
+        instance = cls.get_instance()
+        instance._signal.emit(code, arg)
 
     
     @classmethod
-    def _objection(cls) -> None:
+    async def _objection(cls) -> None:
         """
         이의 제기.
         - objection_count 증가, 메시지 추가, 턴 전환
         """
         cls._state.objection_count[cls._state.turn] += 1
+        if cls._state.record_state is True:
+            await cls.record_end()
+            cls._state.record_state = False
         cls._send_signal("objection", {"role": cls._state.turn.label, "message": "이의 있음!"})
         cls._switch_turn()
 
