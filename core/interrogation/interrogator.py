@@ -1,8 +1,9 @@
 from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from data_models import CaseData, Case, Profile, Evidence
 from typing import List, Dict, Optional
+
 
 # 템플릿 임포트
 
@@ -118,5 +119,34 @@ class Interrogator:
         self.llm = get_llm()
         chain = prompt | self.llm | self.output_parser
         return chain
+    
+    def check_request(self, user_input: str) -> Optional[Dict]:
+
+            prompt = PromptTemplate.from_template("""
+            당신은 법정 역할극을 조정하는 AI입니다. 사용자가 심문을 진행하려고 합니다.
+            사용자 발언: {user_input}
+            프로필 : {profile_data}
+            
+            사용자가 요청하는 심문 유형과 대상을 파악하여 JSON 형식으로 출력하세요. 
+            사용자가 이름을 입력한 경우 프로필과 일치하는 이름인지 반드시 확인하세요.
+            이름 출력은 오로지 프로필 `profile_data`의 name만을 출력하세요.
+                                                
+            1. 피고, 목격자 등 역할이 명시되어 있거나 이름이 일치하는 경우
+                - 피고인 심문: {{"type": "defendant", "answer": "피고에 대한 심문을 진행하십시오."}}
+                - 목격자 심문: {{"type": "witness", "answer": "목격자에 대한 심문을 진행하십시오."}}
+                - 참고인 심문: {{"type": "reference", "answer": "참고인에 대한 심문을 진행하십시오."}}
+                
+            2. 피해자에 대한 심문을 요청하는 경우 
+                - {{"type": "retry", "answer": "현재 재판에는 피고, 목격자, 참고인만이 출석해있습니다."}}
+                                                
+            3. 이름이 틀린 경우 
+                - 오타로 예상됨: {{"type": "retry", "answer": "OOO 씨에 대해 얘기하시는 겁니까?"}}
+                - 전혀 다른 이름 : {{"type": "retry", "answer": "그런 인물은 없습니다"}}
+        """)
+
+
+
+
+# 싱글톤 인스턴스 생성
     
 it = Interrogator()
