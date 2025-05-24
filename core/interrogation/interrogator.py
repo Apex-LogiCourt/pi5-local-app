@@ -1,7 +1,7 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from core.data_models import CaseData, Case, Profile, Evidence
+from data_models import CaseData, Case, Profile, Evidence
 from typing import List, Dict, Optional
 
 # 템플릿 임포트
@@ -105,8 +105,8 @@ class Interrogator:
     @classmethod
     def set_case_data(cls) -> bool:
         """CaseData 객체를 설정합니다."""
-        from core.controller import Controller
-        case_data = Controller.get_case_data()
+        from controller import CaseDataManager
+        case_data = CaseDataManager.get_case_data()
         cls._case = case_data.case
         cls._profiles = case_data.profiles
         cls._evidence = case_data.evidences
