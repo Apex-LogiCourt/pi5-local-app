@@ -26,7 +26,7 @@ async def evidence_ack(data: dict):
         return {"id" : data.get("id"), "status": "fail"}
 
 
-@router.post("/nfc/{id}")
+@router.post("/{id}")
 async def handle_nfc(id: str):
     if id in ["1", "2", "3", "4"] :
         return {"id": id, "status" :"ok" }
