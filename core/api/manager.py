@@ -83,9 +83,6 @@ class WebSocketManager:
         with self.connection_lock:
             self.active_connections.append(websocket)
             self.queues[websocket] = asyncio.Queue()
-        await self.send_record_start()  # 연결 시 녹음 시작 명령 전송
-        await self.send_record_stop()  # 연결 시 녹음 종료 명령 전송
-        await self.send_tts_request()
 
     async def disconnect(self, websocket: WebSocket):
         with self.connection_lock:
@@ -123,7 +120,7 @@ class WebSocketManager:
             "event": "record_stop"
         }))
 
-    async def send_tts_request(self, text: str = "예시입니당", voice: str = "jinho"):
+    async def send_tts_request(self, text: str = "예시입니당", voice: str = "nraewon"):
         """TTS 음성 출력 요청"""
         await self.broadcast(json.dumps({
             "type": "tts",
