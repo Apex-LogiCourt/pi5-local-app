@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon, QPixmap
 from ui.resizable_image import ResizableImage, _get_image_path
 from ui.style_constants import DARK_BG_COLOR, WHITE_TEXT
-from core.controller import CaseDataManager
+from core.game_controller import GameController
 import re
 
 # HoverButton
@@ -59,7 +59,6 @@ class MicButton(QPushButton):
         self.setFixedSize(self.fixed_box_size)
         self.setIcon(QIcon(_get_image_path(self.icon_path)))
         self.setIconSize(self.default_icon_size)
-
         self.setStyleSheet("""
             QPushButton {
                 background-color: #2f5a68;
@@ -79,7 +78,6 @@ class MicButton(QPushButton):
         icon_file = self.on_icon_path if is_on else self.icon_path
         self.setIcon(QIcon(_get_image_path(icon_file)))
 
-# 이름 한글→영문 변환 맵
 KOREAN_TO_ENGLISH_MAP = {
     "은영": "Eunyoung", "봄달": "Bomdal", "지훈": "Jihoon", "소현": "Sohyun",
     "영화": "Younghwa", "성일": "Sungil", "기효": "Kihyo", "승표": "Seungpyo",
@@ -101,15 +99,14 @@ def extract_name_and_role(title_line):
         return match.group(1), match.group(2)
     return None, None
 
-
-# LawyerScreen
 class LawyerScreen(QWidget):
-    def __init__(self, case_summary="", profiles="", on_next=None):
+    def __init__(self, case_summary="", profiles="", on_next=None, on_interrogate=None):
         super().__init__()
         self.case_summary = case_summary
         self.profiles_text = profiles
         self.on_next = on_next
-        self.evidences = CaseDataManager.get_evidences() or []
+        self.on_interrogate = on_interrogate
+        self.evidences = GameController._evidences or []
         self.mic_on = False
         self.init_ui()
 
@@ -133,7 +130,7 @@ class LawyerScreen(QWidget):
         title_wrapper.addWidget(title_label)
         title_wrapper.addStretch(1)
 
-        def make_invisible_button(text, handler=None):
+        def make_button(text, handler=None):
             btn = HoverButton(text)
             if handler:
                 btn.clicked.connect(handler)
@@ -141,9 +138,10 @@ class LawyerScreen(QWidget):
 
         menu_layout = QVBoxLayout()
         menu_layout.setSpacing(15)
-        menu_layout.addWidget(make_invisible_button("사건개요", self.show_case_dialog))
-        menu_layout.addWidget(make_invisible_button("증거품 확인", self.show_evidences))
-        menu_layout.addWidget(make_invisible_button("텍스트입력", self.show_text_input_placeholder))
+        menu_layout.addWidget(make_button("사건개요", self.show_case_dialog))
+        menu_layout.addWidget(make_button("증거품 확인", self.show_evidences))
+        menu_layout.addWidget(make_button("텍스트입력", self.show_text_input_placeholder))
+        menu_layout.addWidget(make_button("➤ 심문하기", self.handle_interrogate))  # ✅ 추가
         menu_layout.addStretch()
 
         summary_lines = ["등장인물"]
@@ -155,7 +153,7 @@ class LawyerScreen(QWidget):
             title = lines[0]
             name, role = extract_name_and_role(title)
             if name and role:
-                summary_lines.append(f"• {name} : {role}")
+                summary_lines.append(f"\u2022 {name} : {role}")
         summary_text = "\n".join(summary_lines)
 
         profile_button = HoverButton(summary_text, min_height=100, max_height=130)
@@ -180,7 +178,6 @@ class LawyerScreen(QWidget):
         """)
         btn_next.clicked.connect(self.proceed_to_next)
 
-        # 오른쪽 버튼 패널
         right_button_grid = QGridLayout()
         right_button_grid.setSpacing(30)
         right_button_grid.addLayout(menu_layout, 0, 0)
@@ -208,8 +205,8 @@ class LawyerScreen(QWidget):
         main_layout = QHBoxLayout()
         main_layout.setContentsMargins(40, 30, 100, 30)
         main_layout.setSpacing(30)
-        main_layout.addLayout(left_layout, 2)      # 이미지 오른쪽
-        main_layout.addLayout(right_wrapper, 3)    # 버튼 왼쪽
+        main_layout.addLayout(left_layout, 2)
+        main_layout.addLayout(right_wrapper, 3)
 
         self.setLayout(main_layout)
 
@@ -221,53 +218,40 @@ class LawyerScreen(QWidget):
         if self.on_next:
             self.on_next()
 
+    def handle_interrogate(self):  # ✅ 추가
+        if self.on_interrogate:
+            self.on_interrogate()
+
     def show_case_dialog(self):
         lines = self.case_summary.strip().split('\n')
         filtered_lines = [line for line in lines if not any(tag in line for tag in ["[피고", "[피해자", "[증인1", "[증인2"])]
         clean_text = "\n".join(filtered_lines)
-
-        msg = QMessageBox(self)
-        msg.setWindowTitle("사건 개요")
-        msg.setText(clean_text)
-        msg.setStyleSheet("QLabel { font-size: 16px; }")
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.exec_()
+        QMessageBox.information(self, "사건 개요", clean_text, QMessageBox.Ok)
 
     def show_evidences(self):
         prosecutors = []
         attorneys = []
         for e in self.evidences:
-            summary = f"• {e.name}: {e.description[0]}"
+            summary = f"\u2022 {e.name}: {e.description[0]}"
             if e.type == "prosecutor":
                 prosecutors.append(summary)
             elif e.type == "attorney":
                 attorneys.append(summary)
         parts = []
         if attorneys:
-            parts.append("🔶 변호사 측 증거품\n" + "\n".join(attorneys))
+            parts.append("\ud83d\udd36 변호사 측 증거품\n" + "\n".join(attorneys))
         if prosecutors:
-            parts.append("🔷 검사 측 증거품\n" + "\n".join(prosecutors))
+            parts.append("\ud83d\udd37 검사 측 증거품\n" + "\n".join(prosecutors))
         text = "\n\n".join(parts) if parts else "등록된 증거물이 없습니다."
-
-        msg = QMessageBox(self)
-        msg.setWindowTitle("모든 증거품")
-        msg.setText(text)
-        msg.setStyleSheet("QLabel { font-size: 16px; }")
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.exec_()
+        QMessageBox.information(self, "모든 증거품", text, QMessageBox.Ok)
 
     def show_text_input_placeholder(self):
-        msg = QMessageBox(self)
-        msg.setWindowTitle("텍스트입력")
-        msg.setText("입력 기능은 추후 구현 예정입니다.")
-        msg.setStyleSheet("QLabel { font-size: 16px; }")
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.exec_()
+        QMessageBox.information(self, "텍스트입력", "입력 기능은 추후 구현 예정입니다.", QMessageBox.Ok)
 
     def show_full_profiles_dialog(self):
         dialog = QDialog(self)
         dialog.setWindowTitle("등장인물 정보")
-        dialog.setStyleSheet("background-color: #0f2a45; color: white; font-size: 15px;")
+        dialog.setStyleSheet("background-color: #0f2a45; color: white; font-size: 14px;")
         layout = QVBoxLayout()
 
         for part in self.profiles_text.split('--------------------------------'):
@@ -280,14 +264,9 @@ class LawyerScreen(QWidget):
 
             row_layout = QHBoxLayout()
             left = QVBoxLayout()
-
-            title_label = QLabel(f"<b>{title}</b>")
-            title_label.setStyleSheet("font-size: 15px;")
-            left.addWidget(title_label)
-
+            left.addWidget(QLabel(f"<b>{title}</b>"))
             info_label = QLabel(info_text)
             info_label.setWordWrap(True)
-            info_label.setStyleSheet("font-size: 15px;")
             left.addWidget(info_label)
 
             name_match = re.search(r":\s*(.+?)\s*[\(\[]", title)

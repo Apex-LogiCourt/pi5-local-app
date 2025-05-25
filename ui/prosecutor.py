@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon, QPixmap
 from ui.resizable_image import ResizableImage, _get_image_path
 from ui.style_constants import DARK_BG_COLOR, WHITE_TEXT
-from core.controller import CaseDataManager
+from core.game_controller import GameController  # ✅ 변경된 부분
 import re
 
 # --- HoverButton (메뉴 및 등장인물용) ---
@@ -46,7 +46,7 @@ class HoverButton(QPushButton):
         }}
         """
 
-# --- MicButton (아이콘만 확대, 배경 고정) ---
+# --- MicButton ---
 class MicButton(QPushButton):
     def __init__(self, icon_path, on_icon_path):
         super().__init__()
@@ -79,7 +79,7 @@ class MicButton(QPushButton):
         icon_file = self.on_icon_path if is_on else self.icon_path
         self.setIcon(QIcon(_get_image_path(icon_file)))
 
-# --- 이름 한글→영문 변환 맵 ---
+# --- 이름 매핑 ---
 KOREAN_TO_ENGLISH_MAP = {
     "은영": "Eunyoung", "봄달": "Bomdal", "지훈": "Jihoon", "소현": "Sohyun",
     "영화": "Younghwa", "성일": "Sungil", "기효": "Kihyo", "승표": "Seungpyo",
@@ -103,12 +103,13 @@ def extract_name_and_role(title_line):
 
 # --- ProsecutorScreen ---
 class ProsecutorScreen(QWidget):
-    def __init__(self, case_summary="", profiles="", on_next=None):
+    def __init__(self, case_summary="", profiles="", on_next=None, on_interrogate=None):
         super().__init__()
         self.case_summary = case_summary
         self.profiles_text = profiles
         self.on_next = on_next
-        self.evidences = CaseDataManager.get_evidences() or []
+        self.on_interrogate = on_interrogate  # ✅ 추가
+        self.evidences = GameController._evidences or []
         self.mic_on = False
         self.init_ui()
 
@@ -132,7 +133,7 @@ class ProsecutorScreen(QWidget):
         title_wrapper.addWidget(title_label)
         title_wrapper.addStretch(1)
 
-        def make_invisible_button(text, handler=None):
+        def make_button(text, handler=None):
             btn = HoverButton(text)
             if handler:
                 btn.clicked.connect(handler)
@@ -140,9 +141,10 @@ class ProsecutorScreen(QWidget):
 
         menu_layout = QVBoxLayout()
         menu_layout.setSpacing(15)
-        menu_layout.addWidget(make_invisible_button("사건개요", self.show_case_dialog))
-        menu_layout.addWidget(make_invisible_button("증거품 확인", self.show_evidences))
-        menu_layout.addWidget(make_invisible_button("텍스트입력", self.show_text_input_placeholder))
+        menu_layout.addWidget(make_button("사건개요", self.show_case_dialog))
+        menu_layout.addWidget(make_button("증거품 확인", self.show_evidences))
+        menu_layout.addWidget(make_button("텍스트입력", self.show_text_input_placeholder))
+        menu_layout.addWidget(make_button("➤ 심문하기", self.handle_interrogate))  # ✅ 추가
         menu_layout.addStretch()
 
         summary_lines = ["등장인물"]
@@ -218,6 +220,11 @@ class ProsecutorScreen(QWidget):
     def proceed_to_next(self):
         if self.on_next:
             self.on_next()
+
+    def handle_interrogate(self):  # ✅ 추가된 메서드
+        if self.on_interrogate:
+            self.on_interrogate()
+
 
     def show_case_dialog(self):
         lines = self.case_summary.strip().split('\n')

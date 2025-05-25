@@ -1,5 +1,3 @@
-# ✅ 전체 MainWindow 클래스 포함한 main.py 수정본
-
 import sys
 import os
 import asyncio
@@ -21,6 +19,7 @@ from ui.lawyer import LawyerScreen
 from ui.result import ResultScreen
 from ui.resizable_image import ResizableImage, _get_image_path
 from ui.game_description import GameDescriptionScreen
+from ui.interrogation import InterrogationScreen  # ✅ 추가
 from ui.style_constants import *
 
 class MainWindow(QWidget):
@@ -41,6 +40,7 @@ class MainWindow(QWidget):
         }
 
         self.intro_screen_instance = None
+        self.previous_screen = None  # ✅ 추가
         self.init_ui()
         asyncio.ensure_future(self.preload_case_data())
 
@@ -192,7 +192,8 @@ class MainWindow(QWidget):
         self.prosecutor_screen = ProsecutorScreen(
             case_summary=summary,
             profiles=profiles_text,
-            on_next=self.show_lawyer_screen
+            on_next=self.show_lawyer_screen,
+            on_interrogate=lambda: self.show_interrogation_screen(previous='prosecutor')
         )
         self.stacked_layout.addWidget(self.prosecutor_screen)
         self.stacked_layout.setCurrentWidget(self.prosecutor_screen)
@@ -202,6 +203,7 @@ class MainWindow(QWidget):
             self.intro_screen_instance.deleteLater()
             self.intro_screen_instance = None
 
+
     def show_lawyer_screen(self):
         summary = GameController._case.outline
         profiles_text = self._generate_profiles_text()
@@ -209,7 +211,8 @@ class MainWindow(QWidget):
         self.lawyer_screen = LawyerScreen(
             case_summary=summary,
             profiles=profiles_text,
-            on_next=lambda: asyncio.ensure_future(self.show_judgement())
+            on_next=lambda: asyncio.ensure_future(self.show_judgement()),
+            on_interrogate=lambda: self.show_interrogation_screen(previous='lawyer')  # ✅ 추가 필요
         )
         self.stacked_layout.addWidget(self.lawyer_screen)
         self.stacked_layout.setCurrentWidget(self.lawyer_screen)
@@ -217,6 +220,24 @@ class MainWindow(QWidget):
         if hasattr(self, 'prosecutor_screen'):
             self.stacked_layout.removeWidget(self.prosecutor_screen)
             self.prosecutor_screen.deleteLater()
+
+
+    def show_interrogation_screen(self, previous):  # ✅ 추가
+        self.previous_screen = previous
+        screen = InterrogationScreen(
+            case_summary=GameController._case.outline,
+            profiles=GameController._profiles,
+            on_back=self.handle_interrogation_back
+        )
+        self.stacked_layout.addWidget(screen)
+        self.stacked_layout.setCurrentWidget(screen)
+
+    def handle_interrogation_back(self):  # ✅ 추가
+        if self.previous_screen == 'prosecutor':
+            self.show_prosecutor_screen()
+        elif self.previous_screen == 'lawyer':
+            self.show_lawyer_screen()
+
 
     async def show_judgement(self):
         summary = GameController._case.outline
@@ -229,7 +250,6 @@ class MainWindow(QWidget):
         self._update_start_button("데이터 로딩 중...", False)
         self.stacked_layout.setCurrentWidget(self.start_screen)
         await self.preload_case_data()
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
