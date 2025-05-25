@@ -44,6 +44,8 @@ import websockets
 import json
 import devices.TTS_module as tts
 
+record_audio_task = None
+
 async def send_messages(websocket, message: dict):
     """서버로 메시지를 송신""" 
     await websocket.send(json.dumps(message))
@@ -60,6 +62,8 @@ async def receive_messages(websocket):
         print("[클라이언트] 서버 연결 종료")
 
 async def server_event_handler(websocket, data: dict): #서버에서 받은 메시지 처리
+    global record_audio_task
+
     event_type = data.get("type") or data.get("event")
 
     if event_type == "tts_start":
@@ -70,8 +74,10 @@ async def server_event_handler(websocket, data: dict): #서버에서 받은 메�
             print(f"[클라이언트] TTS 시작: '{tts_text}' (voice: {voice})")
             await tts.set_playing_state(True)
             await tts.text_to_speech(tts_text, voice)
-        except Exception:
-            print(f"[클라이언트] TTS 시작 오류: {Exception}")
+        except Exception as e:
+            import traceback
+            print(f"[클라이언트] TTS 시작 오류: {e}")
+            traceback.print_exc() #전체 스택 트레이스 출력
 
     elif event_type == "tts_end":
         print("[클라이언트] TTS 종료")
@@ -81,12 +87,17 @@ async def server_event_handler(websocket, data: dict): #서버에서 받은 메�
         print("[클라이언트] 녹음 시작")
         await tts.set_rec_state(True)
         await asyncio.sleep(1)
-        await tts.record_audio("stt_temp")
+        # await tts.record_audio("stt_temp")
+        record_audio_task = asyncio.create_task(tts.record_audio("stt_temp"))
 
     elif event_type == "record_stop":
         print("[클라이언트] 녹음 종료")
         await tts.set_rec_state(False)
-        
+
+        # record_audio가 끝날 때까지 기다림
+        if record_audio_task is not None:
+            await record_audio_task
+
         print("[클라이언트] STT 데이터 송신")
         stt_text = tts.speech_to_text("stt_temp")
         messages = {

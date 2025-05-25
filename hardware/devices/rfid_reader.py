@@ -33,7 +33,8 @@ async def scan_rfid_loop():
             asyncio.get_event_loop().create_task(handle_nfc(card_num))
 
         except Exception as e:
-            print(f"[RFID] 오류 발생: {e}")
+            # print(f"[RFID] 오류 발생: {e}")
+            pass
 
         await asyncio.sleep(0.5)
     GPIO.cleanup()
