@@ -1,12 +1,27 @@
 from fastapi import FastAPI
-# from api.routers import state_router, websocket_router, evidence_router
 from fastapi.middleware.cors import CORSMiddleware
-# from api.manager import sse_manager, websocket_manager, state_manager
 import asyncio
-from hardware.api.http_request import websocket_client
-from hardware.devices import button_listener, rfid_reader
+from api.http_request import websocket_client
+from devices import button_listener, rfid_reader
 import time
-app = FastAPI()
+# app = FastAPI()
+
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    button_listener.button_init()
+    task1 = asyncio.create_task(websocket_client())
+    task2 = asyncio.create_task(rfid_reader.scan_rfid_loop())
+    print("[lifespan] HW 모듈 실행 완료")
+    yield
+    task1.cancel()
+    task2.cancel()
+    await asyncio.gather(task1, task2, return_exceptions=True)
+    rfid_reader.rfid_exit()
+    button_listener.button_exit()
+
+app = FastAPI(lifespan=lifespan)
 
 # CORS 설정
 app.add_middleware(

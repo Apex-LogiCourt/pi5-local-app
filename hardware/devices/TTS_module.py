@@ -28,7 +28,7 @@ def speech_to_text(filename):
 async def text_to_speech(text: str, voice: str):
     path = DEFAULT_PATH + text[0:10]
     clova_TTS(text, voice, path)
-    play_wav(path)
+    await play_wav(path)
     return
 
 async def play_wav(file_path):

@@ -2,13 +2,13 @@ import RPi.GPIO as GPIO
 import time
 import asyncio
 import atexit
-from hardware.api.http_request import handle_button_press
+from api.http_request import handle_button_press
 
 BUTTON_PIN_PROSECUTOR = 4
 BUTTON_PIN_ATTORNEY = 14
 
 def button_init():
-    print("[GPIO] initializing")
+    print("[GPIO] initializing ...")
     GPIO.setwarnings(False) 
     GPIO.setmode(GPIO.BCM) #BCM or BOARD
 
@@ -29,11 +29,11 @@ def button_callback_attorney(channel):
     print(f"Button pushed! {channel}")
     asyncio.get_event_loop().create_task(handle_button_press("attorney"))
 
-def cleanup_gpio():
+def button_exit():
     GPIO.cleanup()
-    print("[GPIO] clean-up")
+    print("[GPIO] cleanup complete.")
 
-atexit.register(cleanup_gpio)
+atexit.register(button_exit)
 
 
 if __name__ == "__main__":
