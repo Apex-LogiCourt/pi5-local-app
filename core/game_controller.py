@@ -4,6 +4,7 @@ from core.controller import CaseDataManager
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 import asyncio
 import time
+from interrogation.interrogator import Interrogator, it
 
 class GameController(QObject):
     _instance = None
@@ -14,6 +15,7 @@ class GameController(QObject):
     _profiles : List[Profile] = None
     _case_data : CaseData = None
     _signal = pyqtSignal(str, object)
+    _interrogator : Interrogator = it.get_instance()
 
     
     @classmethod
@@ -53,7 +55,10 @@ class GameController(QObject):
         cls._state.messages.append({"role":"system", "content": cls._profiles.__str__()})
         cls._state.messages.append({"role":"system", "content": cls._evidences.__str__()})
 
-        print(f"{cls._state.messages}")
+        from tools.service import handler_send_initial_evidence
+        handler_send_initial_evidence(cls._evidences)
+        print(f"[GameController] initialize() ended")
+        
 
         return cls._case_data
 
@@ -65,29 +70,33 @@ class GameController(QObject):
 
         if cls._isInitialized is True:
             cls._state.phase = Phase.DEBATE
-            
+
+        from tools.service import handler_tts_service
+        asyncio.create_task(handler_tts_service(cls._case_data.case.outline))
+        cls._interrogator.set_case_data()
+
         return True
     
 
     @classmethod
-    def record_start(cls) -> None:
-        """녹음 시작 후에 controller에서 호출 API 호출"""
+    async def record_start(cls) -> None:
+        """녹음 시작 후에 API 호출"""
         cls._state.record_state = True
+        from tools.service import handler_record_start
+        await handler_record_start()
 
     
     @classmethod
-    def record_end(cls) -> bool:
+    async def record_end(cls) -> bool:
         """
         녹음 종료 버튼을 누름
         Returns:
             bool: True면 턴 전환, False면 턴 전환 없음
         """
         cls._state.record_state = False
-
-        """
-        녹음 종료 후에 no_context 인지 interrogation_accepted 인지 확인 
-        """
-
+        from tools.service import handler_record_stop
+        await handler_record_stop()
+        
         return True
     
     @classmethod
@@ -101,17 +110,38 @@ class GameController(QObject):
         """
         if not text.strip():
             return False
-            
         cls._add_message(cls._state.turn, text)
-        return True
+        if cls._state.phase == Phase.DEBATE:
+            return asyncio.create_task(cls._handle_user_input_validation(text))
+        
+        if cls._state.phase == Phase.INTERROGATE:
+            from tools.service import run_chain_streaming, handler_tts_service
+            cls._state.current_profile = it._current_profile
+            
+            
+            def handle_response(sentence):
+                # 심문 응답을 처리하는 콜백
+                asyncio.create_task(handler_tts_service(sentence))
+                cls._send_signal("interrogation_response", {
+                    "role": cls._state.current_profile.name if cls._state.current_profile else "증인",
+                    "message": sentence
+                })
+                # cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", sentence)
+                
+            cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", 
+                run_chain_streaming(it.build_ask_chain(text, cls._state.current_profile), handle_response))
+
+        
+
     
     @classmethod
     def interrogation_end(cls) -> None:
         """심문 화면에서 뒤로 가기 버튼을 눌렀을 때 호출, 심문 종료"""
-        if cls._state.phase == Phase.INTERROGATE:
-            cls._state.phase = Phase.DEBATE
-            cls._state.current_profile = None
-    
+        cls._state.phase = Phase.DEBATE
+        cls._state.current_profile = None
+        if cls._state.record_state is True:
+            asyncio.create_task(cls.record_end())
+
     @classmethod
     def done(cls) -> None:
         """발언 완전 종료 시에 호출, 양쪽 다 됐을 때는 최종 판결 시작"""
@@ -129,22 +159,59 @@ class GameController(QObject):
         return cls._state
     
 
+    @classmethod
+    async def _handle_user_input_validation(cls, text: str) -> bool:
+
+        async def request_speak_judge(cls, msg: dict, code:str) -> bool:
+            """판사의 발언을 음성으로 출력. return False 는 턴 전환 없음."""
+            cls._send_signal(code, msg)
+            cls._add_message("판사", msg.get("message"))  # 판사 메시지 추가
+            from tools.service import handler_tts_service
+            await handler_tts_service(text)
+            return False
+
+        result = CaseDataManager.get_instance().check_contextual_relevance(text)
+ 
+        if result.get("relevant") == "false": # 문맥 관련 없음
+            return await request_speak_judge(cls, {"role": "판사", "message": result.get("answer")}, "no_context")
+   
+        if result.get("relevant") == "true" :
+            if result.get("answer") == "interrogation":
+                # 심문 세팅
+                temp = it.check_request(text)
+                type_ = temp.get("type")
+                if type_ == "retry": 
+                    return await request_speak_judge(cls, {"role": "판사", "message": temp.get("answer")}, "no_context")
+                else : 
+                    cls._state.phase = Phase.INTERROGATE 
+                    return await request_speak_judge(cls, {"role": "판사", "message": temp.get("answer"), "type":type_}, "interrogation_accepted")
+            else :
+                cls._add_message(cls._state.turn, text)
+                return True
+
+    
+
 #==============================================
 # 내부 함수
 #==============================================
 
-    def _send_signal(self, code, arg):
+    @classmethod
+    def _send_signal(cls, code, arg):
         """ 신호 전송"""
-        self._signal.emit(code, arg)
+        instance = cls.get_instance()
+        instance._signal.emit(code, arg)
 
     
     @classmethod
-    def _objection(cls) -> None:
+    async def _objection(cls) -> None:
         """
         이의 제기.
         - objection_count 증가, 메시지 추가, 턴 전환
         """
         cls._state.objection_count[cls._state.turn] += 1
+        if cls._state.record_state is True:
+            await cls.record_end()
+            cls._state.record_state = False
         cls._send_signal("objection", {"role": cls._state.turn.label, "message": "이의 있음!"})
         cls._switch_turn()
 
@@ -158,21 +225,13 @@ class GameController(QObject):
         """messages 리스트에 (role, content) 추가."""
         role_str = role.value if isinstance(role, Role) else role
         cls._state.messages.append({"role": role_str, "content": content})
+        print(f"[GameController] _add_message() called: {cls._state.messages[-1]}")
 
     @classmethod
     def _switch_turn(cls) -> None:
         """Role.PROSECUTOR ↔ Role.ATTORNEY 토글."""
         cls._state.turn = cls._state.turn.next()
 
-    # def _question(self, type: str, question: str) -> None:
-    #     """
-    #     참고인 심문 
-    #     - 내부적으로 증인 심문 체인을 호출하고, 응답을 메시지에 추가
-    #     """
-    #     self.state.mode = Mode.WITNESS
-    #     self._add_message("user", f"[참고인:{witness_name}] {question}")
-    #     # resp = self._ask_witness(question, witness_name)
-    #     # self._add_message("witness", resp)
 
 
 

@@ -23,13 +23,13 @@ CREATE_EVIDENCE_TEMPLATE = """
 
 기본 증거품의 형식: {format_instructions}
 
-다음 형식의 JSON 배열로 6개의 증거를 출력하세요:
+다음 형식의 JSON 배열로 4개의 증거를 출력하세요:
 [
   {{ "name": "증거명", "type": "attorney", "description": ["한 문장 설명"] }},
   ...
 ]
 
-"type" 필드를 기준으로 attorney 3개, prosecutor 3개를 포함해야 합니다.
+"type" 필드를 기준으로 attorney 2개, prosecutor 2개를 포함해야 합니다.
 그러나 출력은 하나의 리스트 형태로 제공해야 하며, "attorney": [...], "prosecutor": [...] 같은 형식은 사용하지 마세요.
 """
 
