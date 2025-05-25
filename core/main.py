@@ -26,13 +26,15 @@ if __name__ == "__main__":
     gc = GameController.get_instance()  # 게임 컨트롤러 초기화
     
     asyncio.run(gc.initialize())  # 비동기 초기화
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
 
     asyncio.run(gc.start_game())  # 게임 시
     asyncio.run(gc.record_start())  # 녹음 시작
     asyncio.run(gc.record_end())  # 녹음 종료
     
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+
+
 
     # asyncio.run(gc.start_game())  # 메서드 호출로 수정
     
