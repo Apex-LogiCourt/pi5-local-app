@@ -19,16 +19,34 @@ class CaseDataManager:
     _evidences : List[Evidence] = None
     _profiles : List[Profile] = None
     _case_data : CaseData = None
+
+
+    def __new__(cls):   
+        """싱글톤 인스턴스를 생성하는 메서드"""
+        if cls._instance is None:
+            cls._instance = super(CaseDataManager, cls).__new__(cls)
+            cls._instance.__init__()
+        return cls._instance
+
     
     def __init__(self):
-        # 새로운 인스턴스 생성 방지
-        raise RuntimeError('이 클래스의 인스턴스를 직접 생성할 수 없습니다')
+        # 이미 초기화된 경우 다시 초기화하지 않음
+        if hasattr(self, '_initialized'):
+            return
+        self._initialized = True
     
     @classmethod
+    def get_instance(cls):
+        """싱글톤 인스턴스를 반환하는 클래스 메서드"""
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
+    @classmethod
     async def initialize(cls) -> CaseData:
-        await CaseDataManager.generate_case_stream()  # 비동기 호출
-        await CaseDataManager.generate_profiles_stream()  # 비동기 호출  
-        await CaseDataManager.generate_evidences()  # 비동기 호출
+        await cls.generate_case_stream()  # 비동기 호출
+        await cls.generate_profiles_stream()  # 비동기 호출  
+        await cls.generate_evidences()  # 비동기 호출
         return cls._case_data
     
     #==============================================
@@ -38,6 +56,8 @@ class CaseDataManager:
     async def generate_case_stream(cls, callback=None):
         chain = build_case_chain()
         result = cls._handle_stream(chain, callback)
+        # from tools.service import run_chain_streaming
+        # result = run_chain_streaming(chain)
         cls._case = Case(outline=result, behind="")
         return result
     
@@ -72,6 +92,48 @@ class CaseDataManager:
         chain = build_case_behind_chain(cls._case.outline, cls._profiles) 
         result = cls._handle_stream(chain, callback)
         return result
+    
+    @classmethod
+    def check_contextual_relevance(cls, user_input : str) -> dict:
+        """입력이 현재 재판 역할극의 문맥과 관련 있는지 판단합니다."""
+        from langchain_core.prompts import PromptTemplate
+        from langchain_openai import ChatOpenAI
+        from langchain_core.output_parsers import JsonOutputParser
+
+        case_summary = cls._case.outline
+
+        prompt = PromptTemplate.from_template("""
+            당신은 역할극 기반 재판 시뮬레이션의 판사입니다.
+            사건 개요: {case_summary}
+            사용자의 새 발언: {user_input}
+            
+            이 발언이 현재 재판 역할극과 관련이 있습니까?
+            당신의 주된 역할은 재판 역할극 중의 사용자의 부적절한 발언을 감지하고 사용자의 심문 요청 여부를 판단하는 것입니다.
+            
+            1. 사용자가 심문을 요청하는 경우 :
+              - 예시 : "피고인에게 질문하고 싶습니다.", "참고인을 심문하겠습니다.", "심문을 요청합니다"
+              - 출력 : {{"relevant": "true", "answer": "interrogation"}}
+                                              
+            2. 사용자의 발언이 현재 재판과 관련이 있는 경우 :
+                - 사용자는 재판과 관련한 주장을 이어가는 중입니다 
+                {{"relevant": "true", "answer" : ""}}
+
+            3. 상관없는 경우 :
+                - 관련 없는 이유를 `answer`에 한두 줄 짧게 설명하며 엄하게 꾸짖으세요
+                {{"relevant": "false", "answer": "갑자기 뜬금없이 갈비찜 레시피라뇨? 재판과 상관 없는 발언 같습니다."}}  
+            """)
+
+        chain = (
+            prompt
+            | ChatOpenAI(model="gpt-4o-mini", temperature=0.8)
+            | JsonOutputParser()
+        )
+        
+        result = chain.invoke({"case_summary": case_summary, "user_input": user_input})
+        print(f"결과 : {result}")
+    
+        return result
+    
     
     # 프로필 파싱 및 저장하는 내부 메소드 
     @classmethod
@@ -166,7 +228,6 @@ class CaseDataManager:
         print("데이터 준비 실패")
         return None
     
-    
     #==============================================
     # getter/ setter 메소드 추가 
     # 호출 방식 예시 : CaseDataManager.get_case_data()
@@ -235,6 +296,13 @@ def get_judge_result_wrapper(message_list):
     from verdict import get_judge_result
     return get_judge_result(message_list)
 
+#============================================
+
+
+
+
+
+
 
 if __name__ == "__main__":
     # asyncio.run(CaseDataManager.initialize())  # 비동기 호출
@@ -243,4 +311,9 @@ if __name__ == "__main__":
     # asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
     # print(CaseDataManager.get_case_data())
 
-     asyncio.run(CaseDataManager.initialize())
+    cd = CaseDataManager.get_instance()
+
+    asyncio.run(cd.initialize())
+
+    test_input = "전 엄청 배가 고프네요 저녁에 뭐 먹을까요?"
+    cd.check_contextual_relevance(test_input)
