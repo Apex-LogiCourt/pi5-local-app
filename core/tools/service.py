@@ -67,6 +67,7 @@ def handler_question(question: str, profile : Profile) :
 
 
 def run_chain_streaming(chain, callback=None):
+    full_text = ""
     # chain이 문자열인 경우 run_str_streaming 사용
     if isinstance(chain, str):
         run_str_streaming(chain, callback)
@@ -81,11 +82,15 @@ def run_chain_streaming(chain, callback=None):
         stream = chain.stream({})
         
         def on_sentence_ready(sentence):
+            nonlocal full_text
+            full_text += sentence
             if callback:
                 callback(sentence)
             return sentence
         
         sentence_streamer(stream, on_sentence_ready)
+        return full_text.strip()  # 전체 텍스트 반환
+
     except Exception as e:
         print(f"[ERROR] Failed to stream chain: {e}")
         if callback:

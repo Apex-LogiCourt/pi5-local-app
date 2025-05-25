@@ -63,7 +63,7 @@ class GameController(QObject):
         return cls._case_data
 
     @classmethod
-    async def start_game(cls) -> bool :
+    def start_game(cls) -> bool :
         """게임을 INIT → DEBATE 상태로 시작하고, system 메시지 초기화."""
         if cls._isInitialized is False:
             return False
@@ -72,7 +72,7 @@ class GameController(QObject):
             cls._state.phase = Phase.DEBATE
 
         from tools.service import handler_tts_service
-        await handler_tts_service(cls._case_data.case.outline)
+        asyncio.create_task(handler_tts_service(cls._case_data.case.outline))
         cls._interrogator.set_case_data()
 
         return True
@@ -100,7 +100,7 @@ class GameController(QObject):
         return True
     
     @classmethod
-    async def user_input(cls, text: str) -> bool:
+    def user_input(cls, text: str) -> bool:
         """
         사용자의 수동 입력, 텍스트를 전송
         Args:
@@ -112,21 +112,24 @@ class GameController(QObject):
             return False
         cls._add_message(cls._state.turn, text)
         if cls._state.phase == Phase.DEBATE:
-            return await cls._handle_user_input_validation(text)
+            return asyncio.create_task(cls._handle_user_input_validation(text))
         
         if cls._state.phase == Phase.INTERROGATE:
-            from tools.service import run_chain_streaming
+            from tools.service import run_chain_streaming, handler_tts_service
             cls._state.current_profile = it._current_profile
+            
             
             def handle_response(sentence):
                 # 심문 응답을 처리하는 콜백
+                asyncio.create_task(handler_tts_service(sentence))
                 cls._send_signal("interrogation_response", {
                     "role": cls._state.current_profile.name if cls._state.current_profile else "증인",
                     "message": sentence
                 })
-                cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", sentence)
-            
-            run_chain_streaming(it.build_ask_chain(text, cls._state.current_profile), handle_response)
+                # cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", sentence)
+                
+            cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", 
+                run_chain_streaming(it.build_ask_chain(text, cls._state.current_profile), handle_response))
 
         
 
