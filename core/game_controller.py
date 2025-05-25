@@ -140,7 +140,7 @@ class GameController(QObject):
         cls._state.phase = Phase.DEBATE
         cls._state.current_profile = None
         if cls._state.record_state is True:
-            cls.record_end()
+            asyncio.create_task(cls.record_end())
 
     @classmethod
     def done(cls) -> None:
