@@ -37,17 +37,17 @@ app.add_middleware(
 # app.include_router(websocket_router.router)
 # app.include_router(evidence_router.router)
 
-async def hw_main():
-    button_listener.button_init()
-    tasks = [
-        asyncio.create_task(websocket_client()),
-        asyncio.create_task(rfid_reader.scan_rfid_loop())
-    ]
-    print("[hw-main] HW 모듈 실행 완료")
-    await asyncio.gather(*tasks)
+# async def hw_main():
+#     button_listener.button_init()
+#     tasks = [
+#         asyncio.create_task(websocket_client()),
+#         asyncio.create_task(rfid_reader.scan_rfid_loop())
+#     ]
+#     print("[hw-main] HW 모듈 실행 완료")
+#     await asyncio.gather(*tasks)
 
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8300, reload=True)
-    asyncio.run(hw_main())
+    # asyncio.run(hw_main())
