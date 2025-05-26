@@ -141,4 +141,4 @@ if __name__ == "__main__":
     qt_thread.start()
 
     # 4. FastAPI 실행 (블로킹)
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, loop="asyncio")
+    uvicorn.run("main:app", host="0.0.0.0", port=8888, loop="asyncio")
