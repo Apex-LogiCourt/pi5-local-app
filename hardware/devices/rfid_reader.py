@@ -14,7 +14,12 @@ RST : 22
 """
 
 READER = SimpleMFRC522()
-CARD_LIST = {0x00: "1", 0x01: "2", 0x03: "3", 0x04: "4"} #카드 스캔값 확인 후 수정해야함
+CARD_LIST = {
+    927176852798: "1",
+    899780314557: "2",
+    1064193818836: "3",
+    336465494256: "4"
+} # 실물 카드에 번호 표기
 
 SCAN_STATE = True
 
@@ -33,7 +38,7 @@ async def scan_rfid_loop():
             asyncio.get_event_loop().create_task(handle_nfc(card_num))
 
         except Exception as e:
-            # print(f"[RFID] 오류 발생: {e}")
+            print(f"[RFID] 오류 발생: {e}")
             pass
 
         await asyncio.sleep(0.5)
