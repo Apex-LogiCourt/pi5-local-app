@@ -14,7 +14,7 @@ last_pressed = {
 DEBOUNCE_TIME = 0.5
 
 def button_init():
-    print("[GPIO] initializing ...")
+    print("[GPIO/BUTTON] initializing ...")
     GPIO.setwarnings(False) 
     GPIO.setmode(GPIO.BCM)
 
@@ -46,7 +46,7 @@ def button_callback_attorney(channel):
 
 def button_exit():
     GPIO.cleanup()
-    print("[GPIO] cleanup complete.")
+    print("[GPIO/BUTTON] cleanup complete.")
 
 atexit.register(button_exit)
 

@@ -27,7 +27,7 @@ def get_card_num(card_id):
     return CARD_LIST.get(card_id, -1)
 
 async def scan_rfid_loop():
-    print("[RFID] 스캐너 시작")
+    print("[RFID] scanner starting ...")
     while SCAN_STATE:
         try:
             card_id, _ = READER.read()
@@ -38,7 +38,7 @@ async def scan_rfid_loop():
             asyncio.get_event_loop().create_task(handle_nfc(card_num))
 
         except Exception as e:
-            print(f"[RFID] 오류 발생: {e}")
+            print(f"[RFID] scanner error: {e}")
             pass
 
         await asyncio.sleep(0.5)
@@ -46,4 +46,4 @@ async def scan_rfid_loop():
 
 def rfid_exit():
     GPIO.cleanup()
-    print("[RFID] cleanup complete.")
+    print("[GPIO/RFID] cleanup complete.")
