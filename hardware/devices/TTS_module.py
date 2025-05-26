@@ -1,16 +1,61 @@
 import pyaudio
 import wave
-import keyboard
+import random
 import json
 import requests
+import sounddevice as sd
+import soundfile as sf
+import asyncio
 
 PI5_INPUT_DEVICE_INDEX = 0 #pi에서 사용
+DEFAULT_PATH = "data/audio_temp/"
+is_recording = False
+is_playing = False
 
-def speech_to_text():
+async def set_rec_state(st: bool):
+    global is_recording 
+    is_recording = st
+    return is_recording
+
+async def set_playing_state(st: bool):
+    global is_playing
+    is_playing = st
+    return is_playing
+
+def speech_to_text(filename):
+    return clova_STT(DEFAULT_PATH + filename + ".wav")
+
+async def text_to_speech(text: str, voice: str):
+    path = DEFAULT_PATH + "tts_" + str(random.randint(100, 1000))
+    wavpath = clova_TTS(text, voice, path)
+
+    import os
+    for _ in range(50):  # 최대 5초 대기
+        if os.path.exists(wavpath) and os.path.getsize(wavpath) > 0:
+            break
+        await asyncio.sleep(0.1)
+    else:
+        print(f"[TTS] 경고: {wavpath} 파일 생성 실패 또는 지연")
+        return
+
+    await play_wav(wavpath)
     return
 
-def text_to_speech():
-    return
+async def play_wav(file_path):
+    global is_playing
+    data, samplerate = sf.read(file_path, dtype='float32')
+
+    channels = data.shape[1] if data.ndim > 1 else 1  # 1차원일 땐 1채널로 간주
+
+    with sd.OutputStream(samplerate=samplerate, channels=channels) as stream:
+        block_size = 1024
+        for i in range(0, len(data), block_size):
+            if not is_playing:
+                print("[TTS] 재생 종료")
+                break
+            block = data[i:i+block_size]
+            stream.write(block)
+            await asyncio.sleep(0)  # 이벤트 루프 허용
 
 def print_audio_device(): #최초 실행 시 장치 인덱스 확인하는 작업 필요(print 값 확인하세요)
     audio = pyaudio.PyAudio()
@@ -22,7 +67,10 @@ def print_audio_device(): #최초 실행 시 장치 인덱스 확인하는 작�
     audio.terminate()
     return
 
-def record_audio(file_path):
+async def record_audio(filename):
+    global is_recording
+    path = DEFAULT_PATH + filename + ".wav"
+
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
     RATE = 44100
@@ -33,20 +81,20 @@ def record_audio(file_path):
                         rate=RATE, input=True,
                         input_device_index=2,
                         frames_per_buffer=CHUNK)
-    print("Recording... Press Enter to stop.") #녹음 제어 및 UI 표시방법??
     frames = []
-
-    while True:
+    i = 0
+    while is_recording:
+        if i == 0: print("[STT] REC start ...")
         data = stream.read(CHUNK)
         frames.append(data)
-        if keyboard.is_pressed('enter'):
-            break
-    print("Recording finished.")
+        i+=1
+        await asyncio.sleep(0.01)
+    print("[STT] Recording finished.")
     stream.stop_stream()
     stream.close()
     audio.terminate()
     
-    with wave.open(file_path, 'wb') as wf:
+    with wave.open(path, 'wb') as wf:
         wf.setnchannels(CHANNELS)
         wf.setsampwidth(audio.get_sample_size(FORMAT))
         wf.setframerate(RATE)
@@ -97,6 +145,7 @@ def clova_STT(file_path):
 
 
 def clova_TTS(tts_str, speaker, save_path):
+    print("[TTS] ncloud 서버에 요청 중 ...")
     from dotenv import dotenv_values
     env = dotenv_values()
 
@@ -115,16 +164,17 @@ def clova_TTS(tts_str, speaker, save_path):
         "speed": "-1",  # -5 ~ 10
         "pitch": "0",   # -5 ~ 5
         "text": tts_str,
-        "format": "mp3" # mp3 | wav
+        "format": "wav" # mp3 | wav
     }
     response = requests.post(url=URL, headers=request_header, data=request_body)
-
-    path = save_path + ".mp3"
+    path = save_path + ".wav"
     if(response.status_code == 200):
         with open(path, "wb") as f:
             f.write(response.content)
     else:
+        print(f"[TTS 오류 발생: {response.text}")
         return -1
+    print(f"[TTS] {path} 생성 완료")
     return path
 
 
