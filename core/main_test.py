@@ -23,13 +23,6 @@ def loop_runner():
 threading.Thread(target=loop_runner, daemon=True).start()
 
 
-# 초기화는 loop 안에서 일회성으로 처리
-async def init():
-    gc = GameController.get_instance()
-    await gc.initialize()
-    await gc.start_game()
-loop.call_soon_threadsafe(asyncio.create_task, init())
-
 # ---------------- FastAPI 앱 구성 ----------------
 app = FastAPI()
 
@@ -140,7 +133,7 @@ if __name__ == "__main__":
     async def init():
         gc = GameController.get_instance()
         await gc.initialize()
-        await gc.start_game()
+        gc.start_game()
     loop.call_soon_threadsafe(asyncio.create_task, init())
 
     # 3. PyQt 시작
