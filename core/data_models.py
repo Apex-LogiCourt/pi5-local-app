@@ -74,7 +74,7 @@ class Role(Enum):
     def label(self) -> str:
         return {
             "prosecutor": "검사",
-            "attorney": "벌호사"
+            "attorney": "변호사"
         }[self.value]
 
 
