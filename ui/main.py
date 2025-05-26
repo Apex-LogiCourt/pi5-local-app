@@ -13,13 +13,13 @@ from PyQt5.QtCore import Qt
 from qasync import QEventLoop
 
 from core.game_controller import GameController
-from ui.intro import IntroScreen
-from ui.prosecutor import ProsecutorScreen
-from ui.lawyer import LawyerScreen
-from ui.result import ResultScreen
+from ui.intro_screen import IntroScreen
+from ui.prosecutor_screen import ProsecutorScreen
+from ui.lawyer_screen import LawyerScreen
+from ui.result_screen import ResultScreen
 from ui.resizable_image import ResizableImage, _get_image_path
-from ui.game_description import GameDescriptionScreen
-from ui.interrogation import InterrogationScreen  # ✅ 추가
+from ui.description_screen import GameDescriptionScreen
+from ui.interrogation_screen import InterrogationScreen  # ✅ 추가
 from ui.style_constants import *
 
 class MainWindow(QWidget):

@@ -1,10 +1,10 @@
-from data_models import CaseData, Case, Profile, Evidence
+from core.data_models import CaseData, Case, Profile, Evidence
 from typing import Dict, List, Optional
 
 
 def handler_send_initial_evidence(evidences : List[Evidence]) -> None:
     """초기 증거 데이터를 WebSocket을 통해 전송하는 함수"""
-    from api.manager import sse_manager
+    from core.api.manager import sse_manager
     import asyncio
     from dataclasses import asdict
     
@@ -14,7 +14,7 @@ def handler_send_initial_evidence(evidences : List[Evidence]) -> None:
 
 def handler_send_updated_evidence(evidence: Evidence) -> None:
     """증거 업데이트 시 WebSocket을 통해 전송하는 함수"""
-    from api.manager import sse_manager
+    from core.api.manager import sse_manager
     import asyncio
     from dataclasses import asdict
     
@@ -33,15 +33,15 @@ def handler_send_updated_evidence(evidence: Evidence) -> None:
 #============================================
 
 async def handler_tts_service(text: str, voice: str = "nraewon"):
-    from api.manager import websocket_manager
+    from core.api.manager import websocket_manager
     await websocket_manager.send_tts_request(text, voice)
 
 async def handler_record_start():
-    from api.manager import websocket_manager
+    from core.api.manager import websocket_manager
     await websocket_manager.send_record_start()  
 
 async def handler_record_stop():
-    from api.manager import websocket_manager
+    from core.api.manager import websocket_manager
     await websocket_manager.send_record_stop()  
 
 

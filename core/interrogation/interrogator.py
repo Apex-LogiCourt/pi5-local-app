@@ -1,7 +1,7 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
-from data_models import CaseData, Case, Profile, Evidence
+from core.data_models import CaseData, Case, Profile, Evidence
 from typing import List, Dict, Optional
 
 

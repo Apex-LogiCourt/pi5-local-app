@@ -4,7 +4,7 @@ from core.controller import CaseDataManager
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 import asyncio
 import time
-from interrogation.interrogator import Interrogator, it
+from core.interrogation.interrogator import Interrogator, it
 
 class GameController(QObject):
     _instance = None
@@ -55,7 +55,7 @@ class GameController(QObject):
         cls._state.messages.append({"role":"system", "content": cls._profiles.__str__()})
         cls._state.messages.append({"role":"system", "content": cls._evidences.__str__()})
 
-        from tools.service import handler_send_initial_evidence
+        from core.tools.service import handler_send_initial_evidence
         handler_send_initial_evidence(cls._evidences)
         print(f"[GameController] initialize() ended")
         
@@ -71,7 +71,7 @@ class GameController(QObject):
         if cls._isInitialized is True:
             cls._state.phase = Phase.DEBATE
 
-        from tools.service import handler_tts_service
+        from core.tools.service import handler_tts_service
         asyncio.create_task(handler_tts_service(cls._case_data.case.outline))
         cls._interrogator.set_case_data()
 
@@ -82,7 +82,7 @@ class GameController(QObject):
     async def record_start(cls) -> None:
         """녹음 시작 후에 API 호출"""
         cls._state.record_state = True
-        from tools.service import handler_record_start
+        from core.tools.service import handler_record_start
         await handler_record_start()
 
     
@@ -94,7 +94,7 @@ class GameController(QObject):
             bool: True면 턴 전환, False면 턴 전환 없음
         """
         cls._state.record_state = False
-        from tools.service import handler_record_stop
+        from core.tools.service import handler_record_stop
         await handler_record_stop()
         
         return True
@@ -115,7 +115,7 @@ class GameController(QObject):
             return asyncio.create_task(cls._handle_user_input_validation(text))
         
         if cls._state.phase == Phase.INTERROGATE:
-            from tools.service import run_chain_streaming, handler_tts_service
+            from core.tools.service import run_chain_streaming, handler_tts_service
             cls._state.current_profile = it._current_profile
             
             
@@ -166,7 +166,7 @@ class GameController(QObject):
             """판사의 발언을 음성으로 출력. return False 는 턴 전환 없음."""
             cls._send_signal(code, msg)
             cls._add_message("판사", msg.get("message"))  # 판사 메시지 추가
-            from tools.service import handler_tts_service
+            from core.tools.service import handler_tts_service
             await handler_tts_service(text)
             return False
 
