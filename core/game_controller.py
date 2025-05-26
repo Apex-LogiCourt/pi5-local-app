@@ -63,7 +63,7 @@ class GameController(QObject):
         return cls._case_data
 
     @classmethod
-    def start_game(cls) -> bool :
+    async def start_game(cls) -> bool :
         """게임을 INIT → DEBATE 상태로 시작하고, system 메시지 초기화."""
         if cls._isInitialized is False:
             return False
@@ -100,7 +100,7 @@ class GameController(QObject):
         return True
     
     @classmethod
-    def user_input(cls, text: str) -> bool:
+    async def user_input(cls, text: str) -> bool:
         """
         사용자의 수동 입력, 텍스트를 전송
         Args:
@@ -112,7 +112,7 @@ class GameController(QObject):
             return False
         cls._add_message(cls._state.turn, text)
         if cls._state.phase == Phase.DEBATE:
-            return asyncio.create_task(cls._handle_user_input_validation(text))
+            return await cls._handle_user_input_validation(text)
         
         if cls._state.phase == Phase.INTERROGATE:
             from tools.service import run_chain_streaming, handler_tts_service
@@ -128,12 +128,11 @@ class GameController(QObject):
                 })
                 # cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", sentence)
                 
-            cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", 
-                run_chain_streaming(it.build_ask_chain(text, cls._state.current_profile), handle_response))
+            response_text = await run_chain_streaming(it.build_ask_chain(text, cls._state.current_profile), handle_response)
+            cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", response_text)
 
-        
+        return True
 
-    
     @classmethod
     def interrogation_end(cls) -> None:
         """심문 화면에서 뒤로 가기 버튼을 눌렀을 때 호출, 심문 종료"""
@@ -149,7 +148,7 @@ class GameController(QObject):
         
         if all(cls._state.done_flags.values()):
             cls._state.phase = Phase.JUDGEMENT
-            cls._send_signal("judgement", {"role": "판사", "message": "최종 판결을 내리겠습니다."})
+            cls._send_signal("judgement", {'role': '판사', 'message': '최종 판결을 내리겠습니다.'})
             cls._add_message("판사", "최종 판결을 내리겠습니다.")
             cls._switch_turn()
 
@@ -163,17 +162,20 @@ class GameController(QObject):
     async def _handle_user_input_validation(cls, text: str) -> bool:
 
         async def request_speak_judge(cls, msg: dict, code:str) -> bool:
-            """판사의 발언을 음성으로 출력. return False 는 턴 전환 없음."""
+            """판사의 발언을 음성으로 출력. return False 는 턴 전환 없음.
+            msg 형식 {'role' : '판사', 'message': '지금은 재판 중인데 갑자기 배고프다니요? 재판과 상관 없는 발언 같습니다'}
+            """
             cls._send_signal(code, msg)
             cls._add_message("판사", msg.get("message"))  # 판사 메시지 추가
             from tools.service import handler_tts_service
-            await handler_tts_service(text)
+            asyncio.create_task(handler_tts_service(msg.get("message")))
             return False
 
         result = CaseDataManager.get_instance().check_contextual_relevance(text)
- 
+
+        print(f"디버깅 : {result}")
         if result.get("relevant") == "false": # 문맥 관련 없음
-            return await request_speak_judge(cls, {"role": "판사", "message": result.get("answer")}, "no_context")
+            return await request_speak_judge(cls, {'role': '판사', 'message': result.get("answer")}, "no_context")
    
         if result.get("relevant") == "true" :
             if result.get("answer") == "interrogation":
@@ -181,10 +183,10 @@ class GameController(QObject):
                 temp = it.check_request(text)
                 type_ = temp.get("type")
                 if type_ == "retry": 
-                    return await request_speak_judge(cls, {"role": "판사", "message": temp.get("answer")}, "no_context")
+                    return await request_speak_judge(cls, {'role': '판사', 'message' : temp.get("answer")}, "no_context")
                 else : 
                     cls._state.phase = Phase.INTERROGATE 
-                    return await request_speak_judge(cls, {"role": "판사", "message": temp.get("answer"), "type":type_}, "interrogation_accepted")
+                    return await request_speak_judge(cls, {'role': '판사', 'message': temp.get("answer"), 'type':type_}, "interrogation_accepted")
             else :
                 cls._add_message(cls._state.turn, text)
                 return True
@@ -255,11 +257,10 @@ if __name__ == "__main__":
     gc._send_signal("test_code", {"key": "value"})
     gc._send_signal("verdict", "유죄입니다.")
 
-    cd = asyncio.run(gc.initialize())
-    # gc._send_signal("case_data", cd)
+    async def test_init():
+        await gc.initialize()
+        await gc.start_game()
 
-    gc.start_game()
-
-
+    asyncio.run(test_init())
 
     sys.exit(0)

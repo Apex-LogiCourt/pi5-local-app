@@ -133,7 +133,7 @@ if __name__ == "__main__":
     async def init():
         gc = GameController.get_instance()
         await gc.initialize()
-        gc.start_game()
+        await gc.start_game()
     loop.call_soon_threadsafe(asyncio.create_task, init())
 
     # 3. PyQt 시작
