@@ -144,9 +144,13 @@ class StateManager:
         with self.btn_lock:
             return self.current_preessed
 
-    def set_current_pressed(self, role: str):
+    def set_current_pressed(self, role: str) -> bool:
         with self.btn_lock:
-            self.current_preessed = role
+            from game_controller import GameController
+            if GameController.get_instance()._isInitialized is False:
+                return False
+            GameController.get_instance()._handle_bnt_event(role)
+            return True
 
     def add_evidence(self, evidence: Dict):
         with self.evidence_lock:

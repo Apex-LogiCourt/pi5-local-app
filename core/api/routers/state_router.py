@@ -9,5 +9,7 @@ async def handle_button_press(press_id: str):
     if press_id not in ["prosecutor", "attorney"]:
         raise HTTPException(status_code=400, detail="Invalid ID")
     
-    state_manager.set_current_pressed(press_id)
-    return {"status": "ok", "role": state_manager.get_current_pressed()}
+    ck = state_manager.set_current_pressed(press_id)
+    if not ck :
+        return {"status": "error", "message": "Game not initialized"}
+    return {"status": "ok", "role": press_id}

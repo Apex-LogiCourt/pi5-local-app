@@ -97,6 +97,8 @@ class GameController(QObject):
         from tools.service import handler_record_stop
         await handler_record_stop()
         
+        if cls._state.phase == Phase.INTERROGATE:
+            return False
         return True
     
     @classmethod
@@ -130,7 +132,7 @@ class GameController(QObject):
                 
             response_text = await run_chain_streaming(it.build_ask_chain(text, cls._state.current_profile), handle_response)
             cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", response_text)
-
+        # print(f"user_input() called, 현재 턴{cls._state.turn}")
         return True
 
     @classmethod
@@ -205,17 +207,15 @@ class GameController(QObject):
 
     
     @classmethod
-    async def _objection(cls) -> None:
+    def _objection(cls) -> None:
         """
         이의 제기.
         - objection_count 증가, 메시지 추가, 턴 전환
         """
-        cls._state.objection_count[cls._state.turn] += 1
-        if cls._state.record_state is True:
-            await cls.record_end()
-            cls._state.record_state = False
-        cls._send_signal("objection", {"role": cls._state.turn.label, "message": "이의 있음!"})
         cls._switch_turn()
+        cls._state.objection_count[cls._state.turn] += 1
+        cls._send_signal("objection", {"role": cls._state.turn.label(), "message": "이의 있음!"})
+        print(f"[GameController] _objection() called: {cls._state.turn.label()}")
 
     @classmethod
     def _get_judgement(cls) -> str:
@@ -225,7 +225,7 @@ class GameController(QObject):
     @classmethod
     def _add_message(cls, role: Role, content: str) -> None:
         """messages 리스트에 (role, content) 추가."""
-        role_str = role.value if isinstance(role, Role) else role
+        role_str = role.label() if isinstance(role, Role) else role
         cls._state.messages.append({"role": role_str, "content": content})
         print(f"[GameController] _add_message() called: {cls._state.messages[-1]}")
 
@@ -234,7 +234,16 @@ class GameController(QObject):
         """Role.PROSECUTOR ↔ Role.ATTORNEY 토글."""
         cls._state.turn = cls._state.turn.next()
 
-
+    @classmethod
+    def _handle_bnt_event(cls, role : str) -> None:
+        """버튼 이벤트 처리 메서드"""
+        # print(f"input_role : {role}, 현재 턴: {cls._state.turn.value}, 여부 : {role != cls._state.turn.value}")
+        if cls._state.record_state is True:
+            asyncio.create_task(cls.record_end())
+        
+        # 현재 턴과 다른 사람이 버튼을 눌렀을 때만 이의제기
+        if role != cls._state.turn.value and cls._state.phase == Phase.DEBATE:
+            cls._objection()
 
 
 
