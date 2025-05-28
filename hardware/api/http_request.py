@@ -2,16 +2,59 @@ import httpx
 import asyncio
 import websockets
 import json
+from core.data_models import Evidence
 
 # 나중에 도커로 돌릴 때는 host를 localhost가 아닌 도커 컨테이너 core 로 바꿔주세용 
-async def listen_sse_async(press_id: str):
+async def listen_sse_async():
     async with httpx.AsyncClient(timeout=None) as client:
         async with client.stream("GET", "http://localhost:8000/sse/evidence/stream") as response:
             async for line in response.aiter_lines():
-                if line.startswith("event:"): # 근데 "event" 로 올듯 일단 한번찍어보세용
-                    data = line.removeprefix("data:").strip()
-                    print(f"받은 데이터: {data}")
+                sse_data_parser(line) # 라인이 끝날 때 호출해야 하는데??...
+                
+                # if line.startswith("event:"): # 근데 "event" 로 올듯 일단 한번찍어보세용
+                #     data = line.removeprefix("event:").strip()
+                #     print(f"[HW/sse] raw: {data}")
+                    
+                    
 
+def sse_data_parser(sse_chunk: str):
+    """
+    SSE 응답 문자열에서 Evidence 객체를 생성하여 반환합니다.
+    event: evidence
+    data: {...}
+    형식만 처리하며, 다른 이벤트는 무시합니다.
+
+    input:  sse_chunk: SSE 메시지 블록
+    return: Evidence 객체 또는 None
+    """
+    event_name = None
+    data_lines = []
+
+    for line in sse_chunk.strip().splitlines():
+        if line.startswith("event:"):
+            event_name = line.removeprefix("event:").strip()
+        elif line.startswith("data:"):
+            data_lines.append(line.removeprefix("data:").strip())
+
+    if event_name != "evidence":
+        return None  # 'evidence' 이벤트만 처리
+
+    try:
+        full_data = "\n".join(data_lines)
+        parsed = json.loads(full_data)
+        filtered = {
+            "name": parsed["name"],
+            "type": parsed["type"],
+            "description": parsed["description"],
+            "picture": parsed["picture"]
+        }
+        evidence = Evidence.from_dict(filtered)
+        evidence.id = parsed["id"]
+        print(f"[HW/sse] Evidence data: {evidence}")
+        return evidence
+    except (json.JSONDecodeError, KeyError) as e:
+        print(f"[HW/sse] SSE parse failed. {e}")
+        return None
 
 async def handle_button_press(press_id: str):
     response = httpx.post(f'http://localhost:8000/api/press/{press_id}')
