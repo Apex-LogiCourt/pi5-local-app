@@ -66,7 +66,7 @@ def handler_question(question: str, profile : Profile) :
 #     sentence_streamer(stream, on_sentence_ready)
 
 
-def run_chain_streaming(chain, callback=None):
+async def run_chain_streaming(chain, callback=None):
     full_text = ""
     # chain이 문자열인 경우 run_str_streaming 사용
     if isinstance(chain, str):
