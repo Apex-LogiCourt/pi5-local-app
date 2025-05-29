@@ -38,7 +38,10 @@ async def text_to_speech(text: str, voice: str):
         print(f"[TTS] warning: {wavpath} cannot found wav file.")
         return
 
-    await play_wav(wavpath)
+    try:
+        await play_wav(wavpath)
+    except Exception as e:
+        print(f"[TTS] tts playing err: {e}")
     return
 
 async def play_wav(file_path):
@@ -178,10 +181,10 @@ def clova_TTS(tts_str, speaker, save_path):
 
 #### TEST CODE ####
 if __name__ == '__main__':
-    # print_audio_device()
+    print_audio_device()
 
-    record_audio("recoding.wav")
-    stt_text = clova_STT("recoding.wav")
-    print(stt_text)
-    tts_path = clova_TTS(stt_text, speaker="nara_call", save_path="./tts_test")
-    print(tts_path)
+    # record_audio("recoding.wav")
+    # stt_text = clova_STT("recoding.wav")
+    # print(stt_text)
+    # tts_path = clova_TTS(stt_text, speaker="nara_call", save_path="./tts_test")
+    # print(tts_path)
