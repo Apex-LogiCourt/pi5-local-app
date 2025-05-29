@@ -54,17 +54,16 @@ if __name__ == "__main__":
     asyncio.set_event_loop(loop)
     threading.Thread(target=loop.run_forever, daemon=True).start()
 
-    # 2. GameController 초기화
-    async def init():
+    # 2. GameController 초기화 완료 후 PyQt 시작
+    async def init_and_start():
         gc = GameController.get_instance()
         await gc.initialize()
         await gc.start_game()
-    loop.call_soon_threadsafe(asyncio.create_task, init())
+        # 초기화 완료 후 PyQt 시작
+        qt_thread = threading.Thread(target=start_qt_app, args=(loop,), daemon=True)
+        qt_thread.start()
+    
+    loop.call_soon_threadsafe(asyncio.create_task, init_and_start())
 
-    # 3. PyQt 시작
-    qt_thread = threading.Thread(target=start_qt_app, args=(loop,), daemon=True)
-    qt_thread.start()
-
-    # 4. FastAPI 실행 (블로킹)
-    # uvicorn.run("main:app", host="0.0.0.0", port=8888, loop="asyncio")
+    # 3. FastAPI 실행 (블로킹)
     uvicorn.run("main:app", host="0.0.0.0", port=8000, loop="asyncio")

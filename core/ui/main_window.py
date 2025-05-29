@@ -90,7 +90,7 @@ class MainWindow(QWidget):
         # GameController.initialize()는 클래스 메소드이므로 클래스에서 직접 호출합니다.
         # 그리고 이는 비동기 함수이므로 asyncio.ensure_future로 실행합니다.
         if hasattr(GameController, 'initialize'):
-            asyncio.ensure_future(GameController.initialize())
+            pass
         # GameController.init_game()은 존재하지 않는 것으로 보입니다.
         # elif hasattr(GameController, 'init_game'):
         #     asyncio.ensure_future(GameController.init_game())
