@@ -1,4 +1,4 @@
-import RPi.GPIO as GPIO 
+# import RPi.GPIO as GPIO 
 import time
 import asyncio
 import atexit
@@ -15,21 +15,21 @@ DEBOUNCE_TIME = 0.5
 
 def button_init():
     print("[GPIO/BUTTON] initializing ...")
-    GPIO.setwarnings(False) 
-    GPIO.setmode(GPIO.BCM)
+    # GPIO.setwarnings(False) 
+    # GPIO.setmode(GPIO.BCM)
 
-    GPIO.setup(BUTTON_PIN_PROSECUTOR, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
-    GPIO.add_event_detect(BUTTON_PIN_PROSECUTOR, GPIO.RISING, callback=button_callback_prosecutor, bouncetime=50)
+    # GPIO.setup(BUTTON_PIN_PROSECUTOR, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
+    # GPIO.add_event_detect(BUTTON_PIN_PROSECUTOR, GPIO.RISING, callback=button_callback_prosecutor, bouncetime=50)
 
-    GPIO.setup(BUTTON_PIN_ATTORNEY, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
-    GPIO.add_event_detect(BUTTON_PIN_ATTORNEY, GPIO.RISING, callback=button_callback_attorney, bouncetime=50)
+    # GPIO.setup(BUTTON_PIN_ATTORNEY, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
+    # GPIO.add_event_detect(BUTTON_PIN_ATTORNEY, GPIO.RISING, callback=button_callback_attorney, bouncetime=50)
 
 def button_callback_prosecutor(channel):
     now = time.time()
     if now - last_pressed["prosecutor"] > DEBOUNCE_TIME:
         last_pressed["prosecutor"] = now
         print(f"[BUTTON] Button pushed!, PROSECUTOR")
-        asyncio.get_event_loop().create_task(handle_button_press("prosecutor"))
+        asyncio.create_task(handle_button_press("prosecutor"))
     else:
         # print("[prosecutor] Ignored due to debounce.")
         pass
@@ -39,7 +39,7 @@ def button_callback_attorney(channel):
     if now - last_pressed["attorney"] > DEBOUNCE_TIME:
         last_pressed["attorney"] = now
         print(f"[BUTTON] Button pushed!, ATTORNEY")
-        asyncio.get_event_loop().create_task(handle_button_press("attorney"))
+        asyncio.create_task(handle_button_press("attorney"))
     else:
         # print("[attorney] Ignored due to debounce.")
         pass
