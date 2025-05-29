@@ -20,14 +20,14 @@ from game_controller import GameController
 
 # 현재 파일(main_window.py)이 ui 폴더에 있으므로,
 # screen 폴더 및 다른 ui 모듈은 상대 경로로 import 합니다.
-from screen.intro_screen import IntroScreen
-from screen.prosecutor_screen import ProsecutorScreen
-from screen.lawyer_screen import LawyerScreen
-from screen.result_screen import ResultScreen, LoadingDialog
-from resizable_image import ResizableImage, _get_image_path, _get_profile_image_path
-from screen.description_screen import GameDescriptionScreen
-from screen.interrogation_screen import InterrogationScreen
-from style_constants import *
+from ui.screen.intro_screen import IntroScreen
+from ui.screen.prosecutor_screen import ProsecutorScreen
+from ui.screen.lawyer_screen import LawyerScreen
+from ui.screen.result_screen import ResultScreen, LoadingDialog
+from ui.resizable_image import ResizableImage, _get_image_path, _get_profile_image_path
+from ui.screen.description_screen import GameDescriptionScreen
+from ui.screen.interrogation_screen import InterrogationScreen
+from ui.style_constants import *
 
 
 class MainWindow(QWidget):

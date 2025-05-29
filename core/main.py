@@ -1,12 +1,31 @@
-from fastapi import FastAPI
-from api.routers import state_router, websocket_router, evidence_router
-from fastapi.middleware.cors import CORSMiddleware
+# main.py
+import sys
 import asyncio
+import threading
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from api.routers import state_router, websocket_router, evidence_router
 from game_controller import GameController
 
+from PyQt5.QtWidgets import QApplication
+from ui.main_window import MainWindow
+import uvicorn
+
+
+# main.py 상단
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+
+def loop_runner():
+    print("[LoopThread] asyncio 루프 시작")
+    loop.run_forever()
+
+threading.Thread(target=loop_runner, daemon=True).start()
+
+
+# ---------------- FastAPI 앱 구성 ----------------
 app = FastAPI()
 
-# CORS 설정
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,26 +34,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 라우터 등록
 app.include_router(state_router.router)
 app.include_router(websocket_router.router)
 app.include_router(evidence_router.router)
 
 
+# ---------------- PyQt 실행 스레드 ----------------
+def start_qt_app(loop):
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())
 
+
+# ---------------- 전체 실행 ----------------
 if __name__ == "__main__":
-    gc = GameController.get_instance()  # 게임 컨트롤러 초기화
-    
-    asyncio.run(gc.initialize())  # 비동기 초기화
+    # 1. 루프 만들고 백그라운드 실행
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    threading.Thread(target=loop.run_forever, daemon=True).start()
 
-    asyncio.run(gc.start_game())  # 게임 시
-    asyncio.run(gc.record_start())  # 녹음 시작
-    asyncio.run(gc.record_end())  # 녹음 종료
-    
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+    # 2. GameController 초기화
+    async def init():
+        gc = GameController.get_instance()
+        await gc.initialize()
+        await gc.start_game()
+    loop.call_soon_threadsafe(asyncio.create_task, init())
 
+    # 3. PyQt 시작
+    qt_thread = threading.Thread(target=start_qt_app, args=(loop,), daemon=True)
+    qt_thread.start()
 
-
-    # asyncio.run(gc.start_game())  # 메서드 호출로 수정
-    
+    # 4. FastAPI 실행 (블로킹)
+    # uvicorn.run("main:app", host="0.0.0.0", port=8888, loop="asyncio")
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, loop="asyncio")
