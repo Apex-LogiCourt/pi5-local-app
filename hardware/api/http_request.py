@@ -3,45 +3,37 @@ import asyncio
 import websockets
 import json
 from core.data_models import Evidence
+from devices.eink_display import update_and_sand_image
 
 # 나중에 도커로 돌릴 때는 host를 localhost가 아닌 도커 컨테이너 core 로 바꿔주세용 
 async def listen_sse_async():
-    async with httpx.AsyncClient(timeout=None) as client:
-        async with client.stream("GET", "http://localhost:8000/sse/evidence/stream") as response:
-            async for line in response.aiter_lines():
-                sse_data_parser(line) # 라인이 끝날 때 호출해야 하는데??...
-                
-                # if line.startswith("event:"): # 근데 "event" 로 올듯 일단 한번찍어보세용
-                #     data = line.removeprefix("event:").strip()
-                #     print(f"[HW/sse] raw: {data}")
-                    
-                    
+    while True:
+        try:
+            async with httpx.AsyncClient(timeout=None) as client:
+                async with client.stream("GET", "http://localhost:8000/evidence/stream") as response:
+                    print("[HW/sse] SSE connected. wait for data...")
+                    async for line in response.aiter_lines():
+                        if line.strip() == "":
+                            continue
+                        # print(f"[HW/sse] raw: {line}")
+                        asyncio.create_task(sse_data_handler(line))
+                            
+        except httpx.RequestError as e:
+            print(f"[HW/sse] connection fail: {e}")
+            await asyncio.sleep(1)
 
-def sse_data_parser(sse_chunk: str):
+async def sse_data_handler(raw_data: str):
     """
     SSE 응답 문자열에서 Evidence 객체를 생성하여 반환합니다.
-    event: evidence
-    data: {...}
-    형식만 처리하며, 다른 이벤트는 무시합니다.
-
-    input:  sse_chunk: SSE 메시지 블록
-    return: Evidence 객체 또는 None
+    data: {...} 형식의 데이터 처리
     """
-    event_name = None
-    data_lines = []
-
-    for line in sse_chunk.strip().splitlines():
-        if line.startswith("event:"):
-            event_name = line.removeprefix("event:").strip()
-        elif line.startswith("data:"):
-            data_lines.append(line.removeprefix("data:").strip())
-
-    if event_name != "evidence":
-        return None  # 'evidence' 이벤트만 처리
-
+    if raw_data.startswith("data:"):
+        data = raw_data.removeprefix("data:").strip()
+    else:
+        return
+    
     try:
-        full_data = "\n".join(data_lines)
-        parsed = json.loads(full_data)
+        parsed = json.loads(data)
         filtered = {
             "name": parsed["name"],
             "type": parsed["type"],
@@ -50,16 +42,19 @@ def sse_data_parser(sse_chunk: str):
         }
         evidence = Evidence.from_dict(filtered)
         evidence.id = parsed["id"]
-        print(f"[HW/sse] Evidence data: {evidence}")
+        print(f"[HW/sse] {evidence}")
+        asyncio.create_task(evidence_ack(id=str(evidence.id), status="received"))
+        update_and_sand_image(evidence.id, evidence)
         return evidence
     except (json.JSONDecodeError, KeyError) as e:
-        print(f"[HW/sse] SSE parse failed. {e}")
+        print(f"[HW/sse] sse data convert error: {e}")
+        asyncio.create_task(evidence_ack(id=str(evidence.id), status="failed"))
         return None
 
 async def handle_button_press(press_id: str):
     response = httpx.post(f'http://localhost:8000/api/press/{press_id}')
     data = response.json()
-    print(data)
+    # print(data)
     # 받는 응답: {"status": "ok", "role": "prosecutor"}
     return data
 
@@ -75,7 +70,7 @@ async def evidence_ack(id: str, status: str):
     # faild일 경우에 evidence 객체를 돌려줌 
     # recived 일 떄 받는 응답: {"id": 1, "status": "ok"}
     data = response.json()
-    print(data)
+    # print(data)
 
 
 # ===================
@@ -94,12 +89,11 @@ async def send_messages(websocket, message: dict):
     await websocket.send(json.dumps(message))
     print(f"[HW/ws] send message to server: {message}")
 
-
 async def receive_messages(websocket):
     try:
         async for message in websocket:
-            print(f"[HW/ws] receive server message: {message}")
             data = json.loads(message)
+            print(f"[HW/ws] receive server message: {data.get("type")}")
             await server_event_handler(websocket, data)
     except websockets.exceptions.ConnectionClosed:
         print("[HW/ws] lost connection.")
@@ -109,8 +103,9 @@ async def server_event_handler(websocket, data: dict): #서버에서 받은 메�
 
     event_type = data.get("type") or data.get("event")
 
-    if event_type == "tts_start":
-        print("[HW/ws] receive TTS message", data)
+    # if event_type == "tts_start":
+    if event_type == "tts":
+        print("[HW/ws] receive TTS message")
         try:
             tts_text = data["data"]
             voice = data.get("voice")
@@ -128,9 +123,7 @@ async def server_event_handler(websocket, data: dict): #서버에서 받은 메�
 
     elif event_type == "record_start":
         print("[HW/ws] request module to start REC.")
-        await tts.set_rec_state(True)
-        await asyncio.sleep(1)
-        # await tts.record_audio("stt_temp")
+        state = await tts.set_rec_state(True)
         record_audio_task = asyncio.create_task(tts.record_audio("stt_temp"))
 
     elif event_type == "record_stop":
@@ -151,22 +144,6 @@ async def server_event_handler(websocket, data: dict): #서버에서 받은 메�
     else:
         print("[HW/ws] receive UNKNOWN EVENT: ", data)
 
-
-# async def send_tts_start(websocket):
-#     """TTS 음성 출력 시작한다는 신호를 보냄""" 
-#     await websocket.send(json.dumps({
-#         "event": "tts_start"
-#     }))
-#     print("[클라이언트] tts_start 전송")
-
-# async def send_tts_end(websocket):
-#     """TTS 음성 출력 종료한다는 신호를 보냄"""
-#     await websocket.send(json.dumps({
-#         "event": "tts_end"
-#     }))
-#     print("[클라이언트] tts_end 전송")
-
-
 async def websocket_client():
     uri = "ws://localhost:8000/ws/voice-stream"
     while True:
@@ -175,7 +152,7 @@ async def websocket_client():
                 print("[HW/ws] server connected.")
                 await receive_messages(websocket)
         except Exception as e:
-            print(f"[HW/ws] connection fail: {e}, retry after 3 sec.")
+            print(f"[HW/ws] connection fail: {e}")
             await asyncio.sleep(3)
 
 if __name__ == "__main__":
