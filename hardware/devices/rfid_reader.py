@@ -1,6 +1,6 @@
 import asyncio
-import RPi.GPIO as GPIO
-from mfrc522 import SimpleMFRC522
+# import RPi.GPIO as GPIO
+# from mfrc522 import SimpleMFRC522
 from api.http_request import handle_nfc
 
 """
@@ -13,7 +13,7 @@ RST : 22
 3.3V: 1
 """
 
-READER = SimpleMFRC522()
+# READER = SimpleMFRC522()
 CARD_LIST = {
     927176852798: "1",
     899780314557: "2",
@@ -35,10 +35,10 @@ async def scan_rfid_loop():
             if card_num == -1:
                 continue
             print(f"[RFID] Card No.{card_num} scanned")
-            asyncio.get_event_loop().create_task(handle_nfc(card_num))
+            asyncio.create_task(handle_nfc(card_num))
 
         except Exception as e:
-            print(f"[RFID] scanner error: {e}")
+            # print(f"[RFID] scanner error: {e}")
             pass
 
         await asyncio.sleep(0.5)
