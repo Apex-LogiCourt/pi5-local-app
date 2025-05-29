@@ -3,8 +3,8 @@ from PyQt5.QtCore import Qt
 
 # Assuming resizable_image.py is in the parent directory 'ui'
 # and _get_image_path expects a filename relative to 'assets' at project root
-from ..resizable_image import ResizableImage, _get_image_path
-from ..style_constants import (
+from ui.resizable_image import ResizableImage, _get_image_path
+from ui.style_constants import (
     DARK_BG_COLOR, GOLD_ACCENT, WHITE_TEXT, PRIMARY_BLUE
 )
 

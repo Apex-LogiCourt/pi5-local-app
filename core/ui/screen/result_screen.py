@@ -6,8 +6,8 @@ from PyQt5.QtCore import Qt, QTimer # Added QTimer
 # from PyQt5.QtGui import QMovie # Not used directly, but QMovie could be an alternative for loading
 import asyncio # Still needed for on_restart if it's async
 
-from ..resizable_image import ResizableImage, _get_image_path, _get_profile_image_path
-from ..style_constants import (
+from ui.resizable_image import ResizableImage, _get_image_path, _get_profile_image_path
+from ui.style_constants import (
     DARK_BG_COLOR, WHITE_TEXT, PRIMARY_BLUE, # GREEN_BTN_COLOR, LIGHT_GRAY_TEXT, # Not used
     COMMON_PANEL_LABEL_STYLE
 )

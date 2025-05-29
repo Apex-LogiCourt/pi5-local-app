@@ -5,13 +5,13 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt
 
-from ..style_constants import (
+from ui.style_constants import (
     DARK_BG_COLOR, SECONDARY_BLUE, COMMON_PANEL_LABEL_STYLE,
     DEFAULT_BUTTON_STYLE, TEXT_EDIT_STYLE_TRANSPARENT_BG, WHITE_TEXT,
     HTML_H3_STYLE, HTML_P_STYLE, HTML_LI_STYLE
 )
 # Assuming resizable_image.py is in the parent directory 'ui'
-from ..resizable_image import _get_image_path, _get_profile_image_path
+from ui.resizable_image import _get_image_path, _get_profile_image_path
 # Removed: from core.data_models import Evidence (data will be passed)
 import re
 

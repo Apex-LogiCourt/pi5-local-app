@@ -5,11 +5,11 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 # from PyQt5.QtGui import QIcon, QPixmap # Not directly needed
 
-from ..resizable_image import ResizableImage, _get_profile_image_path, _get_image_path
-from ..style_constants import DARK_BG_COLOR, WHITE_TEXT
+from ui.resizable_image import ResizableImage, _get_profile_image_path, _get_image_path
+from ui.style_constants import DARK_BG_COLOR, WHITE_TEXT
 # Removed: from core.game_controller import GameController
 # Import common components
-from .common_components import (
+from common_components import (
     HoverButton, MicButton, extract_name_and_role,
     show_case_dialog_common, show_evidences_common, show_full_profiles_dialog_common
 )

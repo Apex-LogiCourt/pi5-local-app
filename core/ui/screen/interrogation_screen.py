@@ -7,8 +7,8 @@ from PyQt5.QtGui import QPixmap, QIcon
 
 # Assuming resizable_image.py is in the parent directory 'ui'
 # and _get_profile_image_path expects a filename relative to 'assets/profile/'
-from ..resizable_image import _get_image_path, _get_profile_image_path
-from ..style_constants import DARK_BG_COLOR, WHITE_TEXT
+from ui.resizable_image import _get_image_path, _get_profile_image_path
+from ui.style_constants import DARK_BG_COLOR, WHITE_TEXT
 # Removed: from core.game_controller import GameController
 import re
 

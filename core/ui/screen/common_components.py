@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QPushButton, QLabel, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QFrame
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon, QPixmap, QFont
-from ..resizable_image import _get_image_path, _get_profile_image_path # Relative to ui/
+from ui.resizable_image import _get_image_path, _get_profile_image_path # Relative to ui/
 import re
 
 KOREAN_TO_ENGLISH_MAP = {
