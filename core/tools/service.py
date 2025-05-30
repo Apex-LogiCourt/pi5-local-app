@@ -157,3 +157,17 @@ def sentence_streamer(
 
 
     
+#=============================================
+# post 요청에 대한 핸들러
+#=============================================
+def handler_tagged_evidence(id: int) -> None:
+    """
+    게임 컨트롤러의 `tagged_evidence`를 업데이트하고 signal을 보냄
+    """
+    from game_controller import GameController
+    gc = GameController.get_instance()
+    for evidence in gc._evidences:
+        if evidence.id == id:
+            gc._state.tagged_evidence = evidence
+            gc._send_signal("evidence_tagged", evidence)
+            return

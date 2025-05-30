@@ -137,8 +137,9 @@ class StateManager:
     def __init__(self):
         self.current_preessed: str = None
         self.btn_lock = Lock()
-        self.evidence_list: List[Dict] = []
         self.evidence_lock = Lock()
+        self.current_evidence: int = None
+
 
     def get_current_pressed(self) -> str:
         with self.btn_lock:
@@ -147,18 +148,17 @@ class StateManager:
     def set_current_pressed(self, role: str) -> bool:
         with self.btn_lock:
             from game_controller import GameController
-            if GameController.get_instance()._isInitialized is False:
+            if GameController.get_instance()._is_initialized is False:
                 return False
             GameController.get_instance()._handle_bnt_event(role)
             return True
-
-    def add_evidence(self, evidence: Dict):
+    def evidence_tagged(self, id:str):
         with self.evidence_lock:
-            self.evidence_list.append(evidence)
+            self.current_evidence = int(id)
+            from tools.service import handler_tagged_evidence
+            handler_tagged_evidence(self.current_evidence)
+        pass
 
-    def get_all_evidence(self) -> List[Dict]:
-        with self.evidence_lock:
-            return self.evidence_list.copy()
 
 # 의존성 주용을 위한 인스턴스 생성
 sse_manager = SSEManager()
