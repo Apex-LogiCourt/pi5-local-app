@@ -8,7 +8,7 @@ from interrogation.interrogator import Interrogator, it
 
 class GameController(QObject):
     _instance = None
-    _isInitialized = False
+    _is_initialized = False
     _state : GameState = None
     _case : Case = None
     _evidences : List[Evidence] = None
@@ -65,10 +65,10 @@ class GameController(QObject):
     @classmethod
     async def start_game(cls) -> bool :
         """게임을 INIT → DEBATE 상태로 시작하고, system 메시지 초기화."""
-        if cls._isInitialized is False:
+        if cls._is_initialized is False:
             return False
 
-        if cls._isInitialized is True:
+        if cls._is_initialized is True:
             cls._state.phase = Phase.DEBATE
 
         from tools.service import handler_tts_service

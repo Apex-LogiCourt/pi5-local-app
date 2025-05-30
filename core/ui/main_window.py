@@ -90,7 +90,7 @@ class MainWindow(QWidget):
         # GameController.initialize()는 클래스 메소드이므로 클래스에서 직접 호출합니다.
         # 그리고 이는 비동기 함수이므로 asyncio.ensure_future로 실행합니다.
         if hasattr(GameController, '_isInitialized'):
-            if GameController._isInitialized:
+            if GameController._is_initialized:
                 print("GameController is already initialized. Loading case data...")
                 self._update_start_button("게임 시작", True)
                 self.is_gc_initialized = True
