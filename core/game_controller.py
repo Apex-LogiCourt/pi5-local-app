@@ -74,7 +74,7 @@ class GameController(QObject):
         from tools.service import handler_tts_service
         asyncio.create_task(handler_tts_service(cls._case_data.case.outline))
         cls._interrogator.set_case_data()
-        # cls._send_signal("initialized", cls._case_data)
+        cls._send_signal("initialized", cls._case_data)
 
         return True
     
