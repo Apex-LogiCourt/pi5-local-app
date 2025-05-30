@@ -3,20 +3,11 @@ import serial
 import time
 import numpy as np
 import os
-import asyncio
+import traceback
 
 from PIL import Image, ImageDraw, ImageFont
 from typing import List
-
-# from typing import List, Literal        #pi 테스트용
-# from dataclasses import dataclass       #pi 테스트용
-from core.data_models import Evidence #나중에 사용
-# @dataclass
-# class Evidence:
-#     name: str  # 증거품 이름(명사형) 
-#     type: Literal["attorney", "prosecutor"]  # 제출 주체 
-#     description: List[str]  # 증거 설명 (추가 가능)
-#     picture: str  # 사진 경로 (향후 구현)
+from data_models import Evidence
 
 RFCOMM_DEV = "/dev/rfcomm0" # Interface for Serial mapping of Bluetooth.
 
@@ -38,6 +29,7 @@ def update_and_sand_image(epd_index: int, evidence: Evidence):
         send_bytes_over_serial(byte_data)
     except Exception as e:
         print(f"[HW/EPD] epd update error: {e}")
+        traceback.print_exc()
     return
 
 

@@ -2,7 +2,7 @@ import httpx
 import asyncio
 import websockets
 import json
-from core.data_models import Evidence
+from data_models import Evidence
 from devices.eink_display import update_and_sand_image
 
 # 나중에 도커로 돌릴 때는 host를 localhost가 아닌 도커 컨테이너 core 로 바꿔주세용 
@@ -99,7 +99,7 @@ async def receive_messages(websocket):
         print("[HW/ws] lost connection.")
 
 async def server_event_handler(websocket, data: dict): #서버에서 받은 메시지 처리
-    global record_audio_task
+    global record_audio_task # 녹음 상태 체크용 변수
 
     event_type = data.get("type") or data.get("event")
 
@@ -153,7 +153,7 @@ async def websocket_client():
                 await receive_messages(websocket)
         except Exception as e:
             print(f"[HW/ws] connection fail: {e}")
-            await asyncio.sleep(3)
+            await asyncio.sleep(1)
 
 if __name__ == "__main__":
     pass
