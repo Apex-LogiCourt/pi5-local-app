@@ -49,7 +49,7 @@ class GameController(QObject):
         cls._profiles = cls._case_data.profiles
         cls._case = cls._case_data.case
         cls._evidences = cls._case_data.evidences
-        cls._isInitialized = True
+        cls._is_initialized = True
 
         cls._state.messages.append({"role":"system", "content": cls._case_data.case.outline})
         cls._state.messages.append({"role":"system", "content": cls._profiles.__str__()})
@@ -238,12 +238,32 @@ class GameController(QObject):
     def _handle_bnt_event(cls, role : str) -> None:
         """버튼 이벤트 처리 메서드"""
         # print(f"input_role : {role}, 현재 턴: {cls._state.turn.value}, 여부 : {role != cls._state.turn.value}")
-        if cls._state.record_state is True:
-            asyncio.create_task(cls.record_end())
-        
-        # 현재 턴과 다른 사람이 버튼을 눌렀을 때만 이의제기
-        if role != cls._state.turn.value and cls._state.phase == Phase.DEBATE:
-            cls._objection()
+
+        is_same_turn = role == cls._state.turn.value
+        is_recording = cls._state.record_state # 값 복사 
+
+        if cls._state.phase == Phase.DEBATE: # 토론 중일 때 
+            if is_recording :
+                asyncio.create_task(cls.record_end())
+                cls._send_signal("record_toggled", False)
+            if is_same_turn and not is_recording:
+                asyncio.create_task(cls.record_start())
+                cls._send_signal("record_toggled", True)
+                return
+            if not is_same_turn:
+                cls._objection()
+                return
+
+        if cls._state.phase == Phase.INTERROGATE :
+            if not is_same_turn : return
+            else :
+                if is_recording:
+                    asyncio.create_task(cls.record_end())
+                    cls._send_signal("record_toggled", False)
+                else:
+                    asyncio.create_task(cls.record_start())
+                    cls._send_signal("record_toggled", True)
+        return
 
 
 
