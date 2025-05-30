@@ -248,29 +248,3 @@ class GameController(QObject):
 
 
 
-if __name__ == "__main__":
-    class DummyReceiver(QObject):
-        @pyqtSlot(str, object)
-        def receive(self, code, arg):
-            print(f"[Signal Received] code: {code}, arg: {arg}")
-
-    import sys
-    from PyQt5.QtWidgets import QApplication
-
-    app = QApplication(sys.argv)
-
-    gc = GameController.get_instance()
-    receiver = DummyReceiver()
-    gc._signal.connect(receiver.receive)
-
-    # 테스트 시그널 발신
-    gc._send_signal("test_code", {"key": "value"})
-    gc._send_signal("verdict", "유죄입니다.")
-
-    async def test_init():
-        await gc.initialize()
-        await gc.start_game()
-
-    asyncio.run(test_init())
-
-    sys.exit(0)
