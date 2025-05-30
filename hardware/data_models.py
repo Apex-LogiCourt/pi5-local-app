@@ -43,7 +43,7 @@ class Evidence:
             name=data["name"],
             type=data["type"],
             description=desc,
-            picture=None
+            picture=data["picture"]
         )
 
 @dataclass
