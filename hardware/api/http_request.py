@@ -93,7 +93,7 @@ async def receive_messages(websocket):
     try:
         async for message in websocket:
             data = json.loads(message)
-            print(f"[HW/ws] receive server message: {data.get("type")}")
+            print(f"[HW/ws] receive server message: {data.get('type')}")
             await server_event_handler(websocket, data)
     except websockets.exceptions.ConnectionClosed:
         print("[HW/ws] lost connection.")
