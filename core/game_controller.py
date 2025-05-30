@@ -176,7 +176,6 @@ class GameController(QObject):
 
         result = CaseDataManager.get_instance().check_contextual_relevance(text)
 
-        print(f"디버깅 : {result}")
         if result.get("relevant") == "false": # 문맥 관련 없음
             return await request_speak_judge(cls, {'role': '판사', 'message': result.get("answer")}, "no_context")
    
