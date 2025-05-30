@@ -52,5 +52,7 @@ async def scan_rfid_loop():
         await asyncio.sleep(0.5)
 
 def rfid_exit():
+    global SCAN_STATE
+    SCAN_STATE = False
     print("[RFID] cleanup complete.")
     pass
