@@ -216,6 +216,8 @@ class MainWindow(QWidget):
         if not self.case_data or not self.case_data.profiles:
             return []
         profile_list = []
+        # CaseData 객체의 profiles가 실제 객체 리스트라고 가정 (예: Profile 클래스 인스턴스)
+        # 만약 self.case_data.profiles가 이미 dict 리스트라면 이 변환은 필요 없음
         for p_obj in self.case_data.profiles:
             profile_list.append({
                 "name": p_obj.name, "type": p_obj.type, "gender": p_obj.gender,
@@ -227,10 +229,11 @@ class MainWindow(QWidget):
         if not self.case_data or not self.case_data.evidences:
             return []
         evidence_list = []
+        # CaseData 객체의 evidences가 실제 객체 리스트라고 가정 (예: Evidence 클래스 인스턴스)
         for e_obj in self.case_data.evidences:
             evidence_list.append({
                 "id": e_obj.id, "name": e_obj.name, "type": e_obj.type,
-                "description": e_obj.description,
+                "description": e_obj.description, # description이 리스트일 수도, 문자열일 수도 있음
             })
         return evidence_list
 
@@ -246,9 +249,10 @@ class MainWindow(QWidget):
         self._cleanup_screen('interrogation_screen_instance')
         self._cleanup_screen('result_screen_instance')
 
+        # self.case_data.case.outline이 문자열이라고 가정
         summary = self.case_data.case.outline
-        profiles_list = self._get_profiles_as_list_of_dicts()
-        evidences_list = self._get_evidences_as_list_of_dicts()
+        profiles_list = self._get_profiles_as_list_of_dicts() # CaseData.profiles가 객체 리스트일 경우 변환
+        evidences_list = self._get_evidences_as_list_of_dicts() # CaseData.evidences가 객체 리스트일 경우 변환
 
         self.intro_screen_instance = IntroScreen(
             game_controller=self.game_controller,
@@ -306,9 +310,10 @@ class MainWindow(QWidget):
         layout = QVBoxLayout(dialog)
         
         list_widget = QListWidget()
-        for p_obj in self.case_data.profiles:
+        for p_obj in self.case_data.profiles: # self.case_data.profiles가 Profile 객체들의 리스트라고 가정
             item_text = f"{p_obj.name} ({self.type_map.get(p_obj.type, p_obj.type)})"
             list_item = QListWidgetItem(item_text)
+            # GameController에 심문 대상의 이름(고유 ID 역할)을 전달하기 위함
             list_item.setData(Qt.UserRole, {"name": p_obj.name, "role_display": self.type_map.get(p_obj.type, p_obj.type)})
             list_widget.addItem(list_item)
         
@@ -335,14 +340,23 @@ class MainWindow(QWidget):
                 QMessageBox.warning(dialog, "선택 필요", "심문할 대상을 선택해주세요.")
 
         ok_button.clicked.connect(accept_selection)
-        list_widget.itemDoubleClicked.connect(accept_selection)
+        list_widget.itemDoubleClicked.connect(accept_selection) # 더블 클릭으로도 선택 가능
         cancel_button.clicked.connect(dialog.reject)
 
         if dialog.exec_() == QDialog.Accepted and selected_character_data:
-            target_character_title = f"이름: {selected_character_data['name']} ({selected_character_data['role_display']})"
+            target_character_name = selected_character_data['name']
+            target_character_role_display = selected_character_data['role_display']
+            target_character_title = f"이름: {target_character_name} ({target_character_role_display})"
+            
+            # GameController에 심문 대상 설정 (interrogator 모듈이 있다면)
+            # GameController의 interrogator가 set_current_profile_by_name 같은 메소드를 가지고 있다고 가정
+            if hasattr(self.game_controller, '_interrogator') and \
+               hasattr(self.game_controller._interrogator, 'set_current_profile_by_name'):
+                self.game_controller._interrogator.set_current_profile_by_name(target_character_name)
+            else:
+                print(f"Warning: GameController._interrogator.set_current_profile_by_name not found. Character '{target_character_name}' may not be set in controller.")
+
             self.show_interrogation_screen(calling_screen_type, target_character_title)
-            if hasattr(self.game_controller._interrogator, 'set_current_profile_by_name'):
-                self.game_controller._interrogator.set_current_profile_by_name(selected_character_data['name'])
 
 
     def show_interrogation_screen(self, previous_screen_type: str, target_character_title: str):
@@ -359,8 +373,8 @@ class MainWindow(QWidget):
             game_controller=self.game_controller,
             on_back_callback=self.handle_interrogation_back,
             case_summary_text=self.case_data.case.outline if self.case_data else "N/A",
-            profiles_text=self._generate_profiles_text_for_display(),
-            target_character_title=target_character_title
+            profiles_text=self._generate_profiles_text_for_display(), # 전체 프로필 정보
+            target_character_title=target_character_title # "이름: OOO (역할)"
         )
         self.stacked_layout.addWidget(self.interrogation_screen_instance)
         self.stacked_layout.setCurrentWidget(self.interrogation_screen_instance)
@@ -368,7 +382,7 @@ class MainWindow(QWidget):
     def _generate_profiles_text_for_display(self):
         if not self.case_data or not self.case_data.profiles: return ""
         profile_texts = []
-        for p_obj in self.case_data.profiles:
+        for p_obj in self.case_data.profiles: # p_obj는 Profile 객체라고 가정
             text = (f"이름: {p_obj.name} ({self.type_map.get(p_obj.type, p_obj.type)})\n"
                     f"성별: {self.gender_map.get(p_obj.gender, p_obj.gender)}, 나이: {p_obj.age}세\n"
                     f"사연: {p_obj.context}")
@@ -377,15 +391,23 @@ class MainWindow(QWidget):
 
     def handle_interrogation_back(self):
         self._cleanup_screen('interrogation_screen_instance')
-        if hasattr(GameController, 'interrogation_end'):
-            GameController.interrogation_end()
+        # GameController에 심문 종료 알림 (Jira 요구사항)
+        if hasattr(self.game_controller, 'interrogation_end'):
+            self.game_controller.interrogation_end()
+        else:
+            # GameController 클래스 자체에 interrogation_end 스태틱/클래스 메소드가 있을 수도 있음
+            if hasattr(GameController, 'interrogation_end'):
+                 GameController.interrogation_end() # 이 경우는 self.game_controller 인스턴스 메소드가 아님
+            else:
+                print("Warning: GameController.interrogation_end method not found.")
+
 
         if self.previous_screen_for_interrogation == 'prosecutor':
             self.show_prosecutor_screen()
         elif self.previous_screen_for_interrogation == 'lawyer':
             self.show_lawyer_screen()
         else:
-            self.show_start_screen()
+            self.show_start_screen() # 기본값
         self.previous_screen_for_interrogation = None
 
     def prepare_for_judgement(self):
@@ -397,7 +419,7 @@ class MainWindow(QWidget):
 
         self.result_screen_instance = ResultScreen(
             game_controller=self.game_controller,
-            on_restart_callback=self.restart_game_flow
+            on_restart_callback=self.restart_game_flow # 비동기 함수를 콜백으로 전달
         )
         if self.case_data:
             self.result_screen_instance.set_initial_data(
@@ -409,14 +431,19 @@ class MainWindow(QWidget):
         self.stacked_layout.addWidget(self.result_screen_instance)
         self.stacked_layout.setCurrentWidget(self.result_screen_instance)
 
-        if hasattr(GameController, 'done'):
-            GameController.done()
+        # GameController에 발언 종료 및 판결 요청 (Jira 요구사항)
+        if hasattr(self.game_controller, 'done'):
+            self.game_controller.done()
         else:
-            print("ERROR: GameController does not have 'done' method to trigger final verdict.")
-            if self.result_screen_instance:
-                self.result_screen_instance.display_error("판결 생성 요청 실패.")
+            # GameController 클래스 자체에 done 스태틱/클래스 메소드가 있을 수도 있음
+            if hasattr(GameController, 'done'):
+                GameController.done() # 이 경우는 self.game_controller 인스턴스 메소드가 아님
+            else:
+                print("ERROR: GameController does not have 'done' method to trigger final verdict.")
+                if self.result_screen_instance:
+                    self.result_screen_instance.display_error("판결 생성 요청 실패.")
 
-    async def restart_game_flow(self):
+    async def restart_game_flow(self): # 비동기로 선언
         print("Restarting game flow...")
         if self.loading_dialog:
             self.loading_dialog.accept()
@@ -424,7 +451,7 @@ class MainWindow(QWidget):
 
         self.loading_dialog = LoadingDialog("게임 재시작 중...", parent=self)
         self.loading_dialog.show()
-        QApplication.processEvents()
+        QApplication.processEvents() # 로딩 다이얼로그가 즉시 표시되도록
 
         self._cleanup_screen('result_screen_instance')
         self._cleanup_screen('prosecutor_screen_instance')
@@ -434,116 +461,170 @@ class MainWindow(QWidget):
 
         self.is_gc_initialized = False
         self.case_data = None 
-        self._update_start_button("데이터 로딩 중...", False) # restart 시 다시 로딩 중으로 표시
+        self._update_start_button("데이터 로딩 중...", False)
         self.stacked_layout.setCurrentWidget(self.start_screen)
         
-        # GameController 재초기화 (main.py에서 이루어지므로, 여기서는 GameController의 특정 reset 메서드가 있다면 호출,
-        # 없다면 GameController가 "initialized" 신호를 다시 보내도록 유도해야 합니다.)
-        # 현재 구조에서는 main.py가 재시작 시 GameController.initialize()를 다시 호출하도록 해야 할 수 있습니다.
-        # 여기서는 단순히 상태를 초기화하고 "initialized" 신호를 기다립니다.
-        # GameController에 reset 기능이 있다면 호출:
-        # if hasattr(self.game_controller, 'reset_for_new_game'): # 예시 메서드명
-        #    await self.game_controller.reset_for_new_game()
-        # elif hasattr(GameController, 'initialize'): # 또는 initialize를 다시 호출하여 신호를 받도록 함
-        #    await GameController.initialize()
-        # else:
-        #    print("ERROR: GameController has no suitable method for re-initialization for restart.")
-        #    if self.loading_dialog: self.loading_dialog.accept()
-        #    self._update_start_button("재초기화 실패 (재시도)", True)
-        # 위 주석 처리된 부분은 GameController의 실제 재시작 로직에 따라 달라집니다.
-        # 지금은 main.py가 재시작을 어떻게 처리하는지에 따라 GameController.initialize()가 다시 호출되고
-        # "initialized" 신호가 발생할 것으로 기대합니다.
-        # 만약 UI에서 직접 재초기화 트리거가 필요하면 GameController에 해당 기능이 필요합니다.
+        # GameController 재초기화 로직은 main.py에서 담당하거나,
+        # GameController 자체에 reset/re-initialize 기능이 필요합니다.
+        # 현재 MainWindow는 "initialized" 시그널을 다시 기다리는 상태가 됩니다.
+        # 만약 GameController에 reset 메소드가 있다면 여기서 호출할 수 있습니다.
+        # 예: if hasattr(self.game_controller, 'reset_game'): await self.game_controller.reset_game()
+        # 지금은 main.py나 GameController의 시그널 재발송에 의존합니다.
         print("MainWindow: Waiting for GameController to re-initialize for restart...")
-
+        # main.py에서 GameController.initialize()를 다시 호출하고,
+        # 성공하면 "initialized" 시그널이 와서 self.loading_dialog가 닫히고 버튼이 활성화될 것입니다.
+        # 만약 이 과정이 오래 걸리거나 실패하면 로딩 다이얼로그가 계속 떠 있을 수 있습니다.
+        # GameController의 재초기화가 성공적으로 "initialized" 시그널을 보내는지 확인이 중요합니다.
 
     @pyqtSlot(str, object)
     def receive_game_signal(self, code: str, arg=None):
         print(f"[{self.__class__.__name__}] Signal Received: Code='{code}', ArgType='{type(arg)}', ArgValue='{str(arg)[:100]}...'")
 
+        # 1. 메시지 기반 코드 처리 (주로 dict 형태의 arg)
         if code == "no_context":
+            # 예시: {"role": "판사", "message": "__측은 재판과 상관 있는 말을 하세요"}
             if isinstance(arg, dict):
                 QMessageBox.warning(self, arg.get("role", "알림"), arg.get("message", "관련 없는 내용입니다."))
             else:
-                QMessageBox.warning(self, "알림", "재판과 관련 없는 내용입니다.")
+                QMessageBox.warning(self, "알림", "재판과 관련 없는 내용입니다." if isinstance(arg, str) else "부적절한 컨텐츠입니다.")
 
         elif code == "interrogation_accepted":
+            # 예시: {"role": "판사", "message": "피고인 심문을 진행하세요", "type": "defendant"}
             if isinstance(arg, dict):
                 print(f"Interrogation accepted for {arg.get('type')}. Judge: {arg.get('message')}")
+                # 현재 화면이 InterrogationScreen일 경우, 판사 메시지 업데이트
                 if self.interrogation_screen_instance and self.stacked_layout.currentWidget() == self.interrogation_screen_instance:
-                    self.interrogation_screen_instance.update_dialogue(arg.get("role", "판사"), arg.get("message","심문을 시작합니다."))
+                    self.interrogation_screen_instance.update_dialogue(arg.get("role", "판사"), arg.get("message", "심문을 시작합니다."))
+                else:
+                    # 일반적인 정보 메시지로 표시할 수도 있습니다.
+                    QMessageBox.information(self, arg.get("role", "알림"), arg.get("message", "심문이 수락되었습니다."))
+
 
         elif code == "objection":
+            # 예시: {"role": "변호사", "message": "이의 있음!"}
             if isinstance(arg, dict):
-                QMessageBox.information(self, f"{arg.get('role', '')}의 이의 제기", arg.get("message", "이의 있습니다!"))
+                QMessageBox.information(self, f"{arg.get('role', '이의 제기')}의 이의", arg.get("message", "이의 있습니다!"))
+            else:
+                QMessageBox.information(self, "이의 제기", str(arg) if isinstance(arg, str) else "이의가 제기되었습니다.")
 
-        elif code == "judgement": 
+        elif code == "judgement": # 이슈의 "verdict_accepted" 에 해당될 수 있음
+            # 예시: {"role": "판사", "message": "최종 판결을 시작하겠습니다"}
+            # 이 시그널은 최종 판결 *시작*을 알리는 용도일 수 있습니다.
+            # 실제 판결 내용은 "verdict" 시그널로 스트리밍됩니다.
             if isinstance(arg, dict) and arg.get('role') == '판사':
                 print(f"Judgement phase initiated by {arg.get('role')}: {arg.get('message')}")
                 if self.result_screen_instance and self.stacked_layout.currentWidget() == self.result_screen_instance:
-                    pass
+                    # ResultScreen의 특정 메소드를 호출하여 판결 시작을 알릴 수 있습니다.
+                    # 예: self.result_screen_instance.display_message(arg.get("message"))
+                    # 현재 ResultScreen은 prepare_for_results() 후 verdict 시그널을 기다리므로, 여기서는 로그만 남겨도 될 수 있습니다.
+                    pass # ResultScreen의 prepare_for_results()가 이미 호출되었을 것이므로, 추가 UI 변경은 필요 없을 수 있음
+            else:
+                print(f"Judgement signal received with arg: {arg}")
 
 
+        # 2. 객체 관련 처리
         elif code == "initialized":
+            # arg: CaseData 객체
             print("Signal 'initialized' received from GameController.")
-            if arg is None : 
-                print("ERROR: 'initialized' signal received with None argument.")
+            if arg is None: # CaseData 객체가 와야 함
+                print("ERROR: 'initialized' signal received with None argument. Cannot start game.")
                 self.is_gc_initialized = False
                 self.case_data = None
                 QMessageBox.critical(self, "초기화 오류", "게임 데이터 초기화에 실패했습니다. 앱을 재시작하거나 관리자에게 문의하세요.")
-                # main.py에서 초기화를 담당하므로, 여기서 무한 루프를 유발할 수 있는 재시도 호출은 제거합니다.
-                # self.init_game_controller_ui_setup() 
-                self._update_start_button("초기화 실패", False) # 버튼 비활성화 유지 또는 다른 적절한 상태로 변경
-                if self.loading_dialog: # 재시작 중이었다면
+                self._update_start_button("초기화 실패", False)
+                if self.loading_dialog: # 재시작 시 로딩 다이얼로그가 떠 있었다면 닫기
                     self.loading_dialog.accept()
                     self.loading_dialog = None
                 return
 
-            self.case_data = arg 
+            # 여기서 arg는 CaseData 타입의 객체여야 합니다.
+            # from core.data_models import CaseData # 타입 확인용
+            # if not isinstance(arg, CaseData):
+            #    print(f"ERROR: 'initialized' signal received with unexpected data type: {type(arg)}")
+            #    # ... 오류 처리 ...
+            #    return
+
+            self.case_data = arg # CaseData 객체 저장
             self.is_gc_initialized = True
             self._update_start_button("시작하기", True)
-            if self.loading_dialog:
+            if self.loading_dialog: # 로딩 다이얼로그가 있다면 닫기
                 self.loading_dialog.accept()
                 self.loading_dialog = None
-            print("GameController initialized successfully. Case data loaded.")
+            print("GameController initialized successfully. Case data loaded and ready.")
 
 
         elif code == "evidence_changed":
-            print(f"Evidence changed: {arg}")
+            # arg: Evidence 객체
+            # TODO: 증거품 변경 시 UI 업데이트 로직 (예: 현재 화면의 증거 목록 새로고침)
+            print(f"Signal 'evidence_changed' received. Evidence data: {arg}")
+            # if self.prosecutor_screen_instance and self.stacked_layout.currentWidget() == self.prosecutor_screen_instance:
+            #     self.prosecutor_screen_instance.update_evidence_display(arg) # 예시
+            # elif self.lawyer_screen_instance and self.stacked_layout.currentWidget() == self.lawyer_screen_instance:
+            #     self.lawyer_screen_instance.update_evidence_display(arg) # 예시
+            pass # 구체적인 UI 업데이트 요구사항이 없으므로 pass
 
-        elif code == "evidence_tagged": 
-            print(f"Evidence tagged: {arg}")
+        elif code == "evidence_tagged": # 오타 수정됨 (evidence_taged -> evidence_tagged)
+            # arg: Evidence 객체
+            # TODO: 증거품 태그 시 UI 업데이트 로직
+            print(f"Signal 'evidence_tagged' received. Evidence data: {arg}")
+            pass # 구체적인 UI 업데이트 요구사항이 없으므로 pass
 
-        elif code == "interrogation": 
+        # 3. LLM 응답 (문장 단위, str)
+        elif code == "interrogation":
+            # arg: str (심문 중 LLM의 답변 문장)
             if self.interrogation_screen_instance and self.stacked_layout.currentWidget() == self.interrogation_screen_instance:
-                if isinstance(arg, dict): 
-                    self.interrogation_screen_instance.update_dialogue(arg.get("role","??"), arg.get("message","..."))
+                if isinstance(arg, dict): # 기존 코드 호환성 유지 (role, message)
+                    self.interrogation_screen_instance.update_dialogue(arg.get("role","AI"), arg.get("message","..."))
+                elif isinstance(arg, str):
+                     # GameController에서 오는 "interrogation" 시그널은 보통 {"role": "캐릭터명", "message": "대사"} 형태일 수 있습니다.
+                     # 만약 순수 문자열만 온다면, 화자를 "AI" 또는 현재 심문 대상으로 설정해야 합니다.
+                     # GameController와의 약속에 따라 처리해야 합니다.
+                     # 여기서는 arg가 단순 문자열일 경우 화자를 "AI"로 가정합니다.
+                     # 실제로는 GameController가 보낸 데이터 형식에 맞춰 화자를 결정해야 합니다.
+                     # 예: self.interrogation_screen_instance.update_dialogue(self.interrogation_screen_instance.current_character_name_or_role, arg)
+                    self.interrogation_screen_instance.update_dialogue("상대방", arg) # 혹은 현재 심문 대상의 이름/역할
                 else:
                     self.interrogation_screen_instance.update_dialogue("AI", str(arg))
+            else:
+                print(f"Interrogation response received but screen not active: {arg}")
 
-        elif code == "verdict": 
+        elif code == "verdict":
+            # arg: str (판결 내용 스트림)
             if self.result_screen_instance and self.stacked_layout.currentWidget() == self.result_screen_instance:
+                # ResultScreen의 append_judgement_chunk 또는 유사한 메소드로 전달
+                # GameController가 "판결 요약"과 "사건의 진실"을 구분해서 보낼 경우,
+                # 이 시그널의 arg에 추가 정보가 있거나, 별도의 시그널을 사용해야 할 수 있습니다.
+                # 현재는 하나의 스트림으로 가정하고 ResultScreen의 append_judgement_chunk 호출
                 self.result_screen_instance.append_judgement_chunk(str(arg))
+                # 모든 판결 내용 수신 후, GameController에서 "verdict_end" 같은 시그널을 보내면
+                # self.result_screen_instance.finalize_results() 등을 호출할 수 있습니다.
+            else:
+                print(f"Verdict stream received but screen not active: {arg}")
 
-
-        elif code == "record_start":
-            print("Signal 'record_start' received. Turning mic button ON.")
+        # 4. 녹음 컨트롤 (변경된 시그널)
+        elif code == "record_toggled":
+            # arg: bool (True: 녹음 시작됨, False: 녹음 중지됨)
+            is_recording = bool(arg)
+            print(f"Signal 'record_toggled' received. Is recording: {is_recording}")
             current_screen = self.stacked_layout.currentWidget()
             if hasattr(current_screen, 'set_mic_button_state'):
-                current_screen.set_mic_button_state(True)
+                current_screen.set_mic_button_state(is_recording)
+            else:
+                print(f"Current screen {type(current_screen).__name__} does not have set_mic_button_state method.")
 
-        elif code == "record_stop":
-            print("Signal 'record_stop' received. Turning mic button OFF.")
-            current_screen = self.stacked_layout.currentWidget()
-            if hasattr(current_screen, 'set_mic_button_state'):
-                current_screen.set_mic_button_state(False)
-        
+        # 5. 기타 게임 상태/오류 처리
         elif code == "error_occurred":
+            # arg: str (에러 메시지)
             error_message = str(arg) if arg else "알 수 없는 오류가 발생했습니다."
             QMessageBox.critical(self, "오류 발생", error_message)
-            if self.loading_dialog: self.loading_dialog.accept()
-            if not self.is_gc_initialized :
-                self._update_start_button("오류 발생 (재시도)", True) # 혹은 False로 두어 재시작 유도
+            if self.loading_dialog:
+                self.loading_dialog.accept()
+                self.loading_dialog = None
+            # 초기화 중 에러였다면 시작 버튼 상태 업데이트
+            if not self.is_gc_initialized:
+                self._update_start_button("오류 발생 (재시도)", True) # 또는 False로 두어 재시작 유도
 
         else:
-            print(f"[{self.__class__.__name__}] Unknown signal code: {code}")
+            print(f"[{self.__class__.__name__}] Unknown or unhandled signal code: {code}")
+            # 해당 code에 대한 처리가 필요하면 여기에 추가
+            pass
