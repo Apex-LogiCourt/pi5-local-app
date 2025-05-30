@@ -22,11 +22,9 @@ EPD_MacAddress = {
 def update_and_sand_image(epd_index: int, evidence: Evidence):
     try:
         epd_mac = EPD_MacAddress[epd_index]
-        print(f"EPD No{epd_index}, MAC: {epd_mac}")
         rfcomm = bind_rfcomm(epd_index, epd_mac)
         img_path = make_epd_image(evidence)
         byte_data = convert_image_to_bytes(img_path)
-        print(f"총 전송 크기: {len(byte_data)} bytes")
         send_bytes_over_serial(rfcomm, byte_data)
     except Exception as e:
         print(f"[HW/EPD] epd update error: {e}")
@@ -44,7 +42,7 @@ def bind_rfcomm(epd_index, mac_addr): #바인딩 이후, RFCOMM_DEV를 USBSerial
         except subprocess.CalledProcessError as e:
             print("[HW/EPD]rfcomm 바인딩 실패:", e)
     else:
-        print(f"{epd_rfcomm} 이미 바인딩되어 있음")
+        pass
     time.sleep(0.5) # 바인딩 안정화용 지연
     return epd_rfcomm
 
@@ -66,7 +64,7 @@ def send_bytes_over_serial(rfcomm, byte_data):
             ser.flush()
             time.sleep(0.2)
             ser.close()
-            print("[HW/EPD]전송 완료")
+            print(f"[HW/EPD] {rfcomm}전송 완료")
     except serial.SerialException as e:
         print("[HW/EPD]시리얼 포트 오류:", e)
 
@@ -163,25 +161,6 @@ def update_epd_image(image_path, evidence: Evidence, font_size=20, line_spacing=
     img.save(image_path)
     print(f"[HW/EPD]저장 완료: {image_path}")
     return 
-
-
-# 테스트용. C 배열 스타일로 출력
-def image_to_c_array(img_path, array_name="gImage_data"):
-    img = Image.open(img_path).convert("1")
-    if img.mode != "1":
-        raise ValueError("이미지는 흑백 모드(1)여야 합니다.")
-    data = np.array(img)
-    flattened = data.flatten()
-    packed = np.packbits(flattened ^ 1)  # 0=검정, 1=흰색
-
-    print(f"const unsigned char {array_name}[{len(packed)}] = {{")
-    for i in range(0, len(packed), 20):
-        line = ", ".join(f"0x{b:02X}" for b in packed[i:i+20])
-        print("  " + line + ",")
-    print("};")
-    return
-
-
 
 ##### TEST CODE #####
 if __name__ == "__main__":
