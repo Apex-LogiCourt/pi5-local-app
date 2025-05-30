@@ -16,13 +16,19 @@ RST : 22
 READER = MFRC522.MFRC522()
 
 CARD_LIST = {
-    927176852798: "1",
-    899780314557: "2",
-    1064193818836: "3",
-    336465494256: "4"
-} # 실물 카드에 번호 표기
+    "050CE0D7": "1",
+    "05167FD1": "2",
+    "00E5C6F7": "3",
+    "00E8564E": "4"
+} #실물 카드에 번호 표시
 
 SCAN_STATE = True
+
+def uidToString(uid):
+    mystring = ""
+    for i in uid:
+        mystring = format(i, '02X') + mystring
+    return mystring
 
 def get_card_num(card_id):
     return CARD_LIST.get(card_id, -1)
@@ -35,9 +41,10 @@ async def scan_rfid_loop():
             if status == READER.MI_OK:
                 (status, uid) = READER.MFRC522_SelectTagSN()
                 if status == READER.MI_OK:
-                    print(f"[RFID/scanner] {uid} detected.")
-                    # print(f"[RFID] Card No.{card_num} scanned")
-                    # asyncio.create_task(handle_nfc(card_num))
+                    card_uid = uidToString(uid)
+                    card_num = CARD_LIST.get(card_uid)
+                    print(f"[RFID] Card No.{card_num} scanned")
+                    asyncio.create_task(handle_nfc(card_num))
                 else:
                     print("[RFID] Authentication error.")
         except Exception as e:

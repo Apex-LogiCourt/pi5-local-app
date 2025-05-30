@@ -59,7 +59,7 @@ async def handle_button_press(press_id: str):
     return data
 
 async def handle_nfc(id: str):
-    response = httpx.post(f'http://localhost:8000/api/press/{id}')
+    response = httpx.post(f'http://localhost:8000/evidence/{id}')
     data = response.json()
     print(data)
     # 받는 응답: {"id": 1, "status": "ok"}
