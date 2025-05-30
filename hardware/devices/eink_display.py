@@ -9,41 +9,44 @@ from PIL import Image, ImageDraw, ImageFont
 from typing import List
 from data_models import Evidence
 
-RFCOMM_DEV = "/dev/rfcomm0" # Interface for Serial mapping of Bluetooth.
+RFCOMM_DEV = "/dev/rfcomm" # Interface for Serial mapping of Bluetooth.
 
 EPD_MacAddress = {
     1: "EC:C9:FF:42:BA:C6",
-    2: "",
-    3: "",
-    4: ""
+    2: "EC:C9:FF:42:C1:B2",
+    3: "EC:C9:FF:42:C1:CA",
+    4: "C0:5D:89:C4:F2:7A"
 }
 
 # EPD모듈 번호(1~4), 증거품 입력 시, 이미지 생성 후 해당 모듈에 전송
 def update_and_sand_image(epd_index: int, evidence: Evidence):
     try:
         epd_mac = EPD_MacAddress[epd_index]
-        bind_rfcomm(epd_mac)
+        print(f"EPD No{epd_index}, MAC: {epd_mac}")
+        rfcomm = bind_rfcomm(epd_index, epd_mac)
         img_path = make_epd_image(evidence)
         byte_data = convert_image_to_bytes(img_path)
         print(f"총 전송 크기: {len(byte_data)} bytes")
-        send_bytes_over_serial(byte_data)
+        send_bytes_over_serial(rfcomm, byte_data)
     except Exception as e:
         print(f"[HW/EPD] epd update error: {e}")
         traceback.print_exc()
     return
 
 
-def bind_rfcomm(mac_addr): #바인딩 이후, RFCOMM_DEV를 USBSerial처럼 사용
-    if not os.path.exists(RFCOMM_DEV):
-        print(f"[HW/EPD]{RFCOMM_DEV} 바인딩 시도...")
+def bind_rfcomm(epd_index, mac_addr): #바인딩 이후, RFCOMM_DEV를 USBSerial처럼 사용
+    epd_rfcomm = f"{RFCOMM_DEV}{epd_index - 1}"
+    if not os.path.exists(epd_rfcomm):
+        print(f"[HW/EPD]{epd_rfcomm} 바인딩 시도...")
         try:
-            subprocess.run(["sudo", "rfcomm", "bind", "0", mac_addr, "1"], check=True)
+            subprocess.run(["sudo", "rfcomm", "bind", str(epd_index-1), mac_addr, "1"], check=True)
             print("[HW/EPD]rfcomm 바인딩 완료")
         except subprocess.CalledProcessError as e:
             print("[HW/EPD]rfcomm 바인딩 실패:", e)
     else:
-        print(f"{RFCOMM_DEV} 이미 바인딩되어 있음")
+        print(f"{epd_rfcomm} 이미 바인딩되어 있음")
     time.sleep(0.5) # 바인딩 안정화용 지연
+    return epd_rfcomm
 
 def convert_image_to_bytes(image_path):
     img = Image.open(image_path).convert("1")
@@ -51,9 +54,9 @@ def convert_image_to_bytes(image_path):
     packed = np.packbits(arr ^ 1)  # 1=흰색, 0=검정 -> 반전 필요
     return packed
 
-def send_bytes_over_serial(byte_data):
+def send_bytes_over_serial(rfcomm, byte_data):
     try:
-        with serial.Serial(RFCOMM_DEV, baudrate=115200, timeout=1) as ser:
+        with serial.Serial(rfcomm, baudrate=115200, timeout=1) as ser:
             print("[HW/EPD]시리얼 포트 열림, 데이터 전송 중...")
             for i in range(0, len(byte_data), 512):
                 chunk = byte_data[i:i+512].tobytes()
@@ -71,7 +74,7 @@ def get_evidence_image_path(e: Evidence):
     return e.picture
 
 #========== EPD용 이미지 생성 ==========
-font_path = "/home/user/Desktop/fonts/NanumGothic.ttf" #pi 테스트용
+font_path = "/home/user/Downloads/nanum-font/NanumGothic.ttf" #pi 테스트용
 
 def make_epd_image(evidence: Evidence, font_size=20, line_spacing=6):
     image_path = evidence.picture
@@ -182,11 +185,11 @@ def image_to_c_array(img_path, array_name="gImage_data"):
 
 ##### TEST CODE #####
 if __name__ == "__main__":
-    i = 1
     e = Evidence(
+        id=4,
         name="t-evidence",
         type='attorney',
         description=["증거품의 기본 설명입니다. 대충 어쩌구 저쩌구 적당한 설명.", "증거품의 추가 설명일까요? 테스트용 문장입니다.", "증거품의 두 번째 추가 설명입니다. 제발 버그 없이 작동하게 해주세요."],
         picture="/home/user/Desktop/evidence_image.jpg"
     )
-    update_and_sand_image(i, e)
+    update_and_sand_image(e.id, e)
