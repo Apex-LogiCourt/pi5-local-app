@@ -74,7 +74,7 @@ def get_evidence_image_path(e: Evidence):
     return e.picture
 
 #========== EPD용 이미지 생성 ==========
-font_path = "/home/user/Downloads/nanum-font/NanumGothic.ttf" #pi 테스트용
+FONT_PATH = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf" #pi 테스트용
 
 def make_epd_image(evidence: Evidence, font_size=20, line_spacing=6):
     image_path = evidence.picture
@@ -90,7 +90,7 @@ def make_epd_image(evidence: Evidence, font_size=20, line_spacing=6):
 
     # 텍스트 처리 시작
     draw = ImageDraw.Draw(canvas)
-    font = ImageFont.truetype(font_path, font_size)
+    font = ImageFont.truetype(FONT_PATH, font_size)
     x, y = (150 + 15), (0 + 15)  #시작 위치
     max_width = 250
     max_height = 150
@@ -129,7 +129,7 @@ def update_epd_image(image_path, evidence: Evidence, font_size=20, line_spacing=
     # 기존 이미지 로드
     img = Image.open(image_path).convert("1")
     draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype(font_path, font_size)
+    font = ImageFont.truetype(FONT_PATH, font_size)
 
     # 추가 설명문 제작
     text = "".join(word + "\n" for word in evidence.description[1:])
