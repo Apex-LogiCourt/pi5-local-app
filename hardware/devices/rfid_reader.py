@@ -1,5 +1,5 @@
 import asyncio
-import lib.MFRC522 as MFRC522
+import devices.lib.MFRC522 as MFRC522
 import signal
 from api.http_request import handle_nfc
 
