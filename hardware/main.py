@@ -1,11 +1,6 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-# TODO data_models.py 파일을 hw쪽에 복사해서 사용.
-
+import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import asyncio
 from api.http_request import websocket_client, listen_sse_async
 from devices import button_listener, rfid_reader
 from contextlib import asynccontextmanager
