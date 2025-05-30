@@ -13,7 +13,7 @@ from ui.common_components import (
     HoverButton, MicButton, extract_name_and_role,
     show_case_dialog_common, show_evidences_common, show_full_profiles_dialog_common
 )
-import re
+import re, asyncio
 
 
 class ProsecutorScreen(QWidget):
@@ -141,11 +141,23 @@ class ProsecutorScreen(QWidget):
         self.btn_mic.set_icon_on(self.mic_on)
 
     def toggle_mic_action(self):
+        print("🧪 [ProsecutorScreen] Mic 버튼 클릭됨")
+
         if self.game_controller:
+            print("🧪 game_controller 연결됨 → mic_on =", self.mic_on)
+
             if not self.mic_on:
-                self.game_controller.record_start()
+                print("✅ record_start() 호출")
+                asyncio.create_task(self.game_controller.record_start())
             else:
-                self.game_controller.record_end()
+                print("✅ record_end() 호출")
+                asyncio.create_task(self.game_controller.record_end())
+        else:
+            print("❌ game_controller 없음")
+
+        # 버튼 상태 토글 (누락되었을 수 있으므로 추가)
+        self.mic_on = not self.mic_on
+        self.btn_mic.set_icon_on(self.mic_on)
 
     def handle_switch_to_lawyer(self):
         if self.on_switch_to_lawyer:

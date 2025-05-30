@@ -82,6 +82,7 @@ class GameController(QObject):
     @classmethod
     async def record_start(cls) -> None:
         """녹음 시작 후에 API 호출"""
+        print("✅ GameController.record_start() 호출됨")  # 호출 확인 로그
         cls._state.record_state = True
         from tools.service import handler_record_start
         await handler_record_start()
@@ -94,6 +95,7 @@ class GameController(QObject):
         Returns:
             bool: True면 턴 전환, False면 턴 전환 없음
         """
+        print("🛑 GameController.record_end() 호출됨")  # 호출 확인 로그
         cls._state.record_state = False
         from tools.service import handler_record_stop
         await handler_record_stop()
