@@ -30,34 +30,37 @@ async def text_to_speech(text: str, voice: str):
     wavpath = clova_TTS(text, voice, path)
 
     import os
-    for _ in range(50):  # 최대 5초 대기
+    for _ in range(50):  # 5 sec waiting
         if os.path.exists(wavpath) and os.path.getsize(wavpath) > 0:
             break
         await asyncio.sleep(0.1)
     else:
-        print(f"[TTS] 경고: {wavpath} 파일 생성 실패 또는 지연")
+        print(f"[TTS] warning: {wavpath} cannot found wav file.")
         return
 
-    await play_wav(wavpath)
+    try:
+        await play_wav(wavpath)
+    except Exception as e:
+        print(f"[TTS] tts playing err: {e}")
     return
 
 async def play_wav(file_path):
     global is_playing
     data, samplerate = sf.read(file_path, dtype='float32')
 
-    channels = data.shape[1] if data.ndim > 1 else 1  # 1차원일 땐 1채널로 간주
+    channels = data.shape[1] if data.ndim > 1 else 1
 
     with sd.OutputStream(samplerate=samplerate, channels=channels) as stream:
         block_size = 1024
         for i in range(0, len(data), block_size):
             if not is_playing:
-                print("[TTS] 재생 종료")
+                print("[TTS] stop playing.")
                 break
             block = data[i:i+block_size]
             stream.write(block)
-            await asyncio.sleep(0)  # 이벤트 루프 허용
+            await asyncio.sleep(0)
 
-def print_audio_device(): #최초 실행 시 장치 인덱스 확인하는 작업 필요(print 값 확인하세요)
+def print_audio_device():
     audio = pyaudio.PyAudio()
     print("Available audio input devices:")
     for i in range(audio.get_device_count()):
@@ -101,22 +104,20 @@ async def record_audio(filename):
         wf.writeframes(b''.join(frames))
 
 
-# 전송 용량 줄이기 위한 aac 변환 작업. 일단 보류
 def convert_wav_to_aac(input_path, output_path):
     import subprocess
-    # FFmpeg를 통한 WAV를 AAC로 변환
     command = [
-        'ffmpeg',              #ffmpeg 설치, 혹은 경로
-        '-i', input_path,      # 입력 파일
-        '-c:a', 'aac',         # AAC 코덱 사용
-        '-b:a', '192k',        # 비트레이트 (192kbps, 필요에 따라 조정)
-        output_path            # 출력 파일
+        'ffmpeg',              # ffmpeg
+        '-i', input_path,      # input file
+        '-c:a', 'aac',         # 
+        '-b:a', '192k',        # 
+        output_path            # output file
     ]
     try:
         subprocess.run(command, check=True)
-        print(f"파일 변환 성공: {output_path}")
+        print(f"[STT] AAC convert complete: {output_path}")
     except subprocess.CalledProcessError as e:
-        print(f"변환 중 오류 발생: {e}")
+        print(f"[STT] AAC convert error: {e}")
     return output_path
 
 
@@ -145,7 +146,6 @@ def clova_STT(file_path):
 
 
 def clova_TTS(tts_str, speaker, save_path):
-    print("[TTS] ncloud 서버에 요청 중 ...")
     from dotenv import dotenv_values
     env = dotenv_values()
 
@@ -166,24 +166,25 @@ def clova_TTS(tts_str, speaker, save_path):
         "text": tts_str,
         "format": "wav" # mp3 | wav
     }
+    print("[TTS] request for ncloud server ...")
     response = requests.post(url=URL, headers=request_header, data=request_body)
     path = save_path + ".wav"
     if(response.status_code == 200):
         with open(path, "wb") as f:
             f.write(response.content)
     else:
-        print(f"[TTS 오류 발생: {response.text}")
+        print(f"[TTS] server response error: {response.text}")
         return -1
-    print(f"[TTS] {path} 생성 완료")
+    print(f"[TTS] {path} complete.")
     return path
 
 
 #### TEST CODE ####
 if __name__ == '__main__':
-    # print_audio_device()
+    print_audio_device()
 
-    record_audio("recoding.wav")
-    stt_text = clova_STT("recoding.wav")
-    print(stt_text)
-    tts_path = clova_TTS(stt_text, speaker="nara_call", save_path="./tts_test")
-    print(tts_path)
+    # record_audio("recoding.wav")
+    # stt_text = clova_STT("recoding.wav")
+    # print(stt_text)
+    # tts_path = clova_TTS(stt_text, speaker="nara_call", save_path="./tts_test")
+    # print(tts_path)

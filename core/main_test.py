@@ -81,6 +81,7 @@ class PyQtApp(QWidget):
             self.signal_label.setText(f"Signal: {code} - {arg['message']}")
         else:
             self.signal_label.setText(f"Signal: {code} - {str(arg)}")
+            print(f"받은 인자 : {str(arg)}")
 
     def handle_record(self):
         print(f"[버튼] 클릭됨 - 현재 상태: {'녹음중' if self.is_recording else '대기중'}")

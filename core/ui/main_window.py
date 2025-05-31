@@ -16,7 +16,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QTimer
 
 # game_controller는 core 패키지에 있음
 from game_controller import GameController
-# from core.data_models import CaseData, Evidence, Profile # 필요시 타입 힌팅용
+from data_models import CaseData, Evidence, Profile # 필요시 타입 힌팅용
 
 # 현재 파일(main_window.py)이 ui 폴더에 있으므로,
 # screen 폴더 및 다른 ui 모듈은 상대 경로로 import 합니다.
@@ -89,8 +89,14 @@ class MainWindow(QWidget):
 
         # GameController.initialize()는 클래스 메소드이므로 클래스에서 직접 호출합니다.
         # 그리고 이는 비동기 함수이므로 asyncio.ensure_future로 실행합니다.
-        if hasattr(GameController, 'initialize'):
-            pass
+        if hasattr(GameController, '_isInitialized'):
+            if GameController._is_initialized:
+                print("GameController is already initialized. Loading case data...")
+                self._update_start_button("게임 시작", True)
+                self.is_gc_initialized = True
+            else:
+                print("GameController is not initialized. Attempting to initialize...")
+                asyncio.ensure_future(GameController.initialize())
         # GameController.init_game()은 존재하지 않는 것으로 보입니다.
         # elif hasattr(GameController, 'init_game'):
         #     asyncio.ensure_future(GameController.init_game())

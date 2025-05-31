@@ -1,7 +1,7 @@
 # routers/evidence_router.py
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from api.manager import sse_manager
+from api.manager import sse_manager, state_manager
 import asyncio
 
 router = APIRouter(prefix="/evidence", tags=["Evidence"])
@@ -29,6 +29,7 @@ async def evidence_ack(data: dict):
 @router.post("/{id}")
 async def handle_nfc(id: str):
     if id in ["1", "2", "3", "4"] :
-        return {"id": id, "status" :"ok" }
+        state_manager.evidence_tagged(id)
+        return {"id": int(id), "status" :"ok" }
     else : 
         raise HTTPException(status_code=400, detail="Invalid ID")

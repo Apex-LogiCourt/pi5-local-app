@@ -1,6 +1,6 @@
 import asyncio
-import RPi.GPIO as GPIO
-from mfrc522 import SimpleMFRC522
+import devices.lib.MFRC522 as MFRC522
+import signal
 from api.http_request import handle_nfc
 
 """
@@ -13,32 +13,46 @@ RST : 22
 3.3V: 1
 """
 
-READER = SimpleMFRC522()
-CARD_LIST = {0x00: "1", 0x01: "2", 0x03: "3", 0x04: "4"} #카드 스캔값 확인 후 수정해야함
+READER = MFRC522.MFRC522()
+
+CARD_LIST = {
+    "050CE0D7": "1",
+    "05167FD1": "2",
+    "00E5C6F7": "3",
+    "00E8564E": "4"
+} #실물 카드에 번호 표시
 
 SCAN_STATE = True
+
+def uidToString(uid):
+    mystring = ""
+    for i in uid:
+        mystring = format(i, '02X') + mystring
+    return mystring
 
 def get_card_num(card_id):
     return CARD_LIST.get(card_id, -1)
 
 async def scan_rfid_loop():
-    print("[RFID] 스캐너 시작")
+    print("[RFID] scanner starting ...")
     while SCAN_STATE:
         try:
-            card_id, _ = READER.read()
-            card_num = get_card_num(card_id)
-            if card_num == -1:
-                continue
-            print(f"[RFID] Card No.{card_num} scanned")
-            asyncio.get_event_loop().create_task(handle_nfc(card_num))
-
+            (status, TagType) = READER.MFRC522_Request(READER.PICC_REQIDL)
+            if status == READER.MI_OK:
+                (status, uid) = READER.MFRC522_SelectTagSN()
+                if status == READER.MI_OK:
+                    card_uid = uidToString(uid)
+                    card_num = CARD_LIST.get(card_uid)
+                    print(f"[RFID] Card No.{card_num} scanned")
+                    asyncio.create_task(handle_nfc(card_num))
+                else:
+                    print("[RFID] Authentication error.")
         except Exception as e:
-            # print(f"[RFID] 오류 발생: {e}")
-            pass
-
+            print(f"[RFID] scanner error: {e}")
         await asyncio.sleep(0.5)
-    GPIO.cleanup()
 
 def rfid_exit():
-    GPIO.cleanup()
+    global SCAN_STATE
+    SCAN_STATE = False
     print("[RFID] cleanup complete.")
+    pass

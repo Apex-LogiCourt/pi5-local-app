@@ -8,7 +8,7 @@ from interrogation.interrogator import Interrogator, it
 
 class GameController(QObject):
     _instance = None
-    _isInitialized = False
+    _is_initialized = False
     _state : GameState = None
     _case : Case = None
     _evidences : List[Evidence] = None
@@ -49,7 +49,7 @@ class GameController(QObject):
         cls._profiles = cls._case_data.profiles
         cls._case = cls._case_data.case
         cls._evidences = cls._case_data.evidences
-        cls._isInitialized = True
+        cls._is_initialized = True
 
         cls._state.messages.append({"role":"system", "content": cls._case_data.case.outline})
         cls._state.messages.append({"role":"system", "content": cls._profiles.__str__()})
@@ -65,16 +65,16 @@ class GameController(QObject):
     @classmethod
     async def start_game(cls) -> bool :
         """게임을 INIT → DEBATE 상태로 시작하고, system 메시지 초기화."""
-        if cls._isInitialized is False:
+        if cls._is_initialized is False:
             return False
 
-        if cls._isInitialized is True:
+        if cls._is_initialized is True:
             cls._state.phase = Phase.DEBATE
 
         from tools.service import handler_tts_service
         asyncio.create_task(handler_tts_service(cls._case_data.case.outline))
         cls._interrogator.set_case_data()
-        # cls._send_signal("initialized", cls._case_data)
+        cls._send_signal("initialized", cls._case_data)
 
         return True
     
@@ -126,7 +126,7 @@ class GameController(QObject):
             
             def handle_response(sentence):
                 # 심문 응답을 처리하는 콜백
-                asyncio.create_task(handler_tts_service(sentence))
+                asyncio.create_task(handler_tts_service(sentence, cls._state.current_profile.voice))
                 cls._send_signal("interrogation", {
                     "role": cls._state.current_profile.name if cls._state.current_profile else "증인",
                     "message": sentence
@@ -178,7 +178,6 @@ class GameController(QObject):
 
         result = CaseDataManager.get_instance().check_contextual_relevance(text)
 
-        print(f"디버깅 : {result}")
         if result.get("relevant") == "false": # 문맥 관련 없음
             return await request_speak_judge(cls, {'role': '판사', 'message': result.get("answer")}, "no_context")
    
@@ -241,38 +240,32 @@ class GameController(QObject):
     def _handle_bnt_event(cls, role : str) -> None:
         """버튼 이벤트 처리 메서드"""
         # print(f"input_role : {role}, 현재 턴: {cls._state.turn.value}, 여부 : {role != cls._state.turn.value}")
-        if cls._state.record_state is True:
-            asyncio.create_task(cls.record_end())
-        
-        # 현재 턴과 다른 사람이 버튼을 눌렀을 때만 이의제기
-        if role != cls._state.turn.value and cls._state.phase == Phase.DEBATE:
-            cls._objection()
+
+        is_same_turn = role == cls._state.turn.value
+        is_recording = cls._state.record_state # 값 복사 
+
+        if cls._state.phase == Phase.DEBATE: # 토론 중일 때 
+            if is_recording :
+                asyncio.create_task(cls.record_end())
+                cls._send_signal("record_toggled", False)
+            if is_same_turn and not is_recording:
+                asyncio.create_task(cls.record_start())
+                cls._send_signal("record_toggled", True)
+                return
+            if not is_same_turn:
+                cls._objection()
+                return
+
+        if cls._state.phase == Phase.INTERROGATE :
+            if not is_same_turn : return
+            else :
+                if is_recording:
+                    asyncio.create_task(cls.record_end())
+                    cls._send_signal("record_toggled", False)
+                else:
+                    asyncio.create_task(cls.record_start())
+                    cls._send_signal("record_toggled", True)
+        return
 
 
 
-if __name__ == "__main__":
-    class DummyReceiver(QObject):
-        @pyqtSlot(str, object)
-        def receive(self, code, arg):
-            print(f"[Signal Received] code: {code}, arg: {arg}")
-
-    import sys
-    from PyQt5.QtWidgets import QApplication
-
-    app = QApplication(sys.argv)
-
-    gc = GameController.get_instance()
-    receiver = DummyReceiver()
-    gc._signal.connect(receiver.receive)
-
-    # 테스트 시그널 발신
-    gc._send_signal("test_code", {"key": "value"})
-    gc._send_signal("verdict", "유죄입니다.")
-
-    async def test_init():
-        await gc.initialize()
-        await gc.start_game()
-
-    asyncio.run(test_init())
-
-    sys.exit(0)
