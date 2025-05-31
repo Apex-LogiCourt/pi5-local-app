@@ -11,7 +11,7 @@ services:
   # 이부분 까지 주석 처리 
 
   base:
-    image: logicourt-base:latest
+    # image: logicourt-base:latest
     platform: linux/arm64
     build:
       context: .
@@ -21,27 +21,27 @@ services:
     command: echo "Base image built!"
   
     
-  core:
-    build:
-      context: ./core
-      dockerfile: Dockerfile
-      platforms:
-        - linux/arm64
-    depends_on:
-      - base
-      # - qemu # Mac에서 qemu 관련 주석 처리
-    volumes:
-      - ./core:/app 
-      - data:/data  # 공유 볼륨을 마운트
-    # command: streamlit run chat.py 
-    command: uvicorn api.api:app --host 0.0.0.0 --port 8000 --reload
-    ports:
-      - "8501:8501"  # Streamlit 기본 포트
-      - "8000:8000"  # hardware 통신용 포트
-    networks:
-      - logicourt_network
-    expose:
-      - "8000"
+  # core:
+  #   build:
+  #     context: ./core
+  #     dockerfile: Dockerfile
+  #     platforms:
+  #       - linux/arm64
+  #   depends_on:
+  #     - base
+  #     # - qemu # Mac에서 qemu 관련 주석 처리
+  #   volumes:
+  #     - ./core:/app 
+  #     - data:/data  # 공유 볼륨을 마운트
+  #   # command: streamlit run chat.py 
+  #   command: uvicorn main:app --host 0.0.0.0 --port 8000 
+  #   ports:
+  #     - "8501:8501"  # Streamlit 기본 포트
+  #     - "8000:8000"  # hardware 통신용 포트
+  #   networks:
+  #     - logicourt_network
+  #   expose:
+  #     - "8000"
 
   # rag:
   #   build:
@@ -53,6 +53,8 @@ services:
   #     - data:/data  # 공유 볼륨을 마운트
 
   # hardware:
+  #   image: logicourt-base:latest
+  #   platform: linux/arm6
   #   build:
   #     context: ./hardware
   #     dockerfile: Dockerfile
@@ -60,6 +62,7 @@ services:
   #     - base
   #   volumes:
   #     - data:/data  # 공유 볼륨을 마운트
+  #   command: uvicorn main:app --host 0.0.0.0 --port 8300 
   #   ports:
   #     - "8300:8300"  # hardware 통신용 포트
   #   networks:
