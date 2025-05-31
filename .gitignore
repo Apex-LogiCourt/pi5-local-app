@@ -9,6 +9,8 @@ __pycache__/
 *.pywz
 
 
+core/core.egg-info/
+*.egg-info/
 # 증거 이미지 리소스 폴더 제외
 data/evidence_resource/
 # 오디오 임시파일 제외

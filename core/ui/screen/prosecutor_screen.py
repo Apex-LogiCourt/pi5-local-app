@@ -13,7 +13,7 @@ from ui.common_components import (
     HoverButton, MicButton, extract_name_and_role,
     show_case_dialog_common, show_evidences_common, show_full_profiles_dialog_common
 )
-import re
+import re, asyncio
 
 
 class ProsecutorScreen(QWidget):
@@ -141,11 +141,23 @@ class ProsecutorScreen(QWidget):
         self.btn_mic.set_icon_on(self.mic_on)
 
     def toggle_mic_action(self):
+        print("🧪 [ProsecutorScreen] Mic 버튼 클릭됨")
+
         if self.game_controller:
+            print("🧪 game_controller 연결됨 → mic_on =", self.mic_on)
+
             if not self.mic_on:
-                self.game_controller.record_start()
+                print("✅ record_start() 호출")
+                asyncio.create_task(self.game_controller.record_start())
             else:
-                self.game_controller.record_end()
+                print("✅ record_end() 호출")
+                asyncio.create_task(self.game_controller.record_end())
+        else:
+            print("❌ game_controller 없음")
+
+        # 버튼 상태 토글 (누락되었을 수 있으므로 추가)
+        self.mic_on = not self.mic_on
+        self.btn_mic.set_icon_on(self.mic_on)
 
     def handle_switch_to_lawyer(self):
         if self.on_switch_to_lawyer:
@@ -174,3 +186,67 @@ class ProsecutorScreen(QWidget):
 
     def show_full_profiles_dialog(self):
         show_full_profiles_dialog_common(self, self.profiles_list)
+
+
+# 테스트 코드
+if __name__ == "__main__":
+    import sys
+    import os
+    # 경로 설정
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    
+    try:
+        import asyncio
+        from PyQt5.QtWidgets import QApplication
+        from qasync import QEventLoop
+        from game_controller import GameController
+    except ImportError as e:
+        print(f"필요한 모듈을 불러올 수 없습니다: {e}")
+        sys.exit(1)
+
+    def dummy_function(): pass
+
+    class ProsecutorTestApp:
+        def __init__(self):
+            self.controller = GameController.get_instance()
+            
+            # 테스트용 데이터
+            test_profiles = [
+                {'name': '김소현', 'type': 'defendant', 'gender': 'female', 'age': 29, 'context': '피고인 설명'},
+            ]
+            
+            test_evidences = [
+                {'name': '독극물 잔', 'type': 'prosecutor', 'description': ['잔에서 독극물 검출됨', '지문 분석 결과 피고인의 것으로 확인']},
+            ]
+            
+            self.window = ProsecutorScreen(
+                game_controller=self.controller,
+                on_switch_to_lawyer=dummy_function,
+                on_request_judgement=dummy_function,
+                on_interrogate=dummy_function,
+                case_summary_text="""⚖ 사건 개요 (테스트용)""",
+                profiles_data_list=test_profiles,
+                evidences_data_list=test_evidences
+            )
+
+        async def run(self):
+            try:
+                await self.controller.initialize()
+                await self.controller.start_game()
+                self.window.show()
+            except Exception as e:
+                print(f"초기화 중 오류 발생: {e}")
+
+    # 애플리케이션 실행
+    app = QApplication(sys.argv)
+    loop = QEventLoop(app)
+    asyncio.set_event_loop(loop)
+
+    test_app = ProsecutorTestApp()
+
+    with loop:
+        loop.create_task(test_app.run())
+        try:
+            loop.run_forever()
+        except KeyboardInterrupt:
+            print("테스트 종료")
