@@ -186,3 +186,67 @@ class ProsecutorScreen(QWidget):
 
     def show_full_profiles_dialog(self):
         show_full_profiles_dialog_common(self, self.profiles_list)
+
+
+# 테스트 코드
+if __name__ == "__main__":
+    import sys
+    import os
+    # 경로 설정
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    
+    try:
+        import asyncio
+        from PyQt5.QtWidgets import QApplication
+        from qasync import QEventLoop
+        from game_controller import GameController
+    except ImportError as e:
+        print(f"필요한 모듈을 불러올 수 없습니다: {e}")
+        sys.exit(1)
+
+    def dummy_function(): pass
+
+    class ProsecutorTestApp:
+        def __init__(self):
+            self.controller = GameController.get_instance()
+            
+            # 테스트용 데이터
+            test_profiles = [
+                {'name': '김소현', 'type': 'defendant', 'gender': 'female', 'age': 29, 'context': '피고인 설명'},
+            ]
+            
+            test_evidences = [
+                {'name': '독극물 잔', 'type': 'prosecutor', 'description': ['잔에서 독극물 검출됨', '지문 분석 결과 피고인의 것으로 확인']},
+            ]
+            
+            self.window = ProsecutorScreen(
+                game_controller=self.controller,
+                on_switch_to_lawyer=dummy_function,
+                on_request_judgement=dummy_function,
+                on_interrogate=dummy_function,
+                case_summary_text="""⚖ 사건 개요 (테스트용)""",
+                profiles_data_list=test_profiles,
+                evidences_data_list=test_evidences
+            )
+
+        async def run(self):
+            try:
+                await self.controller.initialize()
+                await self.controller.start_game()
+                self.window.show()
+            except Exception as e:
+                print(f"초기화 중 오류 발생: {e}")
+
+    # 애플리케이션 실행
+    app = QApplication(sys.argv)
+    loop = QEventLoop(app)
+    asyncio.set_event_loop(loop)
+
+    test_app = ProsecutorTestApp()
+
+    with loop:
+        loop.create_task(test_app.run())
+        try:
+            loop.run_forever()
+        except KeyboardInterrupt:
+            print("테스트 종료")
