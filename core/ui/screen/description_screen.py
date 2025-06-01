@@ -1,12 +1,11 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
+from PyQt5.QtGui import QPixmap # QPixmap을 직접 사용하기 위해 import
 from PyQt5.QtCore import Qt
-
-# Assuming resizable_image.py is in the parent directory 'ui'
-# and _get_image_path expects a filename relative to 'assets' at project root
-from ui.resizable_image import ResizableImage, _get_image_path
+# from ui.resizable_image import ResizableImage, _get_image_path # 이 줄은 주석 처리 또는 삭제
 from ui.style_constants import (
     DARK_BG_COLOR, GOLD_ACCENT, WHITE_TEXT, PRIMARY_BLUE
 )
+# import os # 현재 이 방식에서는 os 모듈이 직접적으로 필요하지 않을 수 있습니다.
 
 class GameDescriptionScreen(QWidget):
     def __init__(self, on_back_callback, game_controller=None): # Added game_controller (optional for this screen)
@@ -54,8 +53,28 @@ class GameDescriptionScreen(QWidget):
 
         # 오른쪽 이미지 영역
         right_panel_layout = QVBoxLayout()
-        # Pass the _get_image_path function and the filename
-        image_label = ResizableImage(_get_image_path, "stand.png", width_limit=400)
+        
+        # --- 이미지 경로를 직접 문자열로 지정하고 표준 QLabel 사용으로 변경 ---
+        image_path_string = "core/assets/stand.png" # 경로 문자열 직접 사용
+
+        image_pixmap = QPixmap(image_path_string)
+        image_label = QLabel() # 표준 QLabel 사용
+
+        if image_pixmap.isNull():
+            print(f"오류: 이미지를 불러올 수 없습니다 - {image_path_string}")
+            # 디버깅을 위해 현재 작업 디렉토리 출력 (필요시 주석 해제)
+            # import os
+            # print(f"현재 작업 디렉토리: {os.getcwd()}")
+            image_label.setText("이미지 로드 실패\n(stand.png)") # os.path.basename 사용 안 함
+        else:
+            # 이미지를 QLabel 너비 400에 맞춰 비율 유지하며 스케일링
+            # 이 코드는 UI 초기화 시 한 번만 실행됩니다.
+            width_limit = 400
+            scaled_pixmap = image_pixmap.scaledToWidth(width_limit, Qt.SmoothTransformation)
+            image_label.setPixmap(scaled_pixmap)
+        
+        image_label.setAlignment(Qt.AlignCenter)
+        # --- 이미지 처리 수정 완료 ---
 
 
         back_btn = QPushButton("\u2190 돌아가기")

@@ -1,20 +1,21 @@
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout,
-    QSizePolicy, QMessageBox, QGridLayout
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
+    QSizePolicy, QMessageBox, QGridLayout # QFrame은 사용되지 않아 제거, QMessageBox는 placeholder 메소드에서 사용
 )
+from PyQt5.QtGui import QPixmap # QPixmap 직접 사용을 위해 import
 from PyQt5.QtCore import Qt
-# from PyQt5.QtGui import QIcon, QPixmap # Not directly needed if using common components
+# from PyQt5.QtGui import QIcon # QIcon은 MicButton에서 사용되지만, MicButton은 common_components에서 가져옴
 
-from ui.resizable_image import ResizableImage, _get_image_path, _get_profile_image_path
+# from ui.resizable_image import ResizableImage, _get_image_path, _get_profile_image_path # 이 줄은 제거
 from ui.style_constants import DARK_BG_COLOR, WHITE_TEXT
 # Removed: from core.game_controller import GameController (instance will be passed)
 # Import common components
 from ui.common_components import (
-    HoverButton, MicButton, extract_name_and_role,
+    HoverButton, MicButton, extract_name_and_role, # MicButton은 여기서 경로 수정 안 함
     show_case_dialog_common, show_evidences_common, show_full_profiles_dialog_common
 )
 import re
-
+# import os # 직접 경로 문자열 사용 시 이 파일에서 os 모듈이 필수는 아님
 
 class LawyerScreen(QWidget):
     def __init__(self, game_controller,
@@ -26,12 +27,11 @@ class LawyerScreen(QWidget):
         self.on_request_judgement = on_request_judgement
         self.on_interrogate = on_interrogate
 
-        # Data passed from MainWindow
         self.case_summary = case_summary_text
         self.profiles_list = profiles_data_list if profiles_data_list is not None else []
         self.evidences_list = evidences_data_list if evidences_data_list is not None else []
         
-        self.mic_on = False # Local state for icon, actual recording state by GC
+        self.mic_on = False
         self.init_ui()
 
     def init_ui(self):
@@ -64,7 +64,6 @@ class LawyerScreen(QWidget):
         menu_layout.addWidget(make_button("➤ 심문하기", self.handle_interrogate))
         menu_layout.addStretch()
 
-        # Generate summary text for profile button from passed profiles_list
         summary_lines = ["등장인물"]
         type_map = {"defendant": "피고", "victim": "피해자", "witness": "목격자", "reference": "참고인"}
         if self.profiles_list:
@@ -72,18 +71,16 @@ class LawyerScreen(QWidget):
                 name = p_info.get('name', 'N/A')
                 role_key = p_info.get('type', 'N/A')
                 role = type_map.get(role_key, role_key)
-                # Construct a title line similar to how extract_name_and_role expects if needed elsewhere
-                # For button, just name and role is fine.
                 summary_lines.append(f"• {name} : {role}")
         summary_text_for_btn = "\n".join(summary_lines)
 
         profile_button = HoverButton(summary_text_for_btn, min_height=100, max_height=130)
         profile_button.clicked.connect(self.show_full_profiles_dialog)
 
+        # MicButton의 아이콘 경로는 common_components.py 내의 MicButton 클래스에서 수정 필요
         self.btn_mic = MicButton("mike.png", "mike_on.png")
-        self.btn_mic.clicked.connect(self.toggle_mic_action) # Connect to action
+        self.btn_mic.clicked.connect(self.toggle_mic_action)
 
-        # --- Action Buttons ---
         self.btn_to_prosecutor = QPushButton("검사측 주장으로")
         self.btn_to_prosecutor.setFixedSize(250, 80)
         self.btn_to_prosecutor.setStyleSheet("""
@@ -107,7 +104,6 @@ class LawyerScreen(QWidget):
         action_buttons_layout.addWidget(self.btn_req_judgement)
         action_buttons_layout.addStretch()
 
-        # --- Right Panel (Controls are on the right for Lawyer) ---
         right_panel_grid = QGridLayout()
         right_panel_grid.setSpacing(20)
         right_panel_grid.addLayout(menu_layout, 0, 0)
@@ -125,57 +121,65 @@ class LawyerScreen(QWidget):
         right_wrapper.addStretch(2)
 
         # --- Left Panel (Image is on the left for Lawyer) ---
-        image_label = ResizableImage(_get_profile_image_path, "lawyer.png") # Pass func and filename
-        image_label.setMaximumWidth(420)
-        image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        # --- 변호사 이미지 로드 방식 변경 ---
+        lawyer_image_path = "core/assets/profile/lawyer.png" # 직접 경로 문자열 사용
+        
+        image_pixmap = QPixmap(lawyer_image_path)
+        image_label = QLabel() # 표준 QLabel 사용
+
+        if image_pixmap.isNull():
+            print(f"오류: 변호사 이미지를 불러올 수 없습니다 - {lawyer_image_path}")
+            image_label.setText("변호사 이미지\n로드 실패")
+        else:
+            # 원본 ResizableImage는 setMaximumWidth(420)가 있었음
+            # QLabel에 이미지를 표시하고 최대 너비를 설정 (비율 유지를 위해 scaled 사용)
+            max_width = 420
+            if image_pixmap.width() > max_width:
+                scaled_pixmap = image_pixmap.scaledToWidth(max_width, Qt.SmoothTransformation)
+                image_label.setPixmap(scaled_pixmap)
+            else:
+                image_label.setPixmap(image_pixmap)
+        
+        image_label.setMaximumWidth(420) # 최대 너비 제한은 유지
+        image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding) # 크기 정책 유지
+        image_label.setAlignment(Qt.AlignCenter) # 중앙 정렬 추가 (선택 사항)
+        # --- 이미지 처리 수정 완료 ---
 
         left_image_layout = QVBoxLayout()
         left_image_layout.addStretch()
         left_image_layout.addWidget(image_label, alignment=Qt.AlignLeft)
         left_image_layout.addStretch()
 
-        main_layout = QHBoxLayout(self) # Set main layout for self
+        main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(60, 30, 40, 30)
         main_layout.setSpacing(30)
         main_layout.addLayout(left_image_layout, 2)
         main_layout.addLayout(right_wrapper, 3)
 
     def set_mic_button_state(self, is_on):
-        """Called by MainWindow based on record_start/stop signals"""
         self.mic_on = is_on
-        self.btn_mic.set_icon_on(self.mic_on)
+        self.btn_mic.set_icon_on(self.mic_on) # MicButton의 내부 로직에 따라 아이콘 변경
 
     def toggle_mic_action(self):
         if self.game_controller:
-            if not self.mic_on: # If mic is currently off, tell GC to start
+            if not self.mic_on:
                 self.game_controller.record_start()
-            else: # If mic is currently on, tell GC to stop
+            else:
                 self.game_controller.record_end()
-        # The icon state (self.mic_on) will be updated via signal from GC -> MainWindow -> self.set_mic_button_state
 
     def handle_switch_to_prosecutor(self):
         if self.on_switch_to_prosecutor:
             self.on_switch_to_prosecutor()
 
     def handle_request_judgement(self):
-        # UI informs controller, controller will eventually send signal for verdict
         if self.game_controller:
-            self.game_controller.user_input("판결을 요청합니다.") # Or a more specific method
-            # self.game_controller.done() # If this is the final action before judgement
-        if self.on_request_judgement: # This callback likely triggers MainWindow to switch to ResultScreen
+            self.game_controller.user_input("판결을 요청합니다.")
+        if self.on_request_judgement:
             self.on_request_judgement()
 
-
     def handle_interrogate(self):
-        # This callback will likely trigger MainWindow to switch to InterrogationScreen
-        # The specific character to interrogate might be chosen via a dialog here
-        # For now, let's assume MainWindow handles the switch and potential character selection UI.
-        # Or, the on_interrogate callback in MainWindow could pop up a character selection dialog.
         if self.on_interrogate:
-             # The on_interrogate callback in MainWindow will handle showing a dialog to pick character
-             # and then switching to InterrogationScreen
             self.on_interrogate()
-
 
     def show_case_dialog(self):
         show_case_dialog_common(self, self.case_summary)
@@ -184,13 +188,7 @@ class LawyerScreen(QWidget):
         show_evidences_common(self, self.evidences_list, attorney_first=True)
 
     def show_text_input_placeholder(self):
-        # Eventually, this would allow typing arguments.
-        # For now, it might just send a generic statement or do nothing.
-        # text, ok = QInputDialog.getText(self, "변론 입력", "주장할 내용을 입력하세요:")
-        # if ok and text and self.game_controller:
-        #     self.game_controller.user_input(text)
         QMessageBox.information(self, "텍스트입력", "변호사측 텍스트 입력 기능은 구현 중입니다.", QMessageBox.Ok)
-
 
     def show_full_profiles_dialog(self):
         show_full_profiles_dialog_common(self, self.profiles_list)
