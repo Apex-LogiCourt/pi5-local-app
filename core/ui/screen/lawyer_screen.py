@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout,
-    QSizePolicy, QMessageBox, QGridLayout
+    QSizePolicy, QMessageBox, QGridLayout,QInputDialog
 )
 from PyQt5.QtCore import Qt
 # from PyQt5.QtGui import QIcon, QPixmap # Not directly needed if using common components
@@ -14,6 +14,7 @@ from ui.common_components import (
     show_case_dialog_common, show_evidences_common, show_full_profiles_dialog_common
 )
 import re, asyncio
+from qasync import asyncSlot
 
 
 class LawyerScreen(QWidget):
@@ -60,7 +61,7 @@ class LawyerScreen(QWidget):
         menu_layout.setSpacing(15)
         menu_layout.addWidget(make_button("사건개요", self.show_case_dialog))
         menu_layout.addWidget(make_button("증거품 확인", self.show_evidences))
-        menu_layout.addWidget(make_button("텍스트입력", self.show_text_input_placeholder))
+        menu_layout.addWidget(make_button("텍스트입력", self.show_text_input_dialog))
         menu_layout.addWidget(make_button("➤ 심문하기", self.handle_interrogate))
         menu_layout.addStretch()
 
@@ -146,16 +147,14 @@ class LawyerScreen(QWidget):
         self.btn_mic.set_icon_on(self.mic_on)
 
     def toggle_mic_action(self):
-        print("🧪 [ProsecutorScreen] Mic 버튼 클릭됨")
+        print("Mic 버튼 클릭됨")
 
         if self.game_controller:
-            print("🧪 game_controller 연결됨 → mic_on =", self.mic_on)
+            print("game_controller 연결됨 → mic_on =", self.mic_on)
 
             if not self.mic_on:
-                print("✅ record_start() 호출")
                 asyncio.create_task(self.game_controller.record_start())
             else:
-                print("✅ record_end() 호출")
                 asyncio.create_task(self.game_controller.record_end())
         else:
             print("❌ game_controller 없음")
@@ -193,14 +192,17 @@ class LawyerScreen(QWidget):
     def show_evidences(self):
         show_evidences_common(self, self.evidences_list, attorney_first=True)
 
-    def show_text_input_placeholder(self):
-        # Eventually, this would allow typing arguments.
-        # For now, it might just send a generic statement or do nothing.
-        # text, ok = QInputDialog.getText(self, "변론 입력", "주장할 내용을 입력하세요:")
-        # if ok and text and self.game_controller:
-        #     self.game_controller.user_input(text)
-        QMessageBox.information(self, "텍스트입력", "변호사측 텍스트 입력 기능은 구현 중입니다.", QMessageBox.Ok)
-
+    @asyncSlot()
+    async def show_text_input_dialog(self):
+        text, ok = QInputDialog.getText(self, "텍스트 입력", "전송할 내용을 입력하세요:")
+        if ok and text.strip():
+            print(f"🧪 입력됨: {text}")
+            if self.game_controller:
+                await self.game_controller.user_input(text)
+            else:
+                print("❌ game_controller 없음")
+        else:
+            print("⛔ 입력 취소 또는 공백")
 
     def show_full_profiles_dialog(self):
         show_full_profiles_dialog_common(self, self.profiles_list)
