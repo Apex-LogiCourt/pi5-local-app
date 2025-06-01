@@ -363,16 +363,3 @@ def get_judge_result(message_list):
         result = chain.invoke({"messages": messages_joined})
     
     return result
-
-if __name__ == "__main__":
-    # 테스트용 코드
-    print("형법 RAG 시스템 테스트")
-    
-    # 샘플 메시지로 테스트
-    test_messages = [
-        {"role": "검사", "content": "피고인은 고의로 피해자를 살해했습니다. 명백한 살인죄에 해당합니다."},
-        {"role": "변호사", "content": "피고인은 정당방위였습니다. 피해자가 먼저 공격했습니다."}
-    ]
-    
-    result = get_judge_result(test_messages)
-    print(f"\n판결 결과:\n{result}")
