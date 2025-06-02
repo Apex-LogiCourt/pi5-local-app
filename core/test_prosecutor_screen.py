@@ -29,6 +29,7 @@ class TestApp:
 
     async def run(self):
         await self.controller.initialize()
+        await self.controller.start_game()
         self.window.show()
 
 if __name__ == "__main__":
