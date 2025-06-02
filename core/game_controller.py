@@ -111,7 +111,7 @@ class GameController(QObject):
         Args:
             text: 사용자가 입력한 텍스트
         Returns:
-            bool: 처리 성공 여부
+             bool: True면 턴 전환, False면 턴 전환 없음
         """
         if not text.strip():
             return False
