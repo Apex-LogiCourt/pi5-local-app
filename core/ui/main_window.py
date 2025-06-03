@@ -107,7 +107,7 @@ class MainWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        logo_label = ResizableImage(_get_image_path, "logo.png")
+        logo_label = ResizableImage(_get_image_path, "start.png")
         logo_label.setStyleSheet(f"background-color: {DARK_BG_COLOR};")
 
         left_frame = QFrame()
