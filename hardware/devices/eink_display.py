@@ -69,11 +69,8 @@ def send_bytes_over_serial(rfcomm, byte_data):
     except serial.SerialException as e:
         print("[HW/EPD]시리얼 포트 오류:", e)
 
-def get_evidence_image_path(e: Evidence):
-    return e.picture
-
 #========== EPD용 이미지 생성 ==========
-FONT_PATH = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf" #pi 테스트용
+FONT_PATH = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf" #실제 폰트경로
 
 def make_epd_image(evidence: Evidence, font_size=20, line_spacing=6):
     image_path = evidence.picture
