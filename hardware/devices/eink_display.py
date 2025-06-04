@@ -24,6 +24,7 @@ def update_and_sand_image(epd_index: int, evidence: Evidence):
         epd_mac = EPD_MacAddress[epd_index]
         rfcomm = bind_rfcomm(epd_index, epd_mac)
         img_path = make_epd_image(evidence)
+        inversion_image(img_path)
         byte_data = convert_image_to_bytes(img_path)
         send_bytes_over_serial(rfcomm, byte_data)
     except Exception as e:
@@ -159,7 +160,7 @@ def update_epd_image(image_path, evidence: Evidence, font_size=20, line_spacing=
         y += font_size + line_spacing
 
     img.save(image_path)
-    print(f"[HW/EPD]저장 완료: {image_path}")
+    print(f"[HW/EPD]이미지 설명 추가 완료: {image_path}")
     return
 
 def inversion_image(image_path):
