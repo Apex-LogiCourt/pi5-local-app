@@ -5,7 +5,7 @@ import numpy as np
 import os
 import traceback
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 from typing import List
 from data_models import Evidence
 
@@ -160,7 +160,21 @@ def update_epd_image(image_path, evidence: Evidence, font_size=20, line_spacing=
 
     img.save(image_path)
     print(f"[HW/EPD]저장 완료: {image_path}")
-    return 
+    return
+
+def inversion_image(image_path):
+    try:
+        img = Image.open(image_path).convert("1")
+
+        img = ImageOps.mirror(img)
+        img_l = img.convert("L")
+        img_inverted = ImageOps.invert(img_l)
+
+        img_final = img_inverted.convert("1")
+        img_final.save(image_path)
+    except Exception as e:
+        print(f"[HW/EPD] 이미지 반전 오류: {e}")
+    return image_path
 
 ##### TEST CODE #####
 if __name__ == "__main__":
