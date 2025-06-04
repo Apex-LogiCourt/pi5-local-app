@@ -71,25 +71,38 @@ def send_bytes_over_serial(rfcomm, byte_data):
 
 #========== EPD용 이미지 생성 ==========
 FONT_PATH = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf" #실제 폰트경로
+TITLE_FONT_PATH = "/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf" #실제 폰트경로
 
 def make_epd_image(evidence: Evidence, font_size=20, line_spacing=6):
     image_path = evidence.picture
     text = evidence.description[0]
     save_path = evidence.name + ".bmp"
     
-    canvas = Image.new("1", (400, 300), 1) # 400*300의 캔버스 생성
+    # 400*300의 캔버스 생성
+    canvas = Image.new("1", (400, 300), 1)
+    draw = ImageDraw.Draw(canvas)
+
+    # 💬 상단 이름 텍스트 출력
+    title_font_size = 20  # or customize
+    title_font = ImageFont.truetype(TITLE_FONT_PATH, title_font_size)
+    title_text = evidence.name
+    title_bbox = draw.textbbox((0, 0), title_text, font=title_font)
+    title_width = title_bbox[2] - title_bbox[0]
+    title_height = title_bbox[3] - title_bbox[1]
+    title_x = (400 - title_width) // 2
+    title_y = (30 - title_height) // 2  # 위 padding 5, 아래 padding 5 고려
+    draw.text((title_x, title_y), title_text, font=title_font, fill=0)
 
     # 캔버스 좌상단에 증거품 이미지 삽입
     img = Image.open(image_path).convert("1")
     img = img.resize((150, 150))
-    canvas.paste(img, (0, 0)) 
+    canvas.paste(img, (0, 30)) 
 
     # 텍스트 처리 시작
-    draw = ImageDraw.Draw(canvas)
     font = ImageFont.truetype(FONT_PATH, font_size)
-    x, y = (150 + 15), (0 + 15)  #시작 위치
-    max_width = 250
-    max_height = 150
+    x, y = (150 + 15), (30 + 15)  #시작 위치
+    max_width = 250 - 10
+    max_height = 150 - 5
 
     lines = []
     for paragraph in text.split("\n"):
