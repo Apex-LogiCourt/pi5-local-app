@@ -50,7 +50,7 @@ def bind_rfcomm(epd_index, mac_addr): #바인딩 이후, RFCOMM_DEV를 USBSerial
 def convert_image_to_bytes(image_path):
     img = Image.open(image_path).convert("1")
     arr = np.array(img).flatten()
-    packed = np.packbits(arr ^ 1)  # 1=흰색, 0=검정 -> 반전 필요
+    packed = np.packbits(arr)
     return packed
 
 def send_bytes_over_serial(rfcomm, byte_data):
@@ -168,11 +168,12 @@ def inversion_image(image_path):
         img = Image.open(image_path).convert("1")
 
         img = ImageOps.mirror(img)
-        img_l = img.convert("L")
-        img_inverted = ImageOps.invert(img_l)
+        # img_l = img.convert("L")
+        # img_inverted = ImageOps.invert(img_l)
 
-        img_final = img_inverted.convert("1")
-        img_final.save(image_path)
+        # img_final = img_inverted.convert("1")
+        # img_final.save(image_path)
+        img.save(image_path)
     except Exception as e:
         print(f"[HW/EPD] 이미지 반전 오류: {e}")
     return image_path
