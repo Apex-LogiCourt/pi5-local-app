@@ -210,7 +210,8 @@ class MainWindow(QWidget):
             QMessageBox.warning(self, "준비 중", "게임 데이터를 아직 로드 중입니다. 잠시 후 다시 시도해주세요.")
             if not self.is_gc_initialized: # 초기화 시도 (만약 실패했었다면)
                 self.init_game_controller()
-            return
+        self.show_prosecutor_screen()
+        return
 
 
     def _get_profiles_as_list_of_dicts(self):
