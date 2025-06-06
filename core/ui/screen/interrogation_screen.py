@@ -12,6 +12,7 @@ from ui.style_constants import DARK_BG_COLOR, WHITE_TEXT
 # Removed: from core.game_controller import GameController
 import re
 
+#아이고 막 이렇게 해놨네 맵핑을 
 KOREAN_TO_ENGLISH_MAP = {
     "은영": "Eunyoung", "봄달": "Bomdal", "지훈": "Jihoon", "소현": "Sohyun",
     "영화": "Younghwa", "성일": "Sungil", "기효": "Kihyo", "승표": "Seungpyo",
@@ -19,7 +20,7 @@ KOREAN_TO_ENGLISH_MAP = {
     "기서": "Kiseo", "원탁": "Wontak", "이안": "Ian"
 }
 
-def extract_name_and_role(title_line):
+def extract_name_and_role(title_line): # 여기도 문제네 ..~
     match = re.search(r"이름\s*:\s*(\S+)\s*\((피고|피해자|목격자|참고인)\)", title_line)
     if match:
         return match.group(1), match.group(2)
