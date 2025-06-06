@@ -117,7 +117,7 @@ class MainWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        logo_label = ResizableImage(_get_image_path, "logo.png") # _get_image_path는 ui.resizable_image에 정의
+        logo_label = ResizableImage(_get_image_path, "start.png") # _get_image_path는 ui.resizable_image에 정의
         logo_label.setStyleSheet(f"background-color: {DARK_BG_COLOR};")
 
         left_frame = QFrame()
