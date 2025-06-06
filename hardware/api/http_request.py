@@ -44,7 +44,8 @@ async def sse_data_handler(raw_data: str):
         evidence.id = parsed["id"]
         print(f"[HW/sse] {evidence}")
         asyncio.create_task(evidence_ack(id=str(evidence.id), status="received"))
-        update_and_sand_image(evidence.id, evidence)
+        # update_and_sand_image(evidence.id, evidence)
+        await asyncio.to_thread(update_and_sand_image, evidence.id, evidence) #blocking 부분 스레드로 처리
         return evidence
     except (json.JSONDecodeError, KeyError) as e:
         print(f"[HW/sse] sse data convert error: {e}")
