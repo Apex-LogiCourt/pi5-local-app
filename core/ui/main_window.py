@@ -94,6 +94,7 @@ class MainWindow(QWidget):
                 print("GameController is already initialized. Loading case data...")
                 self._update_start_button("게임 시작", True)
                 self.is_gc_initialized = True
+                self.case_data = GameController._case_data
             else:
                 print("GameController is not initialized. Attempting to initialize...")
                 asyncio.ensure_future(GameController.initialize())
@@ -117,7 +118,7 @@ class MainWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        logo_label = ResizableImage(_get_image_path, "logo.png") # _get_image_path는 ui.resizable_image에 정의
+        logo_label = ResizableImage(_get_image_path, "start.png") # _get_image_path는 ui.resizable_image에 정의
         logo_label.setStyleSheet(f"background-color: {DARK_BG_COLOR};")
 
         left_frame = QFrame()
@@ -209,15 +210,8 @@ class MainWindow(QWidget):
             QMessageBox.warning(self, "준비 중", "게임 데이터를 아직 로드 중입니다. 잠시 후 다시 시도해주세요.")
             if not self.is_gc_initialized: # 초기화 시도 (만약 실패했었다면)
                 self.init_game_controller()
-            return
-        
-        # GameController의 start_game() 호출 (비동기)
-        if hasattr(GameController, 'start_game'):
-            asyncio.ensure_future(GameController.start_game())
-            self.start_intro_sequence() # UI 전환은 start_game 성공 여부와 관계없이 일단 진행될 수 있음
-                                         # 또는 start_game의 결과를 기다려 진행할 수도 있음 (시그널 사용)
-        else:
-            QMessageBox.critical(self, "오류", "게임 시작 로직을 찾을 수 없습니다.")
+        self.show_prosecutor_screen()
+        return
 
 
     def _get_profiles_as_list_of_dicts(self):

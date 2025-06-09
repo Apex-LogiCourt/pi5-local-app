@@ -245,3 +245,106 @@ class IntroScreen(QWidget):
         else:
             if self.on_intro_finished:
                 self.on_intro_finished()
+
+
+if __name__ == "__main__":
+    import sys
+    from PyQt5.QtWidgets import QApplication
+    
+    # 더미 게임 컨트롤러 클래스
+    class DummyGameController:
+        pass
+    
+    # 더미 데이터 준비
+    dummy_summary = """
+    2024년 3월 15일 오후 2시경, 서울시 강남구 테헤란로의 한 카페에서 발생한 폭행 사건입니다.
+    피해자 김영희(29세, 여성)는 카페에서 노트북으로 작업을 하던 중, 
+    피고인 박민수(34세, 남성)로부터 갑작스러운 폭행을 당했다고 주장하고 있습니다.
+    
+    사건 당시 카페에는 여러 목격자들이 있었으며, CCTV 영상도 확보된 상태입니다.
+    피고인 측은 정당방위를 주장하고 있어 진실 규명이 필요한 상황입니다.
+    """
+    
+    dummy_profiles = [
+        {
+            "name": "박민수",
+            "type": "defendant", 
+            "gender": "male",
+            "age": 34,
+            "context": "사건의 피고인입니다.\n- 평소 성격이 급하다고 알려져 있음\n- 당일 스트레스를 많이 받고 있었다고 주장\n- 정당방위를 주장하고 있음"
+        },
+        {
+            "name": "김영희",
+            "type": "victim",
+            "gender": "female", 
+            "age": 29,
+            "context": "사건의 피해자입니다.\n- 카페에서 평화롭게 작업을 하고 있었다고 주장\n- 갑작스러운 폭행을 당했다고 진술\n- 경미한 부상을 입음"
+        },
+        {
+            "name": "이수진",
+            "type": "witness",
+            "gender": "female",
+            "age": 25, 
+            "context": "목격자입니다.\n- 사건 당시 카페에 있었음\n- 피고인이 먼저 시비를 걸었다고 증언\n- 명확한 상황을 기억하고 있다고 주장"
+        },
+        {
+            "name": "정현우",
+            "type": "witness", 
+            "gender": "male",
+            "age": 42,
+            "context": "목격자입니다.\n- 카페 사장으로 전체 상황을 지켜봤음\n- CCTV 영상을 경찰에 제출함\n- 중립적인 입장에서 증언"
+        }
+    ]
+    
+    dummy_evidences = [
+        {
+            "id": 1,
+            "name": "CCTV 영상",
+            "type": "prosecutor",
+            "description": "사건 당시 카페 내부 상황을 기록한 영상"
+        },
+        {
+            "id": 2, 
+            "name": "의료진단서",
+            "type": "prosecutor",
+            "description": "피해자의 부상 정도를 기록한 진단서"
+        },
+        {
+            "id": 3,
+            "name": "피고인 진술서", 
+            "type": "attorney",
+            "description": "피고인의 당시 상황에 대한 상세 진술"
+        },
+        {
+            "id": 4,
+            "name": "스트레스 관련 증명서",
+            "type": "attorney", 
+            "description": "피고인의 정신적 상태를 증명하는 서류"
+        }
+    ]
+    
+    def on_intro_finished():
+        print("인트로 화면이 종료되었습니다!")
+        QApplication.quit()
+    
+    # PyQt 애플리케이션 시작
+    app = QApplication(sys.argv)
+    
+    # IntroScreen 생성
+    intro_screen = IntroScreen(
+        game_controller=DummyGameController(),
+        on_intro_finished_callback=on_intro_finished,
+        summary_text=dummy_summary,
+        profiles_data=dummy_profiles,
+        evidences_data=dummy_evidences
+    )
+    
+    intro_screen.show()
+    intro_screen.resize(1200, 800)
+    intro_screen.setWindowTitle("IntroScreen 테스트")
+    
+    print("IntroScreen 테스트를 시작합니다...")
+    print("- '다음' 버튼을 클릭하여 각 블록을 확인하세요")
+    print("- 마지막에 '재판 시작' 버튼을 클릭하면 종료됩니다")
+    
+    sys.exit(app.exec_())
