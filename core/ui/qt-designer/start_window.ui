@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>startWindow</class>
+ <widget class="QDialog" name="startWindow">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1280</width>
+    <height>720</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="mouseTracking">
+   <bool>false</bool>
+  </property>
+  <property name="windowTitle">
+   <string>LogiCourt_AI</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QDialog{
+	background-color: rgb(15, 39, 72);
+}</string>
+  </property>
+  <property name="modal">
+   <bool>false</bool>
+  </property>
+  <widget class="QPushButton" name="gameXxxButton">
+   <property name="geometry">
+    <rect>
+     <x>800</x>
+     <y>640</y>
+     <width>471</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	background-color: rgb(47, 90, 104);
+	boder-radius: 20px;
+	color: rgb(255, 254, 254);
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}
+
+QPushButton:hover{
+	background-color: rgb(67, 129, 148);
+	border-radius: 20px;
+	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	background-color: rgb(0, 123, 255);
+	border-radius: 20px;
+	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>XXX</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="startImage">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>781</width>
+     <height>701</height>
+    </rect>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	/* 스타일시트는 스케일 설정 불가능. pixMap으로 설정해야 함 */
+	image:url(:/startWindow/assets/start.png);
+}
+</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="resource.qrc">:/startWindow/assets/start.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="gameDescriptionButton">
+   <property name="geometry">
+    <rect>
+     <x>800</x>
+     <y>560</y>
+     <width>471</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	background-color: rgb(47, 90, 104);
+	boder-radius: 20px;
+	color: rgb(255, 254, 254);
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}
+
+QPushButton:hover{
+	background-color: rgb(67, 129, 148);
+	border-radius: 20px;
+	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	background-color: rgb(0, 123, 255);
+	border-radius: 20px;
+	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>게임 설명</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="gameStartButton">
+   <property name="geometry">
+    <rect>
+     <x>800</x>
+     <y>480</y>
+     <width>471</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	background-color: rgb(47, 90, 104);
+	boder-radius: 20px;
+	color: rgb(255, 254, 254);
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}
+
+QPushButton:hover{
+	background-color: rgb(67, 129, 148);
+	border-radius: 20px;
+	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	background-color: rgb(0, 123, 255);
+	border-radius: 20px;
+	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>게임 시작</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="startLogo">
+   <property name="geometry">
+    <rect>
+     <x>800</x>
+     <y>10</y>
+     <width>471</width>
+     <height>161</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	background-color: rgb(166, 166, 166);
+}
+</string>
+   </property>
+   <property name="text">
+    <string>startLogo</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>800</x>
+     <y>180</y>
+     <width>471</width>
+     <height>291</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	color: rgb(255, 255, 255);
+	font: 20pt &quot;나눔고딕&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>당신의 논리, 상대의 허점,
+AI가 지켜보는 심문의 무대!
+이 법정, 지성의 승부처</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+ </widget>
+ <tabstops>
+  <tabstop>gameStartButton</tabstop>
+  <tabstop>gameDescriptionButton</tabstop>
+  <tabstop>gameXxxButton</tabstop>
+ </tabstops>
+ <resources>
+  <include location="resource.qrc"/>
+ </resources>
+ <connections/>
+</ui>
