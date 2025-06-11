@@ -83,3 +83,19 @@ resource_rc.py와 *.ui가 같은 경로이면 되는 것 같네요.
 - (QDialog) judgeWindow : 메인 창
 - (QTextBrowser) judgeText : 판결문 텍스트
 - (QPushButton) backButton : 뒤로가기 버튼
+
+### [textInputWindow]
+- (QDialog) textInputWindow : 메인 창
+- (QTextEdit) inputTextBox : 입력 텍스트박스
+- (QPushButton) textButton : 입력 버튼
+
+### [evidenceWindow]
+- (QDialog) textInputWindow : 메인 창
+- (QLabel) evidenceLabel1 : 증거품 목록 1
+- (QLabel) evidenceLabel2 : 증거품 목록 2
+- (QLabel) evidenceLabel3 : 증거품 목록 3
+- (QLabel) evidenceLabel4 : 증거품 목록 4
+
+### [overviewWindow]
+- (QDialog) textInputWindow : 메인 창
+- (QTextBrowser) overviewText : 사건 개요 텍스트

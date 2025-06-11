@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>textInputWindow</class>
+ <widget class="QDialog" name="textInputWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>761</width>
+    <height>111</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QDialog{
+	background-color: rgb(15, 39, 72);
+}</string>
+  </property>
+  <widget class="QTextEdit" name="inputTextBox">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>671</width>
+     <height>91</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="textButton">
+   <property name="geometry">
+    <rect>
+     <x>690</x>
+     <y>10</y>
+     <width>61</width>
+     <height>91</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	background-color: rgb(47, 90, 104);
+	color: rgb(255, 254, 254);
+	border-radius: 10px;
+	font: 14pt &quot;나눔고딕 ExtraBold&quot;;
+}
+
+QPushButton:hover{
+	background-color: rgb(67, 129, 148);
+	border-radius: 10px;
+	font: 17pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	background-color: rgb(0, 123, 255);
+	border-radius: 10px;
+	font: 17pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>입력</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
