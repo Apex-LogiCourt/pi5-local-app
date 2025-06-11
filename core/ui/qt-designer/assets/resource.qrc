@@ -1,0 +1,69 @@
+<RCC>
+  <qresource prefix="assets">
+    <file>profile/Bomdal.png</file>
+    <file>profile/Bomdal_angry.png</file>
+    <file>profile/Bomdal_unfair.png</file>
+    <file>profile/Eunyoung.png</file>
+    <file>profile/Eunyoung_angry.png</file>
+    <file>profile/Eunyoung_unfair.png</file>
+    <file>profile/Ian.png</file>
+    <file>profile/Ian_angry.png</file>
+    <file>profile/Ian_unfair.png</file>
+    <file>profile/Jihoon.png</file>
+    <file>profile/Jihoon_angry.png</file>
+    <file>profile/Jihoon_unfair.png</file>
+    <file>profile/Jooahn.png</file>
+    <file>profile/Jooahn_angry.png</file>
+    <file>profile/Jooahn_unfair.png</file>
+    <file>profile/judge.png</file>
+    <file>profile/judge_verdict.png</file>
+    <file>profile/Kihyo.png</file>
+    <file>profile/Kihyo_angry.png</file>
+    <file>profile/Kihyo_unfair.png</file>
+    <file>profile/Kiseo.png</file>
+    <file>profile/Kiseo_angry.png</file>
+    <file>profile/Kiseo_unfair.png</file>
+    <file>profile/lawyer.png</file>
+    <file>profile/Minyoung.png</file>
+    <file>profile/Minyoung_angry.png</file>
+    <file>profile/Minyoung_unfair.png</file>
+    <file>profile/Prosecutor.png</file>
+    <file>profile/Sangdo.png</file>
+    <file>profile/Sangdo_angry.png</file>
+    <file>profile/Sangdo_unfair.png</file>
+    <file>profile/Seungpyo.png</file>
+    <file>profile/Seungpyo_angry.png</file>
+    <file>profile/Seungpyo_unfair.png</file>
+    <file>profile/Sohyun.png</file>
+    <file>profile/Sohyun_angry.png</file>
+    <file>profile/Sohyun_unfair.png</file>
+    <file>profile/Sunhee.png</file>
+    <file>profile/Sunhee_angry.png</file>
+    <file>profile/Sunhee_unfair.png</file>
+    <file>profile/Wontak.png</file>
+    <file>profile/Wontak_angry.png</file>
+    <file>profile/Wontak_unfair.png</file>
+    <file>profile/Younghwa.png</file>
+    <file>profile/Younghwa_angry.png</file>
+    <file>profile/Younghwa_unfair.png</file>
+  </qresource>
+  <qresource prefix="fonts">
+    <file alias="normal">NanumGothic.ttf</file>
+    <file alias="bold">NanumGothicBold.ttf</file>
+    <file alias="exBold">NanumGothicExtraBold.ttf</file>
+    <file alias="light">NanumGothicLight.ttf</file>
+  </qresource>
+  <qresource prefix="images">
+    <file>mic_off.png</file>
+    <file>mic_on.png</file>
+    <file>logo.png</file>
+    <file>imageNotFound.png</file>
+    <file>back_arrow.png</file>
+    <file>background1.png</file>
+    <file>evidence_icon.png</file>
+    <file>judge.png</file>
+    <file>background2.png</file>
+    <file>stand.png</file>
+    <file>start.png</file>
+  </qresource>
+</RCC>
