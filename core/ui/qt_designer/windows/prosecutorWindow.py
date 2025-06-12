@@ -6,11 +6,12 @@ from PyQt5 import uic
 class ProsecutorWindow(QDialog):
     # 시그널 정의
     
-    def __init__(self, uiController, gameController, parent=None):
+    def __init__(self, uiController, gameController, case_data, parent=None):
         super().__init__(parent)
 
         self.uiController = uiController
         self.gameController = gameController
+        self.case_data = case_data
         
         # UI 파일 로드
         ui_path = os.path.join(os.path.dirname(__file__), '..', 'prosecutorWindow.ui')
@@ -86,6 +87,8 @@ class ProsecutorWindow(QDialog):
 # 테스트용 메인 함수
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    ui_controller = None  # UI 컨트롤러 인스턴스
+
     window = ProsecutorWindow()
     window.show()
     sys.exit(app.exec_())
