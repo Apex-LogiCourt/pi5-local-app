@@ -22,11 +22,13 @@ class TextInputWindow(QDialog):
         """버튼 연결 설정"""
         self.textButton.clicked.connect(self._submit_text)
         
-    async def _submit_text(self):
+    def _submit_text(self):
         """텍스트 입력 처리"""
         text = self.inputTextBox.toPlainText().strip()
+
         if text:
-            turn_check = await self.gc.user_input(text)
+            turn_check = asyncio.create_task(self.gc.user_input(text))
+            # turn_check = await self.gc.user_input(text)
             """이게 user_input 결과 값에 따라 turn 변경 여부가 다른데 ㅋㅋ;
             될지 안 될지 모르겠지만 이렇게 해뒀습니다 
             """

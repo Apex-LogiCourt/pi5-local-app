@@ -260,8 +260,6 @@ class UiController():
     def _handle_text_input(self, text):
         """텍스트 입력 처리"""
         print(f"입력받은 텍스트: {text}")
-        # TODO: GameController로 텍스트 전달
-        # asyncio.create_task(self.game_controller.user_input(text))
 
 
 
