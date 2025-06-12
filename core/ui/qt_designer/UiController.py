@@ -11,23 +11,12 @@ from data_models import CaseData, Evidence, Profile
 from game_controller import GameController
 
 from windows.gameDescriptionWindow import GameDescriptionWindow
-from windows.prosecutorWindow import ProsecutorWindow
+from windows.evidenceWindow import EvidenceWindow
+from windows.common import BaseCourtWindow
+from windows.overviewWindow import OverviewWindow
+from windows.judgeWindow import JudgeWindow
 
 import resource_rc
-
-#UI 연결. 단, UI파일은 Python 코드 파일과 같은 디렉토리에 위치해야한다.
-startWindowUi = uic.loadUiType("core/ui/qt_designer/startWindow.ui")[0]
-descriptionWindowUi = uic.loadUiType("core/ui/qt_designer/gameDescriptionWindow.ui")[0]
-generateWindowUi = uic.loadUiType("core/ui/qt_designer/generateWindow.ui")[0]
-generateWindow2Ui = uic.loadUiType("core/ui/qt_designer/generateWindow2.ui")[0]
-interrogationWindowUi = uic.loadUiType("core/ui/qt_designer/interrogationWindow.ui")[0]
-judgeWindowUi = uic.loadUiType("core/ui/qt_designer/judgeWindow.ui")[0]
-lawyerWindowUi = uic.loadUiType("core/ui/qt_designer/lawyerWindow.ui")[0]
-overviewWindowUi = uic.loadUiType("core/ui/qt_designer/overviewWindow.ui")[0]
-prosecutorWindowUi = uic.loadUiType("core/ui/qt_designer/prosecutorWindow.ui")[0]
-textInputWindowUi = uic.loadUiType("core/ui/qt_designer/textInputWindow.ui")[0]
-evidenceWindowUi = uic.loadUiType("core/ui/qt_designer/evidenceWindow.ui")[0]
-
 
 class UiController():
     _instance = None
@@ -46,8 +35,6 @@ class UiController():
         self.init_game_controller()
         self.startWindow()
         self.createWindowInstance()
-        self.descriptionWindowInstance.show()
-        self.prosecutorWindowInstance.show()
 
     def startWindow(self):
         # app = QApplication(sys.argv)
@@ -62,9 +49,9 @@ class UiController():
         if hasattr(GameController, '_is_initialized'):
             if GameController._is_initialized:
                 print("GameController is already initialized. Loading case data...")
-                self.setStartButtonState(True, "게임 시작")
                 self.is_gc_initialized = True
                 self.case_data = GameController._case_data
+                self.setStartButtonState(True, "게임 시작")
                 self.createWindowInstance()
             else:
                 print("GameController is not initialized. Attempting to initialize...")
@@ -79,12 +66,20 @@ class UiController():
         self.generateWindowInstance = None
         self.generateWindow2Instance = None
         self.interrogationWindowInstance = None
-        self.judgeWindowInstance = None
-        self.lawyerWindowInstance = None
-        self.overviewWindowInstance = None
-        self.prosecutorWindowInstance = ProsecutorWindow(self._instance, self.game_controller)
+        self.judgeWindowInstance = JudgeWindow(self._instance, self.game_controller, self.case_data)
+        self.overviewWindowInstance = OverviewWindow(self.case_data.case.outline)
+        self.lawyerWindowInstance = BaseCourtWindow(self._instance, self.game_controller, self.case_data, "lawyerWindow.ui")
+        self.prosecutorWindowInstance = BaseCourtWindow(self._instance, self.game_controller, self.case_data, "prosecutorWindow.ui")
         self.textInputWindowInstance = None
-        self.evidenceWindowInstance = None
+        self.evidenceWindowInstance = EvidenceWindow(self.case_data.evidences) #evidence: List
+        #이하는 테스트
+        self.descriptionWindowInstance.show()
+        self.prosecutorWindowInstance.show()
+        self.evidenceWindowInstance.show()
+        self.judgeWindowInstance.show()
+        self.overviewWindowInstance.show()
+        self.lawyerWindowInstance.show()
+        # QMessageBox.warning(self.prosecutorWindowInstance, "알림", "재판과 관련 없는 내용입니다.")
 
     async def restart_game_flow(self): #최종 판결문에서 뒤로가기 버튼 누를 시 호출
         print("Restarting game flow...")
@@ -109,6 +104,8 @@ class UiController():
         # 시작 버튼 상태 설정
         # startWindowInstance.setStartButtonState(state, msg)
         pass
+
+
 
 if __name__ == "__main__" :
     #QApplication : 프로그램을 실행시켜주는 클래스
