@@ -159,22 +159,6 @@ class UiController(QObject):
                 else:
                     print("ERROR: GameController does not have 'done' method to trigger final verdict.")
 
-
-        elif code == "initialized":
-            print("Signal 'initialized' received from GameController.")
-            if arg is None : # GameController.initialize()의 반환값이 None일 경우에 대한 방어 코드
-                print("ERROR: 'initialized' signal received with None argument. Attempting re-initialization.")
-                self.is_gc_initialized = False
-                self.case_data = None
-                QMessageBox.critical(None, "초기화 오류", "게임 데이터 초기화에 실패했습니다. 다시 시도합니다.")
-                self.init_game_controller() # 재시도
-                return
-            self.case_data = arg # GameController.initialize()가 CaseData 객체를 반환하고, 그것이 arg로 전달된다고 가정
-            self.is_gc_initialized = True
-            self.setStartButtonState(True, "게임 시작")
-            print("GameController initialized successfully. Case data loaded.")
-
-
         elif code == "evidence_changed":
             pass
 
