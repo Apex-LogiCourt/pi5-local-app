@@ -185,6 +185,7 @@ class UiController():
 
 
         elif code == "interrogation": # GameController의 user_input에서 이 시그널을 사용 ("interrogation_dialogue" 대신)
+            self.isInterrogation = True
             if isinstance(arg, dict):
                 self.interrogationWindowInstance.update_dialogue(arg.get("role","??"), arg.get("message","..."))
             else:
@@ -206,12 +207,20 @@ class UiController():
 
 
         elif code == "record_start":
+            if self.isInterrogation:
+                self.interrogationWindowInstance.set_mic_button_state(True)
+                return
+
             if self.isTurnProsecutor:
                 self.prosecutorWindowInstance.toggle_mic_state()
             else:
                 self.lawyerWindowInstance.toggle_mic_state()
 
         elif code == "record_stop":
+            if self.isInterrogation:
+                self.interrogationWindowInstance.set_mic_button_state(False)
+                return
+
             if self.isTurnProsecutor:
                 self.prosecutorWindowInstance.toggle_mic_state()
             else:

@@ -74,8 +74,9 @@ class InterrogationWindow(QDialog):
         
     def _go_back(self):
         """뒤로 가기"""
+        self.gc.interrogation_end()
+        self.uc.isInterrogation = False
         self.close()
-        # TODO: 이전 화면으로 돌아가기
         
     def _open_text_input(self):
         """텍스트 입력창 열기"""
