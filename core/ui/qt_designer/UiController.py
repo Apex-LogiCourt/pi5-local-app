@@ -17,6 +17,7 @@ from ui.qt_designer.windows.overviewWindow import OverviewWindow
 from ui.qt_designer.windows.judgeWindow import JudgeWindow
 from ui.qt_designer.windows.warningWindow import WarningWindow
 from ui.qt_designer.windows.generateWindow import GenerateWindow
+from ui.qt_designer.windows.textInputWindow import TextInputWindow
 
 import ui.qt_designer.resource_rc 
 
@@ -78,7 +79,6 @@ class UiController():
         self.prosecutorWindowInstance.show()
         self.evidenceWindowInstance.show()
         self.judgeWindowInstance.show()
-        self.overviewWindowInstance.show()
         self.lawyerWindowInstance.show()
         self.warningWindowInstance.show()
         self.generateWindowInstance.show()
@@ -230,6 +230,14 @@ class UiController():
     def open_description_window(self):
         self.descriptionWindowInstance.show()
     
+    def open_text_input_window(self):
+        self.textInputWindowInstance.show()
+        
+    def _handle_text_input(self, text):
+        """텍스트 입력 처리"""
+        print(f"입력받은 텍스트: {text}")
+        # TODO: GameController로 텍스트 전달
+        # asyncio.create_task(self.game_controller.user_input(text))
 
 
 

@@ -23,6 +23,7 @@ class BaseCourtWindow(QDialog):
 
     def show_case_overview(self):
         """사건 개요 표시"""
+        self.uc.open_overview_window()
         # TODO: 사건 개요 창 열기
     
     def show_evidence(self):
@@ -31,7 +32,10 @@ class BaseCourtWindow(QDialog):
     
     def show_text_input(self):
         """텍스트 입력 창 표시"""
-        # TODO: 텍스트 입력 창 열기
+        if self.uc:
+            self.uc.open_text_input_window()
+        else:
+            print("UiController 인스턴스가 없습니다.")
     
     def _setup_ui(self):
         """공통 UI 초기 설정"""
@@ -142,8 +146,9 @@ if __name__ == "__main__":
         app = QApplication(sys.argv)
         # from ui.qt_designer.UiController import uiController  # UI 컨트롤러 임포트
         from game_controller import GameController  # 게임 컨트롤러 임포트
+        from ui.qt_designer.UiController import UiController
 
-        # ui_controller = uiController().get_instance()  # UI 컨트롤러 인스턴스
+        uc= UiController().get_instance()  # UI 컨트롤러 인스턴스
         gc = GameController().get_instance()  # 게임 컨트롤러 인스턴스
         
         # GameController 초기화 (비동기)
@@ -152,7 +157,7 @@ if __name__ == "__main__":
         cd = gc._case_data
 
         # window = ProsecutorWindow(ui_controller, game_controller, case_data)
-        window = ProsecutorWindow(None, gc, cd)
+        window = ProsecutorWindow(uc, gc, cd)
         window.show()
         sys.exit(app.exec_())
     
