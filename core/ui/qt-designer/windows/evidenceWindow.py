@@ -5,6 +5,7 @@ from PyQt5 import uic
 from typing import List
 from data_models import Evidence 
 
+"""미완!!!"""
 class EvidenceWindow(QDialog):
     """생성자에 evidence 리스트랑 부모 윈도우 받기"""
     def __init__(self, evidences: List, parent=None):
