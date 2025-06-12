@@ -109,7 +109,7 @@ class UiController():
              await GameController.initialize() # initialize가 CaseData를 반환하지만, 시그널로도 받을 것이므로 여기서는 호출만.
         else:
             print("ERROR: GameController has no 'initialize' method for re-initialization.")
-            QMessageBox.critical(self, "초기화 오류", "게임 데이터 초기화에 실패했습니다.")
+            QMessageBox.critical(None, "초기화 오류", "게임 데이터 초기화에 실패했습니다.")
         # "initialized" 시그널이 GameController로부터 오면 is_gc_initialized, case_data가 설정되고 로딩 다이얼로그가 닫힘.
 
     def setStartButtonState(self, state: bool, msg: str):
@@ -135,8 +135,8 @@ class UiController():
         elif code == "interrogation_accepted":
             if isinstance(arg, dict):
                 print(f"Interrogation accepted for {arg.get('type')}. Judge: {arg.get('message')}")
-                if self.interrogation_screen_instance and self.stacked_layout.currentWidget() == self.interrogation_screen_instance:
-                    self.interrogation_screen_instance.update_dialogue(arg.get("role", "판사"), arg.get("message","심문을 시작합니다."))
+                # interrogationWindowClass 구현 후 확인 필요
+                self.interrogationWindowInstance.func(arg.get("role", "판사"), arg.get("message","심문을 시작합니다."))
 
         elif code == "objection":
             if isinstance(arg, dict):
@@ -163,7 +163,6 @@ class UiController():
                 QMessageBox.critical(None, "초기화 오류", "게임 데이터 초기화에 실패했습니다. 다시 시도합니다.")
                 self.init_game_controller() # 재시도
                 return
-
             self.case_data = arg # GameController.initialize()가 CaseData 객체를 반환하고, 그것이 arg로 전달된다고 가정
             self.is_gc_initialized = True
             self.setStartButtonState(True, "게임 시작")
@@ -171,20 +170,20 @@ class UiController():
 
 
         elif code == "evidence_changed":
-            print(f"Evidence changed: {arg}")
-            # GameController에서 Evidence 객체 또는 dict가 온다고 가정
-            # self.case_data.evidences 리스트 업데이트 로직 필요
+            pass
+
 
         elif code == "evidence_tagged": # 또는 "evidence_taged" (이슈의 오타일 수 있음)
             print(f"Evidence tagged: {arg}")
             # self.case_data.evidences 리스트 업데이트 로직 필요
 
+
         elif code == "interrogation": # GameController의 user_input에서 이 시그널을 사용 ("interrogation_dialogue" 대신)
-            if self.interrogation_screen_instance and self.stacked_layout.currentWidget() == self.interrogation_screen_instance:
-                if isinstance(arg, dict): # GameController에서 {"role": str, "message": str} 형태로 보냄
-                    self.interrogation_screen_instance.update_dialogue(arg.get("role","??"), arg.get("message","..."))
-                else:
-                    self.interrogation_screen_instance.update_dialogue("AI", str(arg)) # 단순 문자열로 올 경우
+            if isinstance(arg, dict):
+                self.interrogationWindowInstance.func(arg.get("role","??"), arg.get("message","..."))
+            else:
+                self.interrogationWindowInstance.func("AI", str(arg))
+        
 
         # GameController 이슈에 명시된 'verdict' 시그널은 판결 '내용' 스트리밍을 위한 것일 수 있습니다.
         # 현재 GameController 코드에서는 'judgement' 시그널로 판결 '시작'을 알리고 있습니다.
@@ -214,7 +213,7 @@ class UiController():
         
         elif code == "error_occurred":
             error_message = str(arg) if arg else "알 수 없는 오류가 발생했습니다."
-            QMessageBox.critical(self, "오류 발생", error_message)
+            QMessageBox.critical(None, "오류 발생", error_message)
             if self.loading_dialog: self.loading_dialog.accept()
             # 오류 상황에 따라 UI 상태 복구 또는 재시도 버튼 활성화
             if not self.is_gc_initialized :
