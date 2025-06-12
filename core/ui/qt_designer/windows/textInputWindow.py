@@ -33,14 +33,15 @@ class TextInputWindow(QDialog):
             될지 안 될지 모르겠지만 이렇게 해뒀습니다 
             """
             if turn_check:
-                if self.uc.isTurnProsecutor :
-                    self.uc.open_lawyer_window()
-                    self.uc.prosecutorWindowInstance.close()
-                else :
-                    self.uc.open_prosecutor_window()
-                    self.uc.lawyerWindowInstance.close()
+                pass
+                # if self.uc.isTurnProsecutor :
+                #     self.uc.open_lawyer_window()
+                #     self.uc.prosecutorWindowInstance.close()
+                # else :
+                #     self.uc.open_prosecutor_window()
+                #     self.uc.lawyerWindowInstance.close()
             self.inputTextBox.clear()
-            self.close()
+            # self.close()
     
 
 # 테스트용 메인 함수
