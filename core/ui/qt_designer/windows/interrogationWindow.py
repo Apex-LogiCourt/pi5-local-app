@@ -53,25 +53,9 @@ class InterrogationWindow(QDialog):
         self.smallEvidenceLabel.clicked.connect(self._show_evidence)
         self.largeEvidenceLabel.clicked.connect(self._show_evidence)
         
-    def show_profile(self, profile_index):
+    def show_profile(self):
         """프로필 표시"""
-        if self.case_data and self.case_data.profiles and 0 <= profile_index < len(self.case_data.profiles):
-            profile = self.case_data.profiles[profile_index]
-            self.current_profile_index = profile_index
-            
-            # 프로필 이름 표시
-            self.profileTextLabel.setText(f"{profile.name}")
-            
-            # 프로필 이미지 설정 (경로가 있다면)
-            if hasattr(profile, 'image_path') and profile.image_path:
-                pixmap = QPixmap(profile.image_path)
-                if not pixmap.isNull():
-                    self.profileImage.setPixmap(pixmap.scaled(
-                        self.profileImage.size(), 
-                        aspectRatioMode=1,  # Qt.KeepAspectRatio
-                        transformMode=1     # Qt.SmoothTransformation
-                    ))
-            
+
     def update_dialogue(self, message):
         """대화 업데이트"""
         self.textLabel.setText(f"[{self.type}]: {message}")
