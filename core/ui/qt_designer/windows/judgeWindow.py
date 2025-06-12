@@ -41,6 +41,8 @@ class JudgeWindow(QDialog):
         self.uiController.restart_game_flow()
         # self.uiController.nowJudgement = False
         self.close()
+        self.uiController.hideAllWindow()
+        self.uiController.open_start_window()
 
 # 테스트용 메인 함수
 if __name__ == "__main__":

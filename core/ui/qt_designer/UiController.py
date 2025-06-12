@@ -195,7 +195,8 @@ class UiController(QObject):
         # 'verdict' 시그널의 arg가 실제 판결 내용 문자열이어야 합니다.
         # 아래는 임시로 "verdict" 시그널이 판결 내용 청크라고 가정하고 작성.
         elif code == "verdict": # 판결 내용 청크 (가정)
-            self.judgeWindowInstance.set_judge_text_add(str(arg))
+            self.judgeWindowInstance.set_judge_text(str(arg))
+            # self.judgeWindowInstance.set_judge_text_add(str(arg))
 
         # 만약 GameController가 판결 요약과 진실을 구분해서 보낸다면,
         # "verdict_summary_chunk", "verdict_summary_done", "truth_chunk", "truth_done" 같은
