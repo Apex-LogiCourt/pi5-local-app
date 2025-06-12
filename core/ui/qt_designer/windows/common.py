@@ -119,10 +119,10 @@ class BaseCourtWindow(QDialog):
             asyncio.create_task(self.gc.record_end())
             self.toggle_mic_state()
     
-    # def show_profile(self, profile_n새새um):
-    #     """등장인물 프로필 표시"""
-    #     print(f"등장인물 {profile_num} 버튼 클릭됨")
-    #     # TODO: 등장인물 프로필 창 열기 근데 없음 
+    def show_profile(self, profile_num):
+        """등장인물 프로필 표시"""
+        print(f"등장인물 {profile_num} 버튼 클릭됨")
+        # TODO: 등장인물 프로필 창 열기 근데 없음 
 
 class ProsecutorWindow(BaseCourtWindow):
     def __init__(self, uiController, gameController, case_data, parent=None):
@@ -132,6 +132,7 @@ class ProsecutorWindow(BaseCourtWindow):
 
     def _turn_change(self):
         self.uc.open_lawyer_window()
+        self.gc._switch_turn()
         self.close()
 
     # def _end_turn(self):
@@ -147,6 +148,7 @@ class LawyerWindow(BaseCourtWindow):
 
     def _turn_change(self):
         self.uc.open_prosecutor_window()
+        self.gc._switch_turn()
         self.close()
 
     # def _end_turn(self):
