@@ -19,6 +19,7 @@ from ui.qt_designer.windows.warningWindow import WarningWindow
 from ui.qt_designer.windows.generateWindow import GenerateWindow
 from ui.qt_designer.windows.interrogationWindow import InterrogationWindow
 from ui.qt_designer.windows.textInputWindow import TextInputWindow
+from ui.qt_designer.windows.startWindow import StartWindow
 
 import ui.qt_designer.resource_rc 
 
@@ -56,6 +57,7 @@ class UiController():
                 self.case_data = GameController._case_data
                 self.setStartButtonState(True, "게임 시작")
                 self.createWindowInstance()
+                self.startWindowInstance.show()
             else:
                 print("GameController is not initialized. Attempting to initialize...")
                 asyncio.ensure_future(GameController.initialize())
@@ -64,7 +66,7 @@ class UiController():
             self.setStartButtonState(False, "컨트롤러 오류 (재시도)")
     
     def createWindowInstance(self):
-        self.startWindowInstance = None
+        self.startWindowInstance = StartWindow(self._instance, self.game_controller)
         self.descriptionWindowInstance = GameDescriptionWindow()
         self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
         self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, self.case_data)
@@ -75,18 +77,6 @@ class UiController():
         self.textInputWindowInstance = TextInputWindow(self._instance, self.game_controller)
         self.evidenceWindowInstance = EvidenceWindow(self.case_data.evidences) #evidence: List
         self.warningWindowInstance = WarningWindow("재판과 관련 없는 내용입니다.")
-        #이하는 테스트
-        self.interrogationWindowInstance.update_dialogue("테스트","테스트문자열입니다")
-        self.descriptionWindowInstance.show()
-        self.prosecutorWindowInstance.show()
-        self.evidenceWindowInstance.show()
-        self.judgeWindowInstance.show()
-        self.lawyerWindowInstance.show()
-        self.warningWindowInstance.show()
-        self.generateWindowInstance.show()
-        self.interrogationWindowInstance.show()
-        self.overviewWindowInstance.show()
-        self.textInputWindowInstance.show()
 
     def hideAllWindow(self):
         self.startWindowInstance.hide()
@@ -237,6 +227,9 @@ class UiController():
         else:
             print(f"[{self.__class__.__name__}] Unknown signal code: {code}")
     
+    def open_generate_window(self):
+        self.generateWindowInstance.show()
+
     def open_prosecutor_window(self):
         self.prosecutorWindowInstance.show()
         self.isTurnProsecutor = True
