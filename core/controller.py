@@ -188,6 +188,7 @@ class CaseDataManager:
                 gender = character_info['gender']
                 age = character_info['age']
                 voice = character_info.get('voice', "")  # voice 정보 가져오기 (.get으로 안전하게)
+                image = character_info.get('image', "")  # image 정보 가져오기 (.get으로 안전하게)
 
             profiles.append(Profile(
                 type=profile_type,
@@ -196,7 +197,8 @@ class CaseDataManager:
                 age=int(age),
                 personality=personality,
                 context=context,
-                voice=voice
+                voice=voice,
+                image=image
             ))
         return profiles
     
