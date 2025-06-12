@@ -17,6 +17,7 @@ from ui.qt_designer.windows.overviewWindow import OverviewWindow
 from ui.qt_designer.windows.judgeWindow import JudgeWindow
 from ui.qt_designer.windows.warningWindow import WarningWindow
 from ui.qt_designer.windows.generateWindow import GenerateWindow
+from ui.qt_designer.windows.interrogationWindow import InterrogationWindow
 
 import ui.qt_designer.resource_rc 
 
@@ -65,7 +66,7 @@ class UiController():
         self.startWindowInstance = None
         self.descriptionWindowInstance = GameDescriptionWindow()
         self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
-        self.interrogationWindowInstance = None
+        self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, self.case_data)
         self.judgeWindowInstance = JudgeWindow(self._instance, self.game_controller, self.case_data)
         self.overviewWindowInstance = OverviewWindow(self.case_data.case.outline)
         self.lawyerWindowInstance = LawyerWindow(self._instance, self.game_controller, self.case_data)
@@ -74,6 +75,7 @@ class UiController():
         self.evidenceWindowInstance = EvidenceWindow(self.case_data.evidences) #evidence: List
         self.warningWindowInstance = WarningWindow("재판과 관련 없는 내용입니다.")
         #이하는 테스트
+        self.interrogationWindowInstance.update_dialogue("ㅁㅁㅁ","ㄴㄴㄴㄴㄴㄴㄴ")
         self.descriptionWindowInstance.show()
         self.prosecutorWindowInstance.show()
         self.evidenceWindowInstance.show()
@@ -81,6 +83,8 @@ class UiController():
         self.lawyerWindowInstance.show()
         self.warningWindowInstance.show()
         self.generateWindowInstance.show()
+        self.interrogationWindowInstance.show()
+        self.overviewWindowInstance.show()
 
     def hideAllWindow(self):
         self.startWindowInstance.hide()
@@ -180,9 +184,9 @@ class UiController():
 
         elif code == "interrogation": # GameController의 user_input에서 이 시그널을 사용 ("interrogation_dialogue" 대신)
             if isinstance(arg, dict):
-                self.interrogationWindowInstance.func(arg.get("role","??"), arg.get("message","..."))
+                self.interrogationWindowInstance.update_dialogue(arg.get("role","??"), arg.get("message","..."))
             else:
-                self.interrogationWindowInstance.func("AI", str(arg))
+                self.interrogationWindowInstance.update_dialogue("AI", str(arg))
         
 
         # GameController 이슈에 명시된 'verdict' 시그널은 판결 '내용' 스트리밍을 위한 것일 수 있습니다.
