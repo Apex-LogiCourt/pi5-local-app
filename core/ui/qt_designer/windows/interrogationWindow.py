@@ -7,12 +7,12 @@ from PyQt5.QtGui import QPixmap
 import asyncio
 
 class InterrogationWindow(QDialog):
-    def __init__(self, uiController, gameController, case_data, parent=None):
+    def __init__(self, uiController, gameController, profileImg, parent=None):
         super().__init__(parent)
         
         self.uc = uiController
         self.gc = gameController
-        self.case_data = case_data
+        self.profile = profileImg
         self.mic_on = False
         self.current_profile_index = 0  # 현재 표시 중인 프로필 인덱스
         
