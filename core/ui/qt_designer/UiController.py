@@ -18,6 +18,7 @@ from ui.qt_designer.windows.judgeWindow import JudgeWindow
 from ui.qt_designer.windows.warningWindow import WarningWindow
 from ui.qt_designer.windows.generateWindow import GenerateWindow
 from ui.qt_designer.windows.interrogationWindow import InterrogationWindow
+from ui.qt_designer.windows.textInputWindow import TextInputWindow
 
 import ui.qt_designer.resource_rc 
 
@@ -71,11 +72,11 @@ class UiController():
         self.overviewWindowInstance = OverviewWindow(self.case_data.case.outline)
         self.lawyerWindowInstance = LawyerWindow(self._instance, self.game_controller, self.case_data)
         self.prosecutorWindowInstance = ProsecutorWindow(self._instance, self.game_controller, self.case_data)
-        self.textInputWindowInstance = None
+        self.textInputWindowInstance = TextInputWindow(self._instance, self.game_controller)
         self.evidenceWindowInstance = EvidenceWindow(self.case_data.evidences) #evidence: List
         self.warningWindowInstance = WarningWindow("재판과 관련 없는 내용입니다.")
         #이하는 테스트
-        self.interrogationWindowInstance.update_dialogue("ㅁㅁㅁ","ㄴㄴㄴㄴㄴㄴㄴ")
+        self.interrogationWindowInstance.update_dialogue("테스트","테스트문자열입니다")
         self.descriptionWindowInstance.show()
         self.prosecutorWindowInstance.show()
         self.evidenceWindowInstance.show()
@@ -85,6 +86,7 @@ class UiController():
         self.generateWindowInstance.show()
         self.interrogationWindowInstance.show()
         self.overviewWindowInstance.show()
+        self.textInputWindowInstance.show()
 
     def hideAllWindow(self):
         self.startWindowInstance.hide()
