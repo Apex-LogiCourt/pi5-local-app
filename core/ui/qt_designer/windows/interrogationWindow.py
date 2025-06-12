@@ -7,18 +7,27 @@ from PyQt5.QtGui import QPixmap
 import asyncio
 
 class InterrogationWindow(QDialog):
-    def __init__(self, uiController, gameController, case_data, parent=None):
+    def __init__(self, uiController, gameController, profile, parent=None):
         super().__init__(parent)
-        
         self.uc = uiController
         self.gc = gameController
-        self.case_data = case_data
+        self.profile = profile
         self.mic_on = False
-        self.current_profile_index = 0  # 현재 표시 중인 프로필 인덱스
-        
+
+
         # UI 파일 로드
         ui_path = os.path.join(os.path.dirname(__file__), '..', 'interrogationWindow.ui')
         uic.loadUi(ui_path, self)
+
+
+        type_mapping = {
+            "witness": "증인",
+            "reference": "참고인",
+            "defendant": "피고인", 
+            "victim": "피해자"
+        }
+        self.type = type_mapping.get(profile.type, "알 수 없음")
+
         
         self._setup_ui()
         self._setup_connections()
@@ -28,10 +37,13 @@ class InterrogationWindow(QDialog):
         # 기본 텍스트 설정
         self.textLabel.setText("심문을 시작합니다.")
         self.profileTextLabel.setText("")
+    
+
+    
+
         
-        # 첫 번째 프로필 표시 (있다면)
-        if self.case_data and self.case_data.profiles:
-            self.show_profile(0)
+
+        
         
     def _setup_connections(self):
         """버튼 연결 설정"""
@@ -41,32 +53,13 @@ class InterrogationWindow(QDialog):
         self.smallEvidenceLabel.clicked.connect(self._show_evidence)
         self.largeEvidenceLabel.clicked.connect(self._show_evidence)
         
-    def show_profile(self, profile_index):
+    def show_profile(self):
         """프로필 표시"""
-        if self.case_data and self.case_data.profiles and 0 <= profile_index < len(self.case_data.profiles):
-            profile = self.case_data.profiles[profile_index]
-            self.current_profile_index = profile_index
-            
-            # 프로필 이름 표시
-            self.profileTextLabel.setText(f"{profile.name}")
-            
-            # 프로필 이미지 설정 (경로가 있다면)
-            if hasattr(profile, 'image_path') and profile.image_path:
-                pixmap = QPixmap(profile.image_path)
-                if not pixmap.isNull():
-                    self.profileImage.setPixmap(pixmap.scaled(
-                        self.profileImage.size(), 
-                        aspectRatioMode=1,  # Qt.KeepAspectRatio
-                        transformMode=1     # Qt.SmoothTransformation
-                    ))
-            
-    def update_dialogue(self, speaker, message):
+
+    def update_dialogue(self, message):
         """대화 업데이트"""
-        self.textLabel.setText(f"{speaker}: {message}")
-        
-    def set_profile_text(self, text):
-        """프로필 텍스트 설정"""
-        self.profileTextLabel.setText(text)
+        self.textLabel.setText(f"[{self.type}]: {message}")
+
         
     def set_main_text(self, text):
         """메인 텍스트 설정"""
