@@ -137,7 +137,7 @@ class GameController(QObject):
             
             def handle_response(sentence):
                 # 심문 응답을 처리하는 콜백
-                asyncio.create_task(handler_tts_service(sentence, cls._state.current_profile.voice))
+                # asyncio.create_task(handler_tts_service(sentence, cls._state.current_profile.voice))
                 cls._send_signal("interrogation", {
                     "role": cls._state.current_profile.name if cls._state.current_profile else "증인",
                     "message": sentence
@@ -145,7 +145,9 @@ class GameController(QObject):
                 # cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", sentence)
                 
             response_text = await run_chain_streaming(it.build_ask_chain(text, cls._state.current_profile), handle_response)
+            asyncio.create_task(handler_tts_service(response_text, cls._state.current_profile.voice))
             cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", response_text)
+            
         # print(f"user_input() called, 현재 턴{cls._state.turn}")
         return True
 
