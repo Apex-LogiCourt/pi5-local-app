@@ -188,16 +188,16 @@ class UiController():
 
 
         elif code == "record_start":
-            print("Signal 'record_start' received. Turning mic button ON.")
-            current_screen = self.stacked_layout.currentWidget()
-            if hasattr(current_screen, 'set_mic_button_state'):
-                current_screen.set_mic_button_state(True)
+            if self.turn == "prosecutor":
+                self.prosecutorWindowInstance.toggle_mic_state()
+            elif self.turn == "lawyer":
+                self.lawyerWindowInstance.toggle_mic_state()
 
         elif code == "record_stop":
-            print("Signal 'record_stop' received. Turning mic button OFF.")
-            current_screen = self.stacked_layout.currentWidget()
-            if hasattr(current_screen, 'set_mic_button_state'):
-                current_screen.set_mic_button_state(False)
+            if self.turn == "prosecutor":
+                self.prosecutorWindowInstance.toggle_mic_state()
+            elif self.turn == "lawyer":
+                self.lawyerWindowInstance.toggle_mic_state()
         
         elif code == "error_occurred":
             error_message = str(arg) if arg else "알 수 없는 오류가 발생했습니다."
