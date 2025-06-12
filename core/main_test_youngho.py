@@ -7,7 +7,7 @@ from api.routers import state_router, websocket_router, evidence_router
 from game_controller import GameController
 
 from PyQt5.QtWidgets import QApplication
-from ui.qt_designer.ui_main import startWindowClass
+from core.ui.qt_designer.ui_controller import startWindowClass
 import uvicorn
 import qasync
 import threading
@@ -107,6 +107,8 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("애플리케이션 종료 중...")
     except Exception as e:
+        import traceback
         print(f"애플리케이션 오류: {e}")
+        traceback.print_exc()
     finally:
         loop.close()
