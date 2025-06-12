@@ -15,3 +15,6 @@ core/core.egg-info/
 data/evidence_resource/
 # 오디오 임시파일 제외
 data/audio_temp/
+
+
+**/resource_rc.py
