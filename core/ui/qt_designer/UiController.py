@@ -133,6 +133,7 @@ class UiController():
             if isinstance(arg, dict):
                 print(f"Interrogation accepted for {arg.get('type')}. Judge: {arg.get('message')}")
                 self.interrogationWindowInstance.update_dialogue(arg.get("role", "판사"), arg.get("message","심문을 시작합니다."))
+                self.interrogationWindowInstance.evidence_tag_reset()
                 self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, arg.get('type'))
 
         elif code == "objection":
@@ -172,7 +173,7 @@ class UiController():
 
         elif code == "evidence_tagged": # 또는 "evidence_taged" (이슈의 오타일 수 있음)
             print(f"Evidence tagged: {arg}")
-            # self.case_data.evidences 리스트 업데이트 로직 필요
+            self.interrogationWindowInstance.evidence_tagged()
 
 
         elif code == "interrogation": # GameController의 user_input에서 이 시그널을 사용 ("interrogation_dialogue" 대신)
