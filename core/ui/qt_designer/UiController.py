@@ -10,14 +10,14 @@ from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QTimer
 from data_models import CaseData, Evidence, Profile
 from game_controller import GameController
 
-from windows.gameDescriptionWindow import GameDescriptionWindow
-from windows.evidenceWindow import EvidenceWindow
-from windows.common import BaseCourtWindow
-from windows.overviewWindow import OverviewWindow
-from windows.judgeWindow import JudgeWindow
-from windows.warningWindow import WarningWindow
+from ui.qt_designer.windows.gameDescriptionWindow import GameDescriptionWindow
+from ui.qt_designer.windows.evidenceWindow import EvidenceWindow
+from ui.qt_designer.windows.common import BaseCourtWindow
+from ui.qt_designer.windows.overviewWindow import OverviewWindow
+from ui.qt_designer.windows.judgeWindow import JudgeWindow
+from ui.qt_designer.windows.warningWindow import WarningWindow
 
-import resource_rc
+import ui.qt_designer.resource_rc 
 
 class UiController():
     _instance = None
