@@ -76,7 +76,7 @@ class uiController():
         self.is_gc_initialized = False
         self.case_data = None
         self.setStartButtonState(False)
-        #시작화면 불러오기
+        #시작화면 불러오기 넣으셈
         
         # GameController 재초기화 (initialize 클래스 메소드 호출)
         if hasattr(GameController, 'initialize'):
