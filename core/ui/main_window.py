@@ -205,7 +205,7 @@ class MainWindow(QWidget):
             setattr(self, screen_attr_name, None)
             print(f"Cleaned up screen: {screen_attr_name}")
 
-    def handle_start_game_button(self):
+    def handle_start_game_button(self): #영호: 게임시작 버튼 이벤트
         if not self.is_gc_initialized or not self.case_data:
             QMessageBox.warning(self, "준비 중", "게임 데이터를 아직 로드 중입니다. 잠시 후 다시 시도해주세요.")
             if not self.is_gc_initialized: # 초기화 시도 (만약 실패했었다면)
