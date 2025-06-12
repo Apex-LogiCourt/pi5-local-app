@@ -37,4 +37,4 @@ uvicorn>=0.27.1
 langgraph>=0.0.20  # LangGraph 최신 버전
 replicate == 1.0.6
 
-pyqt5 >= 5.15, < 6.0  # PyQt5 GUI 라이브러리
+PyQt5 == 5.15.11
