@@ -34,14 +34,7 @@ class JudgeWindow(QDialog):
         """판결문 텍스트 설정"""
         self.judgeText.setPlainText(text)
     
-    def set_judge_html(self, html_text):
-        """판결문 HTML 텍스트 설정"""
-        self.judgeText.setHtml(html_text)
-    
     def go_back(self):
-        """뒤로가기"""
-        print("뒤로가기 버튼 클릭됨")
-        # TODO: 이전 화면으로 돌아가기
         self.close()
 
 # 테스트용 메인 함수

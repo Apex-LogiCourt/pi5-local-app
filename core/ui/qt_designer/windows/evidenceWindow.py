@@ -5,7 +5,6 @@ from PyQt5 import uic
 from typing import List
 from data_models import Evidence 
 
-"""미완!!!"""
 class EvidenceWindow(QDialog):
     """생성자에 evidence 리스트랑 부모 윈도우 받기"""
     def __init__(self, evidences: List, parent=None):
@@ -27,38 +26,37 @@ class EvidenceWindow(QDialog):
             self.evidenceLabel4
         ]
         
-        # 모든 라벨 초기화
-        for label in evidence_labels:
-            label.setText("")
-            label.hide()
-        
-        # 증거품 데이터로 라벨 설정 (최대 4개)
-        for i, evidence in enumerate(evidences[:4]):
-            if i < len(evidence_labels):
-                # Evidence 객체라면 name 속성 사용, dict라면 'name' 키 사용
-                if hasattr(evidence, 'name'):
-                    text = evidence.name
-                elif isinstance(evidence, dict):
-                    text = evidence.get('name', f'증거품 {i+1}')
-                else:
-                    text = str(evidence)
-                    
-                evidence_labels[i].setText(text)
-                evidence_labels[i].show()
+        evidence_descriptions = [
+            self.evidenceDescription1,
+            self.evidenceDescription2,
+            self.evidenceDescription3,
+            self.evidenceDescription4
+        ]
 
+        for i, evidence in enumerate(evidences):
+            evidence_labels[i].setText(evidence.name)
+            evidence_descriptions[i].setText("\n".join(evidence.description))
+        
 # 테스트용 메인 함수
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    import asyncio
     
-    # 테스트용 증거품 데이터
-    test_evidences = [
-        {"name": "피해자의 지갑"},
-        {"name": "범인의 지문이 발견된 칼"},
-        {"name": "CCTV 녹화 영상"},
-        {"name": "목격자 진술서"}
-    ]
+    async def main():
+        app = QApplication(sys.argv)
+        
+        from game_controller import GameController  # 게임 컨트롤러 임포트
+        
+        gc = GameController.get_instance()  # 게임 컨트롤러 인스턴스
+        
+        await gc.initialize()  # 게임 컨트롤러 초기화 (비동기)
+        await gc.start_game()  # 게임 시작 (비동기)
+        
+        evidences = gc._case_data.evidences  # 게임 컨트롤러에서 증거 리스트 가져오기
+        
+        window = EvidenceWindow(evidences)
+        window.show()
+        
+        sys.exit(app.exec_())
     
-    window = EvidenceWindow(test_evidences)
-    window.show()
-    
-    sys.exit(app.exec_())
+    # 비동기 함수 실행
+    asyncio.run(main())
