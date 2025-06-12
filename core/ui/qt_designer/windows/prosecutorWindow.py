@@ -87,8 +87,14 @@ class ProsecutorWindow(QDialog):
 # 테스트용 메인 함수
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    ui_controller = None  # UI 컨트롤러 인스턴스
+    from ui.qt_designer.ui_controller import uiController  # UI 컨트롤러 임포트
+    from game_controller import GameController  # 게임 컨트롤러 임포트
 
-    window = ProsecutorWindow()
+    ui_controller = uiController().get_instance()  # UI 컨트롤러 인스턴스
+    game_controller = GameController().get_instance()  # 게임 컨트롤러 인스턴스
+    case_data = game_controller._case_data
+
+    window = ProsecutorWindow(ui_controller, game_controller, case_data)
+    window = ProsecutorWindow(None, None, None)
     window.show()
     sys.exit(app.exec_())
