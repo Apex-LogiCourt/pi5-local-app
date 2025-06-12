@@ -20,10 +20,14 @@ from ui.qt_designer.windows.generateWindow import GenerateWindow
 from ui.qt_designer.windows.interrogationWindow import InterrogationWindow
 from ui.qt_designer.windows.textInputWindow import TextInputWindow
 from ui.qt_designer.windows.startWindow import StartWindow
+from PyQt5.QtCore import pyqtSignal, QObject, pyqtSlot
 
 import ui.qt_designer.resource_rc 
 
-class UiController():
+
+
+
+class UiController(QObject):
     _instance = None
 
     @classmethod
@@ -33,12 +37,16 @@ class UiController():
         return cls._instance
     
     def __init__(self):
+        super().__init__()  # QObject 초기화 추가
         if UiController._instance is not None:
             raise Exception("싱글톤 클래스는 직접 생성할 수 없습니다. get_instance() 메서드를 사용하세요.")
         UiController._instance = self
         self.game_controller = GameController.get_instance()
         self.init_game_controller()
         self.isTurnProsecutor = True # 처음에는 검사 턴으로 시작
+        print("슬롯 연결 직전:", self.receive_game_signal)
+
+        self.game_controller._signal.connect(self.receive_game_signal)
 
     def startWindow(self):
         # app = QApplication(sys.argv)
@@ -83,8 +91,8 @@ class UiController():
         self.startWindowInstance.hide()
         self.descriptionWindowInstance.hide()
         self.generateWindowInstance.hide()
-        self.interrogationWindowInstance.hide()
-        self.judgeWindowInstance .hide()
+        # self.interrogationWindowInstance.hide()
+        self.judgeWindowInstance.hide()
         self.overviewWindowInstance.hide()
         self.lawyerWindowInstance.hide()
         self.prosecutorWindowInstance.hide()
