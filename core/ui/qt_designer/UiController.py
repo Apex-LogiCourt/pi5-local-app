@@ -17,7 +17,6 @@ from ui.qt_designer.windows.overviewWindow import OverviewWindow
 from ui.qt_designer.windows.judgeWindow import JudgeWindow
 from ui.qt_designer.windows.warningWindow import WarningWindow
 from ui.qt_designer.windows.generateWindow import GenerateWindow
-from ui.qt_designer.windows.textInputWindow import TextInputWindow
 
 import ui.qt_designer.resource_rc 
 
@@ -36,7 +35,7 @@ class UiController():
         UiController._instance = self
         self.game_controller = GameController.get_instance()
         self.init_game_controller()
-        self.turn = "prosecutor"  # 초기 턴은 검사로 설정
+        self.isTurnProsecutor = True # 처음에는 검사 턴으로 시작
 
     def startWindow(self):
         # app = QApplication(sys.argv)
@@ -212,11 +211,11 @@ class UiController():
     
     def open_prosecutor_window(self):
         self.prosecutorWindowInstance.show()
-        self.turn = "prosecutor"
+        self.isTurnProsecutor = True
         
     def open_lawyer_window(self):
         self.lawyerWindowInstance.show()    
-        self.turn = "lawyer"
+        self.isTurnProsecutor = False
 
     def open_judge_window(self):
         self.judgeWindowInstance.show()
