@@ -5,6 +5,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 import asyncio
 import time
 from interrogation.interrogator import Interrogator, it
+from verdict import get_judge_result
 
 
 class SignalEmitter(QObject):
@@ -137,7 +138,7 @@ class GameController(QObject):
             
             def handle_response(sentence):
                 # 심문 응답을 처리하는 콜백
-                asyncio.create_task(handler_tts_service(sentence, cls._state.current_profile.voice))
+                # asyncio.create_task(handler_tts_service(sentence, cls._state.current_profile.voice))
                 cls._send_signal("interrogation", {
                     "role": cls._state.current_profile.name if cls._state.current_profile else "증인",
                     "message": sentence
@@ -145,7 +146,9 @@ class GameController(QObject):
                 # cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", sentence)
                 
             response_text = await run_chain_streaming(it.build_ask_chain(text, cls._state.current_profile), handle_response)
+            asyncio.create_task(handler_tts_service(response_text, cls._state.current_profile.voice))
             cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", response_text)
+            
         # print(f"user_input() called, 현재 턴{cls._state.turn}")
         return True
 
@@ -171,6 +174,8 @@ class GameController(QObject):
             cls._send_signal("judgement", {'role': '판사', 'message': '최종 판결을 내리겠습니다.'})
             cls._add_message("판사", "최종 판결을 내리겠습니다.")
             
+            # 판결 생성 및 스트리밍
+            cls._get_judgement()
 
     @classmethod
     def get_state(cls) -> GameState:
@@ -237,7 +242,21 @@ class GameController(QObject):
     @classmethod
     def _get_judgement(cls) -> str:
         """판결 단계에서 최종 결과를 얻어와 메시지에 추가하고 반환."""
-        pass
+        # 쌓인 대화 메시지들을 가져와서 판결 생성
+        message_list = cls._state.messages
+        print(f"[GameController] 판결 생성 시작 - 총 {len(message_list)}개 메시지")
+        
+        # 판결 결과 생성 (동기 함수)
+        judgement_result = get_judge_result(message_list)
+        
+        from tools.service import handler_tts_service
+
+        asyncio.create_task(handler_tts_service(judgement_result))
+        cls._send_signal("verdict", judgement_result)
+        print(judgement_result)
+        
+        print(f"[GameController] 판결 생성 완료")
+        return judgement_result
 
     @classmethod
     def _add_message(cls, role: Role, content: str) -> None:
