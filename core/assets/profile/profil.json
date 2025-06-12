@@ -5,98 +5,98 @@
       "gender": "여성",
       "age": 21,
       "voice": "nminyoung",
-      "image": "profile/Minyoung_default.png"
+      "image": "Minyoung.png"
     },
     {
       "name": "김소현",
       "gender": "여성",
       "age": 28,
       "voice": "nes_c_sohyun",
-      "image": "profile/Sohyun_default.png"
+      "image": "Sohyun.png"
     },
     {
       "name": "최봄달",
       "gender": "여성",
       "age": 30,
       "voice": "noyj",
-      "image": "profile/Bomdal_default.png"
+      "image": "Bomdal.png"
     },
     {
       "name": "정영화",
       "gender": "여성",
       "age": 32,
       "voice": "nyounghwa",
-      "image": "profile/Younghwa_default.png"
+      "image": "Younghwa.png"
     },
     {
       "name": "민은영",
       "gender": "여성",
       "age": 63,
       "voice": "neunyoung",
-      "image": "profile/Eunyoung_default.png"
+      "image": "Eunyoung.png"
     },
     {
       "name": "이선희",
       "gender": "여성",
       "age": 68,
       "voice": "nsunhee",
-      "image": "profile/Seonhee_default.png"
+      "image": "Sunhee.png"
     },
     {
       "name": "안기서",
       "gender": "여성",
       "age": 29,
       "voice": "ntiffany",
-      "image": "profile/Giseo_default.png"
+      "image": "Kiseo.png"
     },
     {
       "name": "남기효",
       "gender": "남자",
       "age": 31,
       "voice": "nes_c_kihyo",
-      "image": "profile/Gihyeo_default.png"
+      "image": "Kihyo.png"
     },
     {
       "name": "유승표",
       "gender": "남자",
       "age": 70,
       "voice": "nseungpyo",
-      "image": "profile/Seungpyo_default.png"
+      "image": "Seungpyo.png"
     },
     {
       "name": "도원탁",
       "gender": "남자",
       "age": 75,
       "voice": "nwontak",
-      "image": "profile/Dowon_default.png"
+      "image": "Wontak.png"
     },
     {
       "name": "성이안",
       "gender": "남자",
       "age": 35,
       "voice": "nian",
-      "image": "profile/Sung_default.png"
+      "image": "Ian.png"
     },
     {
       "name": "강주안",
       "gender": "남자",
       "age": 45,
       "voice": "njooahn",
-          "image": "profile/Jooan_default.png"
+      "image": "Jooahn.png"
     },
     {
       "name": "최지훈",
       "gender": "남자",
       "age": 47,
       "voice": "njihun",
-      "image": "profile/Jihun_default.png"
+      "image": "Jihoon.png"
     },
     {
       "name": "최상도",
       "gender": "남자",
       "age": 38,
       "voice": "nsangdo",
-      "image": "profile/Sangdo_default.png"
+      "image": "Sangdo.png"
     }
   ]
 }

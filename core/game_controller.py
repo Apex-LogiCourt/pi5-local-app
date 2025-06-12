@@ -6,6 +6,13 @@ import asyncio
 import time
 from interrogation.interrogator import Interrogator, it
 
+
+class SignalEmitter(QObject):
+    signal = pyqtSignal(str, object)
+
+    def __init__(self):
+        super().__init__()
+
 class GameController(QObject):
     _instance = None
     _is_initialized = False
@@ -14,10 +21,10 @@ class GameController(QObject):
     _evidences : List[Evidence] = None
     _profiles : List[Profile] = None
     _case_data : CaseData = None
-    _signal = pyqtSignal(str, object)
+    # _signal = pyqtSignal(str, object)
     _interrogator : Interrogator = it.get_instance()
 
-    
+
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
@@ -35,6 +42,10 @@ class GameController(QObject):
             
         GameController._instance = self
         self.signal = pyqtSignal()
+
+
+        self._signal_emitter = SignalEmitter()
+        self._signal = self._signal_emitter.signal  # SignalEmitter의 signal을 GameController의 _signal로 설정
         # GameState에 초기 데이터 반영
 
 #==============================================
@@ -111,7 +122,7 @@ class GameController(QObject):
         Args:
             text: 사용자가 입력한 텍스트
         Returns:
-            bool: 처리 성공 여부
+             bool: True면 턴 전환, False면 턴 전환 없음
         """
         if not text.strip():
             return False
@@ -150,12 +161,16 @@ class GameController(QObject):
     def done(cls) -> None:
         """발언 완전 종료 시에 호출, 양쪽 다 됐을 때는 최종 판결 시작"""
         cls._state.done_flags[cls._state.turn] = True
+        print(f"[GameController] done() called: {cls._state.done_flags}")
         
+        # if cls._state.done_flags[cls._state.turn.next()] == False:
+        #     cls._switch_turn()
+
         if all(cls._state.done_flags.values()):
             cls._state.phase = Phase.JUDGEMENT
             cls._send_signal("judgement", {'role': '판사', 'message': '최종 판결을 내리겠습니다.'})
             cls._add_message("판사", "최종 판결을 내리겠습니다.")
-            cls._switch_turn()
+            
 
     @classmethod
     def get_state(cls) -> GameState:
@@ -235,6 +250,7 @@ class GameController(QObject):
     def _switch_turn(cls) -> None:
         """Role.PROSECUTOR ↔ Role.ATTORNEY 토글."""
         cls._state.turn = cls._state.turn.next()
+        print(f"[GameController] _switch_turn() called: {cls._state.turn.value}")
 
     @classmethod
     def _handle_bnt_event(cls, role : str) -> None:

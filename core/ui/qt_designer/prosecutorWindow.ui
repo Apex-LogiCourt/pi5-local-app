@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>prosecutorWindow</class>
+ <widget class="QDialog" name="prosecutorWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1280</width>
+    <height>720</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>LogiCourt_AI</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QDialog{
+	background-color: rgb(15, 39, 72);
+}</string>
+  </property>
+  <widget class="QPushButton" name="nameLabel">
+   <property name="geometry">
+    <rect>
+     <x>390</x>
+     <y>30</y>
+     <width>421</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	background-color: rgb(0, 0, 0);
+	color: rgb(255, 254, 254);
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>검사 주장</string>
+   </property>
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="profileImage">
+   <property name="geometry">
+    <rect>
+     <x>700</x>
+     <y>140</y>
+     <width>551</width>
+     <height>551</height>
+    </rect>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	/* 스타일시트는 스케일 설정 불가능. pixMap으로 설정해야 함 */
+	/* image:url(:/images/imageNotFound.png); */
+	color: rgb(255, 255, 255);
+	font: 20pt &quot;나눔고딕&quot;;
+}
+</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="assets/resource.qrc">:/assets/profile/Prosecutor.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="micButton">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>620</y>
+     <width>161</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	image: url(:/images/mic_off.png);
+	background-color: rgb(47, 90, 104);
+	color: rgb(255, 254, 254);
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:hover{
+	background-color: rgb(67, 129, 148);
+	border-radius: 20px;
+	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	background-color: rgb(0, 123, 255);
+	border-radius: 20px;
+	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="endButton">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>620</y>
+     <width>161</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	background-color: rgb(47, 90, 104);
+	color: rgb(255, 254, 254);
+	border-radius: 20px;
+	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
+}
+
+QPushButton:hover{
+	background-color: rgb(67, 129, 148);
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	background-color: rgb(0, 123, 255);
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>주장종료</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="overviewButton">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>180</y>
+     <width>141</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	color: rgb(255, 255, 255);
+	border-radius: 20px;
+	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
+}
+
+QPushButton:hover{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>사건개요</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="evidenceButton">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>310</y>
+     <width>161</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	color: rgb(255, 255, 255);
+	border-radius: 20px;
+	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
+}
+
+QPushButton:hover{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>증거품 확인</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="textButton">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>440</y>
+     <width>161</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	color: rgb(255, 255, 255);
+	border-radius: 20px;
+	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
+}
+
+QPushButton:hover{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>텍스트입력</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="profileTitleLabel">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>190</y>
+     <width>261</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	color: rgb(255, 255, 255);
+	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>등장인물</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="profileButton2">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>320</y>
+     <width>291</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+    text-align: left;
+    padding-left: 10px;
+	color: rgb(255, 255, 255);
+	border-radius: 20px;
+	font: 20pt &quot;나눔고딕&quot;;
+}
+
+QPushButton:hover{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕&quot;;
+}
+QPushButton:pressed{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>profileButton2</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="profileButton3">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>400</y>
+     <width>291</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+    text-align: left;
+    padding-left: 10px;
+	color: rgb(255, 255, 255);
+	border-radius: 20px;
+	font: 20pt &quot;나눔고딕&quot;;
+}
+
+QPushButton:hover{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕&quot;;
+}
+QPushButton:pressed{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>profileButton3</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="profileButton1">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>240</y>
+     <width>291</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+    text-align: left;
+    padding-left: 10px;
+	color: rgb(255, 255, 255);
+	border-radius: 20px;
+	font: 20pt &quot;나눔고딕&quot;;
+}
+
+QPushButton:hover{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕&quot;;
+}
+QPushButton:pressed{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>profileButton1</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="profileButton4">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>480</y>
+     <width>291</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+    text-align: left;
+    padding-left: 10px;
+	color: rgb(255, 255, 255);
+	border-radius: 20px;
+	font: 20pt &quot;나눔고딕&quot;;
+}
+
+QPushButton:hover{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕&quot;;
+}
+QPushButton:pressed{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>profileButton4</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="turnButton">
+   <property name="geometry">
+    <rect>
+     <x>390</x>
+     <y>620</y>
+     <width>161</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	background-color: rgb(47, 90, 104);
+	color: rgb(255, 254, 254);
+	border-radius: 20px;
+	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
+}
+
+QPushButton:hover{
+	background-color: rgb(67, 129, 148);
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	background-color: rgb(0, 123, 255);
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>턴 종료</string>
+   </property>
+  </widget>
+ </widget>
+ <resources>
+  <include location="assets/resource.qrc"/>
+ </resources>
+ <connections/>
+</ui>

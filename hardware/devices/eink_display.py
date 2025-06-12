@@ -5,7 +5,7 @@ import numpy as np
 import os
 import traceback
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 from typing import List
 from data_models import Evidence
 
@@ -24,6 +24,7 @@ def update_and_sand_image(epd_index: int, evidence: Evidence):
         epd_mac = EPD_MacAddress[epd_index]
         rfcomm = bind_rfcomm(epd_index, epd_mac)
         img_path = make_epd_image(evidence)
+        inversion_image(img_path)
         byte_data = convert_image_to_bytes(img_path)
         send_bytes_over_serial(rfcomm, byte_data)
     except Exception as e:
@@ -49,7 +50,7 @@ def bind_rfcomm(epd_index, mac_addr): #바인딩 이후, RFCOMM_DEV를 USBSerial
 def convert_image_to_bytes(image_path):
     img = Image.open(image_path).convert("1")
     arr = np.array(img).flatten()
-    packed = np.packbits(arr ^ 1)  # 1=흰색, 0=검정 -> 반전 필요
+    packed = np.packbits(arr)
     return packed
 
 def send_bytes_over_serial(rfcomm, byte_data):
@@ -68,30 +69,40 @@ def send_bytes_over_serial(rfcomm, byte_data):
     except serial.SerialException as e:
         print("[HW/EPD]시리얼 포트 오류:", e)
 
-def get_evidence_image_path(e: Evidence):
-    return e.picture
-
 #========== EPD용 이미지 생성 ==========
-FONT_PATH = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf" #pi 테스트용
+FONT_PATH = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf" #실제 폰트경로
+TITLE_FONT_PATH = "/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf" #실제 폰트경로
 
 def make_epd_image(evidence: Evidence, font_size=20, line_spacing=6):
     image_path = evidence.picture
     text = evidence.description[0]
     save_path = evidence.name + ".bmp"
     
-    canvas = Image.new("1", (400, 300), 1) # 400*300의 캔버스 생성
+    # 400*300의 캔버스 생성
+    canvas = Image.new("1", (400, 300), 1)
+    draw = ImageDraw.Draw(canvas)
+
+    # 💬 상단 이름 텍스트 출력
+    title_font_size = 20  # or customize
+    title_font = ImageFont.truetype(TITLE_FONT_PATH, title_font_size)
+    title_text = evidence.name
+    title_bbox = draw.textbbox((0, 0), title_text, font=title_font)
+    title_width = title_bbox[2] - title_bbox[0]
+    title_height = title_bbox[3] - title_bbox[1]
+    title_x = (400 - title_width) // 2
+    title_y = (30 - title_height) // 2  # 위 padding 5, 아래 padding 5 고려
+    draw.text((title_x, title_y), title_text, font=title_font, fill=0)
 
     # 캔버스 좌상단에 증거품 이미지 삽입
     img = Image.open(image_path).convert("1")
     img = img.resize((150, 150))
-    canvas.paste(img, (0, 0)) 
+    canvas.paste(img, (0, 30)) 
 
     # 텍스트 처리 시작
-    draw = ImageDraw.Draw(canvas)
     font = ImageFont.truetype(FONT_PATH, font_size)
-    x, y = (150 + 15), (0 + 15)  #시작 위치
-    max_width = 250
-    max_height = 150
+    x, y = (150 + 15), (30 + 15)  #시작 위치
+    max_width = 250 - 10
+    max_height = 150 - 5
 
     lines = []
     for paragraph in text.split("\n"):
@@ -159,8 +170,23 @@ def update_epd_image(image_path, evidence: Evidence, font_size=20, line_spacing=
         y += font_size + line_spacing
 
     img.save(image_path)
-    print(f"[HW/EPD]저장 완료: {image_path}")
-    return 
+    print(f"[HW/EPD]이미지 설명 추가 완료: {image_path}")
+    return
+
+def inversion_image(image_path):
+    try:
+        img = Image.open(image_path).convert("1")
+
+        img = ImageOps.mirror(img)
+        # img_l = img.convert("L")
+        # img_inverted = ImageOps.invert(img_l)
+
+        # img_final = img_inverted.convert("1")
+        # img_final.save(image_path)
+        img.save(image_path)
+    except Exception as e:
+        print(f"[HW/EPD] 이미지 반전 오류: {e}")
+    return image_path
 
 ##### TEST CODE #####
 if __name__ == "__main__":
