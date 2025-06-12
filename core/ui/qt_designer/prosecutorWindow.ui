@@ -30,7 +30,6 @@
    <property name="styleSheet">
     <string notr="true">QPushButton{
 	background-color: rgb(0, 0, 0);
-	boder-radius: 20px;
 	color: rgb(255, 254, 254);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
@@ -162,7 +161,6 @@ QPushButton:pressed{
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
-	boder-radius: 20px;
 	color: rgb(255, 255, 255);
 	border-radius: 20px;
 	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
@@ -192,7 +190,6 @@ QPushButton:pressed{
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
-	boder-radius: 20px;
 	color: rgb(255, 255, 255);
 	border-radius: 20px;
 	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
@@ -222,7 +219,6 @@ QPushButton:pressed{
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
-	boder-radius: 20px;
 	color: rgb(255, 255, 255);
 	border-radius: 20px;
 	font: 20pt &quot;나눔고딕 ExtraBold&quot;;

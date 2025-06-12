@@ -1,5 +1,7 @@
 import sys
 import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import asyncio
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
@@ -8,7 +10,9 @@ from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QTimer
 from data_models import CaseData, Evidence, Profile
 from game_controller import GameController
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from windows.gameDescriptionWindow import GameDescriptionWindow
+from windows.prosecutorWindow import ProsecutorWindow
+
 import resource_rc
 
 #UI 연결. 단, UI파일은 Python 코드 파일과 같은 디렉토리에 위치해야한다.
@@ -25,19 +29,32 @@ textInputWindowUi = uic.loadUiType("core/ui/qt_designer/textInputWindow.ui")[0]
 evidenceWindowUi = uic.loadUiType("core/ui/qt_designer/evidenceWindow.ui")[0]
 
 
-class uiController():
+class UiController():
     _instance = None
 
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
-            cls._instance = uiController()
+            cls._instance = UiController()
         return cls._instance
     
     def __init__(self):
-        if uiController._instance is not None:
+        if UiController._instance is not None:
             raise Exception("싱글톤 클래스는 직접 생성할 수 없습니다. get_instance() 메서드를 사용하세요.")
-        uiController._instance = self
+        UiController._instance = self
+        self.game_controller = GameController.get_instance()
+        self.init_game_controller()
+        self.startWindow()
+        self.createWindowInstance()
+        self.descriptionWindowInstance.show()
+        self.prosecutorWindowInstance.show()
+
+    def startWindow(self):
+        # app = QApplication(sys.argv)
+        # window = StartWindow()
+        # window.show()
+        # app.exec_()
+        pass
 
     def init_game_controller(self):
         print("Requesting GameController initialization...")
@@ -58,14 +75,14 @@ class uiController():
     
     def createWindowInstance(self):
         self.startWindowInstance = None
-        self.descriptionWindowInstance = None
+        self.descriptionWindowInstance = GameDescriptionWindow()
         self.generateWindowInstance = None
         self.generateWindow2Instance = None
         self.interrogationWindowInstance = None
         self.judgeWindowInstance = None
         self.lawyerWindowInstance = None
         self.overviewWindowInstance = None
-        self.prosecutorWindowInstance = None
+        self.prosecutorWindowInstance = ProsecutorWindow(self._instance, self.game_controller)
         self.textInputWindowInstance = None
         self.evidenceWindowInstance = None
 
@@ -86,7 +103,7 @@ class uiController():
             QMessageBox.critical(self, "초기화 오류", "게임 데이터 초기화에 실패했습니다.")
         # "initialized" 시그널이 GameController로부터 오면 is_gc_initialized, case_data가 설정되고 로딩 다이얼로그가 닫힘.
 
-    def setStartButtonState(state: bool, msg: str):
+    def setStartButtonState(self, state: bool, msg: str):
         if msg == None:
             msg = "게임 시작"
         # 시작 버튼 상태 설정
