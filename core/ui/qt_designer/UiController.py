@@ -63,7 +63,6 @@ class UiController():
         self.startWindowInstance = None
         self.descriptionWindowInstance = GameDescriptionWindow()
         self.generateWindowInstance = None
-        self.generateWindow2Instance = None
         self.interrogationWindowInstance = None
         self.judgeWindowInstance = JudgeWindow(self._instance, self.game_controller, self.case_data)
         self.overviewWindowInstance = OverviewWindow(self.case_data.case.outline)
@@ -112,9 +111,11 @@ class UiController():
 
         if code == "no_context":
             if isinstance(arg, dict):
-                QMessageBox.warning(self, arg.get("role", "알림"), arg.get("message", "관련 없는 내용입니다."))
+                self.warningWindowInstance.set_label_text(arg.get("message", "관련 없는 내용입니다."))
+                self.warningWindowInstance.show()
             else:
-                QMessageBox.warning(self, "알림", "재판과 관련 없는 내용입니다.")
+                self.warningWindowInstance.set_label_text(arg.get("message", "재판과 관련 없는 내용입니다."))
+                self.warningWindowInstance.show()
 
         elif code == "interrogation_accepted":
             if isinstance(arg, dict):
@@ -124,7 +125,8 @@ class UiController():
 
         elif code == "objection":
             if isinstance(arg, dict):
-                QMessageBox.information(self, f"{arg.get('role', '')}의 이의 제기", arg.get("message", "이의 있습니다!"))
+                self.warningWindowInstance.set_label_text(f"{arg.get('role', '')}의 이의 제기" + "\n" + arg.get("message", "이의 있습니다!"))
+                self.warningWindowInstance.show()
 
         elif code == "judgement": # GameController에서 'judgement'로 판결 시작을 알림
              if isinstance(arg, dict) and arg.get('role') == '판사':
@@ -142,18 +144,14 @@ class UiController():
                 print("ERROR: 'initialized' signal received with None argument. Attempting re-initialization.")
                 self.is_gc_initialized = False
                 self.case_data = None
-                QMessageBox.critical(self, "초기화 오류", "게임 데이터 초기화에 실패했습니다. 다시 시도합니다.")
+                QMessageBox.critical(None, "초기화 오류", "게임 데이터 초기화에 실패했습니다. 다시 시도합니다.")
                 self.init_game_controller() # 재시도
                 return
 
             self.case_data = arg # GameController.initialize()가 CaseData 객체를 반환하고, 그것이 arg로 전달된다고 가정
             self.is_gc_initialized = True
-            self._update_start_button("시작하기", True)
-            if self.loading_dialog:
-                self.loading_dialog.accept()
-                self.loading_dialog = None
+            self.setStartButtonState(True, "게임 시작")
             print("GameController initialized successfully. Case data loaded.")
-            # print(f"Loaded CaseData: Outline='{self.case_data.case.outline[:50]}...' Profiles={len(self.case_data.profiles)} Evidences={len(self.case_data.evidences)}")
 
 
         elif code == "evidence_changed":
