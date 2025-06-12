@@ -141,6 +141,7 @@ class UiController(QObject):
             if isinstance(arg, dict):
                 print(f"Interrogation accepted for {arg.get('type')}. Judge: {arg.get('message')}")
                 self.interrogationWindowInstance.update_dialogue(arg.get("role", "판사"), arg.get("message","심문을 시작합니다."))
+                self.interrogationWindowInstance.evidence_tag_reset()
                 self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, arg.get('type'))
 
         elif code == "objection":
@@ -180,7 +181,7 @@ class UiController(QObject):
 
         elif code == "evidence_tagged": # 또는 "evidence_taged" (이슈의 오타일 수 있음)
             print(f"Evidence tagged: {arg}")
-            # self.case_data.evidences 리스트 업데이트 로직 필요
+            self.interrogationWindowInstance.evidence_tagged()
 
 
         elif code == "interrogation": # GameController의 user_input에서 이 시그널을 사용 ("interrogation_dialogue" 대신)
@@ -268,8 +269,6 @@ class UiController(QObject):
     def _handle_text_input(self, text):
         """텍스트 입력 처리"""
         print(f"입력받은 텍스트: {text}")
-        # TODO: GameController로 텍스트 전달
-        # asyncio.create_task(self.game_controller.user_input(text))
 
 
 

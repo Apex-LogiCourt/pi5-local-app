@@ -37,21 +37,22 @@ class InterrogationWindow(QDialog):
         # 기본 텍스트 설정
         self.textLabel.setText("심문을 시작합니다.")
         self.profileTextLabel.setText("")
-    
-
-    
-
-        
-
-        
         
     def _setup_connections(self):
         """버튼 연결 설정"""
         self.backButton.clicked.connect(self._go_back)
         self.textButton.clicked.connect(self._open_text_input)
         self.micButton.clicked.connect(self._toggle_mic)
-        self.smallEvidenceLabel.clicked.connect(self._show_evidence)
-        self.largeEvidenceLabel.clicked.connect(self._show_evidence)
+        # self.smallEvidenceLabel.clicked.connect(self._show_evidence)
+        # self.largeEvidenceLabel.clicked.connect(self._show_evidence)
+
+    def evidence_tagged(self):
+        self.smallEvidenceLabel.setVisible(False)
+        self.largeEvidenceLabel.setVisible(True)
+
+    def evidence_tag_reset(self):
+        self.smallEvidenceLabel.setVisible(True)
+        self.largeEvidenceLabel.setVisible(False)
         
     def show_profile(self):
         """프로필 표시"""
@@ -73,7 +74,7 @@ class InterrogationWindow(QDialog):
         
     def _open_text_input(self):
         """텍스트 입력창 열기"""
-
+        self.uc.open_text_input_window()
         
     def _toggle_mic(self):
         """마이크 온/오프 토글"""
