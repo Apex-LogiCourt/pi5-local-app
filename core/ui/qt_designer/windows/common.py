@@ -24,15 +24,14 @@ class BaseCourtWindow(QDialog):
     def show_case_overview(self):
         """사건 개요 표시"""
         self.uc.open_overview_window()
-        # TODO: 사건 개요 창 열기
     
     def show_evidence(self):
         """증거품 확인 창 표시"""
-        # TODO: 증거품 확인 창 열기
+        self.uc.open_evidence_window()
     
     def show_text_input(self):
         """텍스트 입력 창 표시"""
-
+        self.uc.open_text_input_window()
     
     def _setup_ui(self):
         """공통 UI 초기 설정"""
@@ -51,11 +50,11 @@ class BaseCourtWindow(QDialog):
         self.endButton.clicked.connect(self._end_argument)
         self.micButton.clicked.connect(self._toggle_mic)
         
-        # 프로필 버튼들
-        self.profileButton1.clicked.connect(lambda: self.show_profile(1))
-        self.profileButton2.clicked.connect(lambda: self.show_profile(2))
-        self.profileButton3.clicked.connect(lambda: self.show_profile(3))
-        self.profileButton4.clicked.connect(lambda: self.show_profile(4))
+        # 프로필 버튼들 #이벤트함수 미구현으로 주석처리
+        # self.profileButton1.clicked.connect(lambda: self.show_profile(1))
+        # self.profileButton2.clicked.connect(lambda: self.show_profile(2))
+        # self.profileButton3.clicked.connect(lambda: self.show_profile(3))
+        # self.profileButton4.clicked.connect(lambda: self.show_profile(4))
 
     def toggle_mic_state(self):
         """마이크 상태 토글
