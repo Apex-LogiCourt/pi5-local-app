@@ -131,10 +131,10 @@ class UiController(QObject):
 
         if code == "no_context":
             if isinstance(arg, dict):
-                self.warningWindowInstance.set_label_text(arg.get("message", "관련 없는 내용입니다."))
+                self.warningWindowInstance.set_label_text(arg.get("message"))
                 self.warningWindowInstance.show()
             else:
-                self.warningWindowInstance.set_label_text(arg.get("message", "재판과 관련 없는 내용입니다."))
+                self.warningWindowInstance.set_label_text("재판과 관련 없는 내용입니다.")
                 self.warningWindowInstance.show()
 
         elif code == "interrogation_accepted":
