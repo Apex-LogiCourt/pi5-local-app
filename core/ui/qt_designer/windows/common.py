@@ -20,12 +20,6 @@ class BaseCourtWindow(QDialog):
         self._setup_ui()
         self._setup_connections()
 
-    def toggle_mic_state(self):
-        """마이크 상태 토글
-        여기서 마이크 버튼 이미지 변경해야 되고 이건 나중에 pysignal 에서 
-        하드웨어 입력이 들어왔을 때 호출해야합니당 @@@@
-        """
-        self.mic_on = not self.mic_on
 
     def show_case_overview(self):
         """사건 개요 표시"""
@@ -61,6 +55,55 @@ class BaseCourtWindow(QDialog):
         self.profileButton2.clicked.connect(lambda: self.show_profile(2))
         self.profileButton3.clicked.connect(lambda: self.show_profile(3))
         self.profileButton4.clicked.connect(lambda: self.show_profile(4))
+
+    def toggle_mic_state(self):
+        """마이크 상태 토글
+        여기서 마이크 버튼 이미지 변경해야 되고 이건 나중에 pysignal 에서 
+        하드웨어 입력이 들어왔을 때 호출해야합니당 @@@@
+        """
+        self.mic_on = not self.mic_on
+        if self.mic_on:
+            self.micButton.setStyleSheet("""
+                QPushButton{
+                    image: url(:/images/mic_off.png);
+                    background-color: rgb(47, 90, 104);
+                    color: rgb(255, 254, 254);
+                    border-radius: 20px;
+                    font: 24pt "나눔고딕 ExtraBold";
+                }
+                QPushButton:hover{
+                    background-color: rgb(67, 129, 148);
+                    border-radius: 20px;
+                    font: 28pt "나눔고딕 ExtraBold";
+                }
+                QPushButton:pressed{
+                    background-color: rgb(0, 123, 255);
+                    border-radius: 20px;
+                    font: 28pt "나눔고딕 ExtraBold";
+                }
+            """)
+        else:
+            self.micButton.setStyleSheet("""
+                QPushButton{
+                    image: url(:/images/mic_on.png);
+                    background-color: rgb(47, 90, 104);
+                    color: rgb(255, 254, 254);
+                    border-radius: 20px;
+                    font: 24pt "나눔고딕 ExtraBold";
+                }
+                QPushButton:hover{
+                    background-color: rgb(67, 129, 148);
+                    border-radius: 20px;
+                    font: 28pt "나눔고딕 ExtraBold";
+                }
+                QPushButton:pressed{
+                    background-color: rgb(0, 123, 255);
+                    border-radius: 20px;
+                    font: 28pt "나눔고딕 ExtraBold";
+                }
+            """)
+
+        
     
     def _end_argument(self):
         """주장 종료"""
@@ -71,13 +114,13 @@ class BaseCourtWindow(QDialog):
         """마이크 온/오프 토글"""
         # TODO: 마이크 기능 구현
         if not self.mic_on:
-            asyncio.create_task(self.game_controller.record_start())
+            asyncio.create_task(self.gc.record_start())
             self.toggle_mic_state()
         else:
-            asyncio.create_task(self.game_controller.record_stop())
+            asyncio.create_task(self.gc.record_end())
             self.toggle_mic_state()
     
-    # def show_profile(self, profile_num):
+    # def show_profile(self, profile_n새새um):
     #     """등장인물 프로필 표시"""
     #     print(f"등장인물 {profile_num} 버튼 클릭됨")
     #     # TODO: 등장인물 프로필 창 열기 근데 없음 
@@ -97,7 +140,7 @@ if __name__ == "__main__":
     
     async def main():
         app = QApplication(sys.argv)
-        from ui.qt_designer.UiController import uiController  # UI 컨트롤러 임포트
+        # from ui.qt_designer.UiController import uiController  # UI 컨트롤러 임포트
         from game_controller import GameController  # 게임 컨트롤러 임포트
 
         # ui_controller = uiController().get_instance()  # UI 컨트롤러 인스턴스
