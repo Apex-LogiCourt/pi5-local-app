@@ -83,6 +83,19 @@ class UiController():
         self.warningWindowInstance.show()
         self.generateWindowInstance.show()
 
+    def hideAllWindow(self):
+        self.startWindowInstance.hide()
+        self.descriptionWindowInstance.hide()
+        self.generateWindowInstance.hide()
+        self.interrogationWindowInstance.hide()
+        self.judgeWindowInstance .hide()
+        self.overviewWindowInstance.hide()
+        self.lawyerWindowInstance.hide()
+        self.prosecutorWindowInstance.hide()
+        self.textInputWindowInstance.hide()
+        self.evidenceWindowInstance.hide()
+        self.warningWindowInstance.hide()
+
     async def restart_game_flow(self): #최종 판결문에서 뒤로가기 버튼 누를 시 호출
         print("Restarting game flow...")
         QApplication.processEvents()
@@ -134,11 +147,12 @@ class UiController():
         elif code == "judgement": # GameController에서 'judgement'로 판결 시작을 알림
              if isinstance(arg, dict) and arg.get('role') == '판사':
                 print(f"Judgement phase initiated by {arg.get('role')}: {arg.get('message')}")
-                if self.result_screen_instance and self.stacked_layout.currentWidget() == self.result_screen_instance:
-                    # ResultScreen.prepare_for_results()가 이미 호출되었을 것이므로,
-                    # 여기서는 추가적인 메시지 업데이트나 로깅만 할 수 있습니다.
-                    # GameController에서 판결 내용 스트리밍을 위한 별도 시그널(예: "verdict_chunk")을 사용할 것으로 예상됩니다.
-                    pass
+                if hasattr(GameController, 'done'):
+                    self.hideAllWindow()
+                    self.judgeWindowInstance.show()
+                    GameController.done()
+                else:
+                    print("ERROR: GameController does not have 'done' method to trigger final verdict.")
 
 
         elif code == "initialized":
