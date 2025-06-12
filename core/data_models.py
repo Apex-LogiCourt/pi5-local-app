@@ -21,6 +21,7 @@ class Profile:
     personality: str             #성격 특성
     context: str  # 출석 맥락 -- 어떤 사연으로 여기 출석하게 되었는지
     voice: str  # 음성
+    image: str  # 이미지 경로
     
 @dataclass
 class Evidence:
