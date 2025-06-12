@@ -27,9 +27,16 @@ class TextInputWindow(QDialog):
         text = self.inputTextBox.toPlainText().strip()
         if text:
             turn_check = await self.gc.user_input(text)
+            """이게 user_input 결과 값에 따라 turn 변경 여부가 다른데 ㅋㅋ;
+            될지 안 될지 모르겠지만 이렇게 해뒀습니다 
+            """
             if turn_check:
-                self.uc.turn 
-            
+                if self.uc.isTurnProsecutor :
+                    self.uc.open_lawyer_window()
+                    self.uc.prosecutorWindowInstance.close()
+                else :
+                    self.uc.open_prosecutor_window()
+                    self.uc.lawyerWindowInstance.close()
             self.inputTextBox.clear()
             self.close()
     
