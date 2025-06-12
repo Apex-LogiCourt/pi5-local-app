@@ -37,6 +37,7 @@ class InterrogationWindow(QDialog):
         # 기본 텍스트 설정
         self.textLabel.setText("심문을 시작합니다.")
         self.profileTextLabel.setText("")
+        self.profileImage.setPixmap(QPixmap(f":/assets/profile/{self.profile.image}"))
         
     def _setup_connections(self):
         """버튼 연결 설정"""
@@ -61,6 +62,9 @@ class InterrogationWindow(QDialog):
         """대화 업데이트"""
         self.textLabel.setText(f"[{self.type}]: {message}")
 
+    def update_profile_text_label(self, message):
+        self.profileTextLabel.setText(f"[{self.type}]: {message}")
+
         
     def set_main_text(self, text):
         """메인 텍스트 설정"""
@@ -70,6 +74,10 @@ class InterrogationWindow(QDialog):
         """뒤로 가기"""
         self.gc.interrogation_end()
         self.uc.isInterrogation = False
+        if self.uc.isTurnProsecutor:
+            self.uc.open_prosecutor_window()
+        else:
+            self.uc.open_lawyer_window()
         self.close()
         
     def _open_text_input(self):

@@ -140,9 +140,16 @@ class UiController(QObject):
         elif code == "interrogation_accepted":
             if isinstance(arg, dict):
                 print(f"Interrogation accepted for {arg.get('type')}. Judge: {arg.get('message')}")
-                self.interrogationWindowInstance.update_dialogue(arg.get("role", "판사"), arg.get("message","심문을 시작합니다."))
+                ip = None
+                for i in self.case_data.profiles:
+                    if i.type == arg.get('type'):
+                        ip = i
+                        break
+                self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, ip)
+                self.interrogationWindowInstance.update_dialogue(arg.get("role", "판사") + " : " + arg.get("message","심문을 시작합니다."))
                 self.interrogationWindowInstance.evidence_tag_reset()
-                self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, arg.get('type'))
+                self.hideAllWindow()
+                self.interrogationWindowInstance.show()
 
         elif code == "objection":
             if isinstance(arg, dict):
@@ -187,9 +194,9 @@ class UiController(QObject):
         elif code == "interrogation": # GameController의 user_input에서 이 시그널을 사용 ("interrogation_dialogue" 대신)
             self.isInterrogation = True
             if isinstance(arg, dict):
-                self.interrogationWindowInstance.update_dialogue(arg.get("role","??"), arg.get("message","..."))
+                self.interrogationWindowInstance.update_profile_text_label(arg.get("role","??") + " : " + arg.get("message","..."))
             else:
-                self.interrogationWindowInstance.update_dialogue("AI", str(arg))
+                self.interrogationWindowInstance.update_profile_text_label("AI" + " : " + str(arg))
         
 
         # GameController 이슈에 명시된 'verdict' 시그널은 판결 '내용' 스트리밍을 위한 것일 수 있습니다.
