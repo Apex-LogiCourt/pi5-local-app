@@ -107,6 +107,7 @@ class BaseCourtWindow(QDialog):
         """주장 종료"""
         # TODO: 주장 종료 처리
         self.gc.done()
+        self._turn_change()
     
     def _toggle_mic(self):
         """마이크 온/오프 토글"""
@@ -127,26 +128,30 @@ class ProsecutorWindow(BaseCourtWindow):
     def __init__(self, uiController, gameController, case_data, parent=None):
         super().__init__(uiController, gameController, case_data, 'prosecutorWindow.ui', parent)
         self.turnButton.clicked.connect(self._turn_change)
-        self.endButton.clicked.connect(self._end_turn)
+        # self.endButton.clicked.connect(self._end_turn)
 
     def _turn_change(self):
         self.uc.open_lawyer_window()
+        self.close()
 
-    def _end_turn(self):
-        self.gc.done()
+    # def _end_turn(self):
+    #     self.gc.done()
+    #     self.close()
 
 
 class LawyerWindow(BaseCourtWindow):
     def __init__(self, uiController, gameController, case_data, parent=None):
         super().__init__(uiController, gameController, case_data, 'lawyerWindow.ui', parent)
         self.turnButton.clicked.connect(self._turn_change)
-        self.endButton.clicked.connect(self._end_turn)
-        
+        # self.endButton.clicked.connect(self._end_turn)
+
     def _turn_change(self):
         self.uc.open_prosecutor_window()
+        self.close()
 
-    def _end_turn(self):
-        self.gc.done()
+    # def _end_turn(self):
+        # self.gc.done()
+        # self.close()
 
 
 # 테스트용 메인 함수

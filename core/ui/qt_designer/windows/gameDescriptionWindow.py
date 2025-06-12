@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5 import uic
 
 class GameDescriptionWindow(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, uiController, parent=None):
         super().__init__(parent)
         
         # UI 파일 로드
@@ -13,6 +13,7 @@ class GameDescriptionWindow(QDialog):
         uic.loadUi(ui_path, self)
         
         # 초기 설정
+        self.uc = uiController
         self.setup_ui()
         self.setup_connections()
     
@@ -37,7 +38,11 @@ class GameDescriptionWindow(QDialog):
     def setup_connections(self):
         """버튼 연결 설정"""
         # 뒤로가기 버튼 연결
-        self.backButton.clicked.connect(self.close)
+        self.backButton.clicked.connect(self.back_button_click)
+
+    def back_button_click(self):
+        self.uc.open_start_window()
+        self.close
     
     def set_description_text(self, text):
         """descriptionText에 텍스트 설정"""
