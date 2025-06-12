@@ -32,10 +32,7 @@ class BaseCourtWindow(QDialog):
     
     def show_text_input(self):
         """텍스트 입력 창 표시"""
-        if self.uc:
-            self.uc.open_text_input_window()
-        else:
-            print("UiController 인스턴스가 없습니다.")
+
     
     def _setup_ui(self):
         """공통 UI 초기 설정"""
