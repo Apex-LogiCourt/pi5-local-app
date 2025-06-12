@@ -6,8 +6,8 @@ from PyQt5 import uic
 
 #UI파일 연결
 #단, UI파일은 Python 코드 파일과 같은 디렉토리에 위치해야한다.
-startWindowUi = uic.loadUiType("core/ui/qt-designer/startWindow.ui")[0]
-descriptionWindowUi = uic.loadUiType("core/ui/qt-designer/gameDescriptionWindow.ui")[0]
+startWindowUi = uic.loadUiType("core/ui/qt_designer/startWindow.ui")[0]
+descriptionWindowUi = uic.loadUiType("core/ui/qt_designer/gameDescriptionWindow.ui")[0]
 
 
 class startWindowClass(QDialog, startWindowUi) :
