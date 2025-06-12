@@ -201,15 +201,15 @@ class UiController():
 
 
         elif code == "record_start":
-            if self.turn == "prosecutor":
+            if self.isTurnProsecutor:
                 self.prosecutorWindowInstance.toggle_mic_state()
-            elif self.turn == "lawyer":
+            else:
                 self.lawyerWindowInstance.toggle_mic_state()
 
         elif code == "record_stop":
-            if self.turn == "prosecutor":
+            if self.isTurnProsecutor:
                 self.prosecutorWindowInstance.toggle_mic_state()
-            elif self.turn == "lawyer":
+            else:
                 self.lawyerWindowInstance.toggle_mic_state()
         
         elif code == "error_occurred":
