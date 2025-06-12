@@ -67,9 +67,10 @@ class UiController():
     
     def createWindowInstance(self):
         self.startWindowInstance = StartWindow(self._instance, self.game_controller)
-        self.descriptionWindowInstance = GameDescriptionWindow()
+        self.descriptionWindowInstance = GameDescriptionWindow(self._instance)
         self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
-        self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, self.case_data)
+        self.interrogationWindowInstance = None
+        # self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, self.case_data.profiles)
         self.judgeWindowInstance = JudgeWindow(self._instance, self.game_controller, self.case_data)
         self.overviewWindowInstance = OverviewWindow(self.case_data.case.outline)
         self.lawyerWindowInstance = LawyerWindow(self._instance, self.game_controller, self.case_data)
@@ -131,8 +132,8 @@ class UiController():
         elif code == "interrogation_accepted":
             if isinstance(arg, dict):
                 print(f"Interrogation accepted for {arg.get('type')}. Judge: {arg.get('message')}")
-                # interrogationWindowClass 구현 후 확인 필요
-                self.interrogationWindowInstance.func(arg.get("role", "판사"), arg.get("message","심문을 시작합니다."))
+                self.interrogationWindowInstance.update_dialogue(arg.get("role", "판사"), arg.get("message","심문을 시작합니다."))
+                self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, arg.get('type'))
 
         elif code == "objection":
             if isinstance(arg, dict):
@@ -140,7 +141,7 @@ class UiController():
                 self.warningWindowInstance.show()
 
         elif code == "judgement": # GameController에서 'judgement'로 판결 시작을 알림
-             if isinstance(arg, dict) and arg.get('role') == '판사':
+            if isinstance(arg, dict) and arg.get('role') == '판사':
                 print(f"Judgement phase initiated by {arg.get('role')}: {arg.get('message')}")
                 if hasattr(GameController, 'done'):
                     self.hideAllWindow()
@@ -252,6 +253,9 @@ class UiController():
     
     def open_text_input_window(self):
         self.textInputWindowInstance.show()
+
+    def open_start_window(self):
+        self.startWindowInstance.show()
         
     def _handle_text_input(self, text):
         """텍스트 입력 처리"""

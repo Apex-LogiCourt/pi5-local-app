@@ -21,10 +21,12 @@ class StartWindow(QDialog):
     def on_game_start(self):
         print("게임 시작 버튼 클릭됨")
         self.uc.open_generate_window()
+        self.close()
 
     def on_game_description(self):
         print("게임 설명 버튼 클릭됨")
         self.uc.open_description_window()
+        self.close()
 
     def on_text_mode(self):
         print("텍스트 모드 버튼 클릭됨")

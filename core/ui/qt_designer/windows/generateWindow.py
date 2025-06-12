@@ -31,6 +31,7 @@ class GenerateWindow(QDialog):
         다음 단계로 넘어가야함 !!!
         """
         print("앞으로 버튼 클릭됨")
+        self.uc.open_prosecutor_window()
         self.close()
     
     
