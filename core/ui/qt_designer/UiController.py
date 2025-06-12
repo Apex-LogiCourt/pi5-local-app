@@ -16,6 +16,7 @@ from ui.qt_designer.windows.common import BaseCourtWindow
 from ui.qt_designer.windows.overviewWindow import OverviewWindow
 from ui.qt_designer.windows.judgeWindow import JudgeWindow
 from ui.qt_designer.windows.warningWindow import WarningWindow
+from ui.qt_designer.windows.generateWindow import GenerateWindow
 
 import ui.qt_designer.resource_rc 
 
@@ -62,7 +63,7 @@ class UiController():
     def createWindowInstance(self):
         self.startWindowInstance = None
         self.descriptionWindowInstance = GameDescriptionWindow()
-        self.generateWindowInstance = None
+        self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
         self.interrogationWindowInstance = None
         self.judgeWindowInstance = JudgeWindow(self._instance, self.game_controller, self.case_data)
         self.overviewWindowInstance = OverviewWindow(self.case_data.case.outline)
@@ -79,6 +80,7 @@ class UiController():
         self.overviewWindowInstance.show()
         self.lawyerWindowInstance.show()
         self.warningWindowInstance.show()
+        self.generateWindowInstance.show()
 
     async def restart_game_flow(self): #최종 판결문에서 뒤로가기 버튼 누를 시 호출
         print("Restarting game flow...")

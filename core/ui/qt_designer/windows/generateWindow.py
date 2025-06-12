@@ -26,7 +26,7 @@ class GenerateWindow(QDialog):
         """버튼 연결 설정"""
         self.backButton.clicked.connect(self._on_forward_clicked)
     
-    def _on_back_clicked(self):
+    def _on_forward_clicked(self):
         """앞으로 버튼 클릭
         다음 단계로 넘어가야함 !!!
         """
