@@ -96,7 +96,6 @@
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }
-
 QPushButton:hover{
 	background-color: rgb(67, 129, 148);
 	border-radius: 20px;

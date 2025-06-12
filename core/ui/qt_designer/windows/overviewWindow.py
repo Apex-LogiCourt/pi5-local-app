@@ -15,7 +15,7 @@ class OverviewWindow(QDialog):
         
         # 초기 설정
         self.setup_ui()
-        self.setup_connections()
+        #self.setup_connections()
     
     def setup_ui(self):
         """UI 초기 설정"""
