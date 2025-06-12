@@ -102,8 +102,6 @@ class BaseCourtWindow(QDialog):
                     font: 28pt "나눔고딕 ExtraBold";
                 }
             """)
-
-        
     
     def _end_argument(self):
         """주장 종료"""
@@ -128,11 +126,28 @@ class BaseCourtWindow(QDialog):
 class ProsecutorWindow(BaseCourtWindow):
     def __init__(self, uiController, gameController, case_data, parent=None):
         super().__init__(uiController, gameController, case_data, 'prosecutorWindow.ui', parent)
+        self.turnButton.clicked.connect(self._turn_change)
+        self.endButton.clicked.connect(self._end_turn)
+
+    def _turn_change(self):
+        self.uc.open_lawyer_window()
+
+    def _end_turn(self):
+        self.gc.done()
 
 
 class LawyerWindow(BaseCourtWindow):
     def __init__(self, uiController, gameController, case_data, parent=None):
         super().__init__(uiController, gameController, case_data, 'lawyerWindow.ui', parent)
+        self.turnButton.clicked.connect(self._turn_change)
+        self.endButton.clicked.connect(self._end_turn)
+        
+    def _turn_change(self):
+        self.uc.open_prosecutor_window()
+
+    def _end_turn(self):
+        self.gc.done()
+
 
 # 테스트용 메인 함수
 if __name__ == "__main__":

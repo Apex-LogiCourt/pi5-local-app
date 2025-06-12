@@ -382,6 +382,38 @@ QPushButton:pressed{
     <string>profileButton4</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="turnButton">
+   <property name="geometry">
+    <rect>
+     <x>730</x>
+     <y>620</y>
+     <width>161</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	background-color: rgb(47, 90, 104);
+	color: rgb(255, 254, 254);
+	border-radius: 20px;
+	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
+}
+
+QPushButton:hover{
+	background-color: rgb(67, 129, 148);
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	background-color: rgb(0, 123, 255);
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>턴 종료</string>
+   </property>
+  </widget>
  </widget>
  <resources>
   <include location="assets/resource.qrc"/>
