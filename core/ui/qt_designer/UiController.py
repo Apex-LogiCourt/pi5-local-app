@@ -12,7 +12,7 @@ from game_controller import GameController
 
 from ui.qt_designer.windows.gameDescriptionWindow import GameDescriptionWindow
 from ui.qt_designer.windows.evidenceWindow import EvidenceWindow
-from ui.qt_designer.windows.common import BaseCourtWindow
+from ui.qt_designer.windows.common import BaseCourtWindow, LawyerWindow, ProsecutorWindow
 from ui.qt_designer.windows.overviewWindow import OverviewWindow
 from ui.qt_designer.windows.judgeWindow import JudgeWindow
 from ui.qt_designer.windows.warningWindow import WarningWindow
@@ -67,8 +67,8 @@ class UiController():
         self.interrogationWindowInstance = None
         self.judgeWindowInstance = JudgeWindow(self._instance, self.game_controller, self.case_data)
         self.overviewWindowInstance = OverviewWindow(self.case_data.case.outline)
-        self.lawyerWindowInstance = BaseCourtWindow(self._instance, self.game_controller, self.case_data, "lawyerWindow.ui")
-        self.prosecutorWindowInstance = BaseCourtWindow(self._instance, self.game_controller, self.case_data, "prosecutorWindow.ui")
+        self.lawyerWindowInstance = LawyerWindow(self._instance, self.game_controller, self.case_data)
+        self.prosecutorWindowInstance = ProsecutorWindow(self._instance, self.game_controller, self.case_data)
         self.textInputWindowInstance = None
         self.evidenceWindowInstance = EvidenceWindow(self.case_data.evidences) #evidence: List
         self.warningWindowInstance = WarningWindow("재판과 관련 없는 내용입니다.")
