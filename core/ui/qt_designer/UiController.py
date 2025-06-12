@@ -99,6 +99,10 @@ class UiController(QObject):
         self.textInputWindowInstance.hide()
         self.evidenceWindowInstance.hide()
         self.warningWindowInstance.hide()
+    
+    def hideCommon(self):
+        self.lawyerWindowInstance.hide()
+        self.prosecutorWindowInstance.hide()
 
     async def restart_game_flow(self): #최종 판결문에서 뒤로가기 버튼 누를 시 호출
         print("Restarting game flow...")
@@ -157,12 +161,14 @@ class UiController(QObject):
                 self.warningWindowInstance.show()
 
         elif code == "judgement": # GameController에서 'judgement'로 판결 시작을 알림
+            # if self.nowJudgement: return
+            # self.nowJudgement = True
             if isinstance(arg, dict) and arg.get('role') == '판사':
                 print(f"Judgement phase initiated by {arg.get('role')}: {arg.get('message')}")
                 if hasattr(GameController, 'done'):
                     self.hideAllWindow()
                     self.judgeWindowInstance.show()
-                    GameController.done()
+                    self.hideCommon()
                 else:
                     print("ERROR: GameController does not have 'done' method to trigger final verdict.")
 
@@ -189,8 +195,7 @@ class UiController(QObject):
         # 'verdict' 시그널의 arg가 실제 판결 내용 문자열이어야 합니다.
         # 아래는 임시로 "verdict" 시그널이 판결 내용 청크라고 가정하고 작성.
         elif code == "verdict": # 판결 내용 청크 (가정)
-            if self.result_screen_instance and self.stacked_layout.currentWidget() == self.result_screen_instance:
-                self.result_screen_instance.append_judgement_chunk(str(arg)) # 또는 append_truth_chunk
+            self.judgeWindowInstance.set_judge_text_add(str(arg))
 
         # 만약 GameController가 판결 요약과 진실을 구분해서 보낸다면,
         # "verdict_summary_chunk", "verdict_summary_done", "truth_chunk", "truth_done" 같은

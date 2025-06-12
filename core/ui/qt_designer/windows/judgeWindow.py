@@ -34,7 +34,12 @@ class JudgeWindow(QDialog):
         """판결문 텍스트 설정"""
         self.judgeText.setPlainText(text)
     
+    def set_judge_text_add(self, text):
+        self.judgeText.setPlainText(self.judgeText.toPlainText() + text)
+    
     def go_back(self):
+        self.uiController.restart_game_flow()
+        # self.uiController.nowJudgement = False
         self.close()
 
 # 테스트용 메인 함수
