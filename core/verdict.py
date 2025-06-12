@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 from docx import Document
 from tqdm import tqdm
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -99,10 +99,10 @@ def embed_and_store_chunks(chunks, pinecone_api_key, openai_api_key, index_name=
     try:
         print("Pinecone 벡터 스토어 초기화 중...")
         
-        # OpenAI 임베딩 모델 초기화
+        # OpenAI 임베딩 모델 초기화 (최신 모델 사용)
         embeddings = OpenAIEmbeddings(
-            openai_api_key=openai_api_key,
-            model="text-embedding-ada-002"
+            api_key=openai_api_key,
+            model="text-embedding-3-small"  # 최신 임베딩 모델
         )
         
         # Pinecone 벡터 스토어 초기화
@@ -115,31 +115,30 @@ def embed_and_store_chunks(chunks, pinecone_api_key, openai_api_key, index_name=
         print(f"{len(chunks)}개 청크를 임베딩하여 Pinecone에 저장 중...")
         
         # 청크를 문서 객체로 변환
+        from langchain_core.documents import Document as LangChainDocument
         documents = []
         for i, chunk in enumerate(chunks):
-            documents.append({
-                "page_content": chunk,
-                "metadata": {
+            documents.append(LangChainDocument(
+                page_content=chunk,
+                metadata={
                     "source": "criminal-law.docx",
                     "chunk_id": i,
                     "document_type": "criminal_law"
                 }
-            })
+            ))
         
         # 배치 처리로 저장 (Pinecone 제한 고려)
-        batch_size = 100
+        batch_size = 50  # 배치 크기 줄임
         for i in tqdm(range(0, len(documents), batch_size), desc="벡터 저장"):
             batch = documents[i:i + batch_size]
-            texts = [doc["page_content"] for doc in batch]
-            metadatas = [doc["metadata"] for doc in batch]
             
-            vectorstore.add_texts(
-                texts=texts,
-                metadatas=metadatas
-            )
-            
-            # API 제한 방지를 위한 지연
-            time.sleep(1)
+            try:
+                vectorstore.add_documents(documents=batch)
+                # API 제한 방지를 위한 지연
+                time.sleep(2)
+            except Exception as batch_error:
+                print(f"배치 {i//batch_size + 1} 저장 중 오류: {batch_error}")
+                continue
         
         print("모든 청크가 Pinecone에 성공적으로 저장되었습니다!")
         return vectorstore
@@ -240,10 +239,10 @@ def get_criminal_law_context(query, top_k=3):
         if not pinecone_api_key or not openai_api_key:
             return ""
         
-        # 임베딩 모델 초기화
+        # 임베딩 모델 초기화 (최신 모델 사용)
         embeddings = OpenAIEmbeddings(
-            openai_api_key=openai_api_key,
-            model="text-embedding-ada-002"
+            api_key=openai_api_key,
+            model="text-embedding-3-small"
         )
         
         # Pinecone 벡터 스토어 연결
@@ -363,3 +362,57 @@ def get_judge_result(message_list):
         result = chain.invoke({"messages": messages_joined})
     
     return result
+
+# 테스트 사례 추가
+def get_test_case_messages():
+    """
+    테스트용 검사/변호사 대화 내용 반환
+    """
+    return [
+        {
+            "role": "검사",
+            "content": "피고인 김소현은 2024년 11월 15일 오후 11시경, 자신이 운영하는 바에서 피해자 최지훈에게 독성 물질이 포함된 술을 제공하여 의도적으로 살해한 혐의를 받고 있습니다. 목격자 남기효의 증언에 따르면, 피고인이 피해자에게만 특별히 제조한 칵테일을 제공했으며, 피해자는 이를 마신 후 즉시 중독 증상을 보이며 사망했습니다. 이는 명백한 고의적 살인행위로 형법 제250조 제1항에 해당됩니다."
+        },
+        {
+            "role": "변호사",
+            "content": "검사 측 주장은 추측에 불과합니다. 우리 의뢰인 김소현은 단순히 평소처럼 술을 제조하여 제공했을 뿐이며, 피해자의 사망은 예측할 수 없었던 알레르기 반응이나 기존 질병에 의한 것일 가능성이 높습니다. 참고인 우민영의 증언에 따르면, 피고인은 평소 손님들에게 친절하게 서비스를 제공했으며, 피해자와 개인적인 원한 관계도 없었습니다. 고의성이 입증되지 않은 상황에서 살인죄를 적용하는 것은 부당합니다."
+        },
+        {
+            "role": "검사",
+            "content": "변호사 측의 주장은 사실과 다릅니다. 부검 결과 피해자의 혈액에서 일반적으로 술에 포함되지 않는 독성 화학물질이 검출되었으며, 이는 의도적으로 투입된 것으로 보입니다. 또한 CCTV 분석 결과, 피고인이 피해자에게만 별도의 재료를 추가하는 모습이 명확히 포착되었습니다. 이러한 객관적 증거들은 피고인의 고의적 살인 의도를 분명히 보여줍니다."
+        },
+        {
+            "role": "변호사",
+            "content": "검사 측이 제시한 부검 결과와 CCTV 영상에 대해 이의를 제기합니다. 첫째, 해당 화학물질은 바 청소용 세제에서 유래된 것으로 보이며, 우발적 오염 가능성을 배제할 수 없습니다. 둘째, CCTV 영상은 화질이 불분명하여 정확히 무엇을 첨가했는지 식별이 불가능합니다. 피고인은 평소 칵테일에 특별한 가니시나 시럽을 추가하는 습관이 있었으며, 이는 단순한 서비스 차원의 행동이었습니다. 합리적 의심을 넘어서는 입증이 부족한 상황입니다."
+        }
+    ]
+
+# 테스트 실행 함수
+def run_test_case():
+    """
+    테스트 사례로 RAG 시스템 검증
+    """
+    print("=== RAG 시스템 테스트 시작 ===")
+    test_messages = get_test_case_messages()
+    
+    print("\n[테스트 사건 배경]")
+    print("- 피고인: 김소현 (바 운영자)")
+    print("- 피해자: 최지훈 (고객)")
+    print("- 목격자: 남기효")
+    print("- 참고인: 우민영")
+    print("- 사건: 바에서 독성 물질 투입으로 인한 사망 사건")
+    
+    print("\n[검사-변호사 주장 내용]")
+    for i, msg in enumerate(test_messages, 1):
+        print(f"{i}. [{msg['role']}]: {msg['content'][:100]}...")
+    
+    print("\n[AI 판사 판결 진행중...]")
+    result = get_judge_result(test_messages)
+    
+    print("\n=== AI 판사 최종 판결 ===")
+    print(result)
+    print("\n=== 테스트 완료 ===")
+
+if __name__ == "__main__":
+    # 테스트 실행
+    run_test_case()
