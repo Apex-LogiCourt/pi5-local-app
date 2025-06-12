@@ -41,11 +41,11 @@ class uiController():
 
     def init_game_controller(self):
         print("Requesting GameController initialization...")
-        self._update_start_button("컨트롤러 초기화 중...", False)
+        self.setStartButtonState(False, "컨트롤러 초기화 중...")
         if hasattr(GameController, '_is_initialized'):
             if GameController._is_initialized:
                 print("GameController is already initialized. Loading case data...")
-                self.setStartButtonState(True)
+                self.setStartButtonState(True, "게임 시작")
                 self.is_gc_initialized = True
                 self.case_data = GameController._case_data
                 self.createWindowInstance()
@@ -54,7 +54,7 @@ class uiController():
                 asyncio.ensure_future(GameController.initialize())
         else:
             print("ERROR: GameController does not have a class method 'initialize'.")
-            self.setStartButtonState(False)
+            self.setStartButtonState(False, "컨트롤러 오류 (재시도)")
     
     def createWindowInstance(self):
         self.startWindowInstance = None
@@ -86,11 +86,11 @@ class uiController():
             QMessageBox.critical(self, "초기화 오류", "게임 데이터 초기화에 실패했습니다.")
         # "initialized" 시그널이 GameController로부터 오면 is_gc_initialized, case_data가 설정되고 로딩 다이얼로그가 닫힘.
 
-    def setStartButtonState(state: bool):
-        # 시작 버튼 상태 설정(데이터 로딩 중 ...)
-        # 이하 기존 코드
-        # self._update_start_button("게임 시작", True)
-        # self._update_start_button("컨트롤러 오류 (재시도)", True)
+    def setStartButtonState(state: bool, msg: str):
+        if msg == None:
+            msg = "게임 시작"
+        # 시작 버튼 상태 설정
+        # startWindowInstance.setStartButtonState(state, msg)
         pass
 
 if __name__ == "__main__" :
