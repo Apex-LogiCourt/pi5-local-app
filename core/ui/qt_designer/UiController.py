@@ -35,6 +35,7 @@ class UiController():
         UiController._instance = self
         self.game_controller = GameController.get_instance()
         self.init_game_controller()
+        self.turn = "prosecutor"  # 초기 턴은 검사로 설정
 
     def startWindow(self):
         # app = QApplication(sys.argv)
@@ -208,6 +209,28 @@ class UiController():
 
         else:
             print(f"[{self.__class__.__name__}] Unknown signal code: {code}")
+    
+    def open_prosecutor_window(self):
+        self.prosecutorWindowInstance.show()
+        self.turn = "prosecutor"
+        
+    def open_lawyer_window(self):
+        self.lawyerWindowInstance.show()    
+        self.turn = "lawyer"
+
+    def open_judge_window(self):
+        self.judgeWindowInstance.show()
+
+    def open_evidence_window(self):
+        self.evidenceWindowInstance.show()
+    
+    def open_overview_window(self):
+        self.overviewWindowInstance.show()
+    
+    def open_description_window(self):
+        self.descriptionWindowInstance.show()
+    
+
 
 
 
