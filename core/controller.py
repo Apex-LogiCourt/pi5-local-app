@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from typing import List, Dict
-from case_generation.case_builder import build_case_chain, build_character_chain,build_case_behind_chain
+from case_generation.case_builder import build_case_chain, build_character_chain,build_case_behind_chain, select_random_characters
 from evidence import make_evidence
 from data_models import CaseData, Case, Profile, Evidence
 import asyncio
@@ -19,6 +19,7 @@ class CaseDataManager:
     _evidences : List[Evidence] = None
     _profiles : List[Profile] = None
     _case_data : CaseData = None
+    _selected_characters : List[Dict] = None
 
 
     def __new__(cls):   
@@ -54,7 +55,9 @@ class CaseDataManager:
 
     @classmethod
     async def generate_case_stream(cls, callback=None):
-        chain = build_case_chain()
+        # 먼저 캐릭터들을 선택하고 클래스 변수에 저장
+        cls._selected_characters = select_random_characters(4)
+        chain = build_case_chain(cls._selected_characters)
         result = cls._handle_stream(chain, callback)
         # from tools.service import run_chain_streaming
         # result = run_chain_streaming(chain)
@@ -63,10 +66,11 @@ class CaseDataManager:
     
     @classmethod
     async def generate_profiles_stream(cls, callback=None):
-        chain = build_character_chain(cls._case.outline)
+        chain = build_character_chain(cls._case.outline, cls._selected_characters)
         result = cls._handle_stream(chain, callback)
         
-        asyncio.create_task(cls._parse_and_store_profiles(result))
+        # 비동기 태스크가 아닌 직접 await로 처리하여 순서 보장
+        await cls._parse_and_store_profiles(result)
         return result
     
     @classmethod 
@@ -89,7 +93,7 @@ class CaseDataManager:
     # 매개변수로 변경된 증거 리스트도 포함 
     @classmethod
     async def generate_case_behind(cls, callback=None):
-        chain = build_case_behind_chain(cls._case.outline, cls._profiles) 
+        chain = build_case_behind_chain(cls._case.outline, cls._profiles, cls._selected_characters) 
         result = cls._handle_stream(chain, callback)
         return result
     
@@ -138,10 +142,12 @@ class CaseDataManager:
     # 프로필 파싱 및 저장하는 내부 메소드 
     @classmethod
     async def _parse_and_store_profiles(cls, result: str):
-        # print("parse_and_store_profiles 실행")
+        print("[Debug] parse_and_store_profiles 실행")
         profiles = cls._parse_character_template(result)
+        print(f"[Debug] 파싱된 프로필 수: {len(profiles)}")
+        for profile in profiles:
+            print(f"[Debug] {profile.type}: {profile.name}")
         cls.set_profiles(profiles)
-        # print(profiles)
 
     @staticmethod
     def _parse_character_template(template: str) -> List[Profile]:
@@ -188,6 +194,7 @@ class CaseDataManager:
                 gender = character_info['gender']
                 age = character_info['age']
                 voice = character_info.get('voice', "")  # voice 정보 가져오기 (.get으로 안전하게)
+                image = character_info.get('image', "")  # image 정보 가져오기 (.get으로 안전하게)
 
             profiles.append(Profile(
                 type=profile_type,
@@ -196,7 +203,8 @@ class CaseDataManager:
                 age=int(age),
                 personality=personality,
                 context=context,
-                voice=voice
+                voice=voice,
+                image=image
             ))
         return profiles
     

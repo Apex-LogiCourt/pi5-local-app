@@ -30,7 +30,6 @@
    <property name="styleSheet">
     <string notr="true">QPushButton{
 	background-color: rgb(47, 90, 104);
-	boder-radius: 20px;
 	color: rgb(255, 254, 254);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;

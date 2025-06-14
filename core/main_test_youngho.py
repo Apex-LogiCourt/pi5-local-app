@@ -7,7 +7,7 @@ from api.routers import state_router, websocket_router, evidence_router
 from game_controller import GameController
 
 from PyQt5.QtWidgets import QApplication
-from core.ui.qt_designer.ui_controller import startWindowClass
+from ui.qt_designer.UiController import UiController
 import uvicorn
 import qasync
 import threading
@@ -74,15 +74,9 @@ async def main_async():
     gc = GameController.get_instance()
     await gc.initialize()
     await gc.start_game()
-    
-    # PyQt 애플리케이션 실행
-    qt_app = QApplication.instance()
-    if qt_app is None:
-        qt_app = QApplication(sys.argv)
-    
-    print("PyQt 윈도우 표시 중...")
-    window = startWindowClass()
-    window.show()
+
+    uiController = UiController.get_instance()
+    uiController.startWindow()
     
     # PyQt 이벤트 루프 실행 (qasync로 asyncio와 통합)
     await qasync.asyncio.sleep(0)  # 이벤트 루프가 시작되도록 함

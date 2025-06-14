@@ -142,15 +142,13 @@ class Interrogator:
         사용자가 이름을 입력한 경우 프로필과 일치하는 이름인지 반드시 확인하세요.
         이름 출력은 오로지 프로필에 있는 이름만을 출력하세요.
                                             
-        1. 피고, 목격자 등 역할이 명시되어 있거나 이름이 일치하는 경우
+        1. 피고, 피해자, 목격자, 참고인 등 역할이 명시되어 있거나 이름이 일치하는 경우
             - 피고인 심문: {{"type": "defendant", "answer": "피고에 대한 심문을 진행하십시오."}}
+            - 피해자 심문: {{"type": "victim", "answer": "피해자에 대한 심문을 진행하십시오."}}
             - 목격자 심문: {{"type": "witness", "answer": "목격자에 대한 심문을 진행하십시오."}}
             - 참고인 심문: {{"type": "reference", "answer": "참고인에 대한 심문을 진행하십시오."}}
-            
-        2. 피해자에 대한 심문을 요청하는 경우 
-            - {{"type": "retry", "answer": "현재 재판에는 피고, 목격자, 참고인만이 출석해있습니다."}}
                                             
-        3. 이름이 틀린 경우 
+        2. 이름이 틀린 경우 
             - 오타로 예상됨: {{"type": "retry", "answer": "OOO 씨에 대해 얘기하시는 겁니까?"}}
             - 전혀 다른 이름 : {{"type": "retry", "answer": "그런 인물은 없습니다"}}
         """)
@@ -162,10 +160,22 @@ class Interrogator:
 
         if type != "retry":
             # 심문 요청이 유효한 경우, 프로필 리스트에서 해당 타입과 일치하는 프로필 찾기
+            target_profile = None
+            
+            # 사용자가 이름을 직접 언급했는지 확인
             for profile in cls._profiles:
-                if profile.type == type:
-                    cls._current_profile = profile
+                if profile.name in user_input:
+                    target_profile = profile
                     break
+            
+            # 이름이 없으면 타입으로 찾기
+            if not target_profile:
+                for profile in cls._profiles:
+                    if profile.type == type:
+                        target_profile = profile
+                        break
+            
+            cls._current_profile = target_profile
 
         return result
 

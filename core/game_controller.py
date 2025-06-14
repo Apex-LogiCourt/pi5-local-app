@@ -5,6 +5,14 @@ from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 import asyncio
 import time
 from interrogation.interrogator import Interrogator, it
+from verdict import get_judge_result
+
+
+class SignalEmitter(QObject):
+    signal = pyqtSignal(str, object)
+
+    def __init__(self):
+        super().__init__()
 
 class GameController(QObject):
     _instance = None
@@ -14,10 +22,10 @@ class GameController(QObject):
     _evidences : List[Evidence] = None
     _profiles : List[Profile] = None
     _case_data : CaseData = None
-    _signal = pyqtSignal(str, object)
+    # _signal = pyqtSignal(str, object)
     _interrogator : Interrogator = it.get_instance()
 
-    
+
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
@@ -35,6 +43,10 @@ class GameController(QObject):
             
         GameController._instance = self
         self.signal = pyqtSignal()
+
+
+        self._signal_emitter = SignalEmitter()
+        self._signal = self._signal_emitter.signal  # SignalEmitter의 signal을 GameController의 _signal로 설정
         # GameState에 초기 데이터 반영
 
 #==============================================
@@ -126,7 +138,7 @@ class GameController(QObject):
             
             def handle_response(sentence):
                 # 심문 응답을 처리하는 콜백
-                asyncio.create_task(handler_tts_service(sentence, cls._state.current_profile.voice))
+                # asyncio.create_task(handler_tts_service(sentence, cls._state.current_profile.voice))
                 cls._send_signal("interrogation", {
                     "role": cls._state.current_profile.name if cls._state.current_profile else "증인",
                     "message": sentence
@@ -134,7 +146,9 @@ class GameController(QObject):
                 # cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", sentence)
                 
             response_text = await run_chain_streaming(it.build_ask_chain(text, cls._state.current_profile), handle_response)
+            asyncio.create_task(handler_tts_service(response_text, cls._state.current_profile.voice))
             cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", response_text)
+            
         # print(f"user_input() called, 현재 턴{cls._state.turn}")
         return True
 
@@ -150,12 +164,18 @@ class GameController(QObject):
     def done(cls) -> None:
         """발언 완전 종료 시에 호출, 양쪽 다 됐을 때는 최종 판결 시작"""
         cls._state.done_flags[cls._state.turn] = True
+        print(f"[GameController] done() called: {cls._state.done_flags}")
         
+        # if cls._state.done_flags[cls._state.turn.next()] == False:
+        #     cls._switch_turn()
+
         if all(cls._state.done_flags.values()):
             cls._state.phase = Phase.JUDGEMENT
             cls._send_signal("judgement", {'role': '판사', 'message': '최종 판결을 내리겠습니다.'})
             cls._add_message("판사", "최종 판결을 내리겠습니다.")
-            cls._switch_turn()
+            
+            # 판결 생성 및 스트리밍
+            cls._get_judgement()
 
     @classmethod
     def get_state(cls) -> GameState:
@@ -222,7 +242,21 @@ class GameController(QObject):
     @classmethod
     def _get_judgement(cls) -> str:
         """판결 단계에서 최종 결과를 얻어와 메시지에 추가하고 반환."""
-        pass
+        # 쌓인 대화 메시지들을 가져와서 판결 생성
+        message_list = cls._state.messages
+        print(f"[GameController] 판결 생성 시작 - 총 {len(message_list)}개 메시지")
+        
+        # 판결 결과 생성 (동기 함수)
+        judgement_result = get_judge_result(message_list)
+        
+        from tools.service import handler_tts_service
+
+        asyncio.create_task(handler_tts_service(judgement_result))
+        cls._send_signal("verdict", judgement_result)
+        print(judgement_result)
+        
+        print(f"[GameController] 판결 생성 완료")
+        return judgement_result
 
     @classmethod
     def _add_message(cls, role: Role, content: str) -> None:
@@ -235,6 +269,7 @@ class GameController(QObject):
     def _switch_turn(cls) -> None:
         """Role.PROSECUTOR ↔ Role.ATTORNEY 토글."""
         cls._state.turn = cls._state.turn.next()
+        print(f"[GameController] _switch_turn() called: {cls._state.turn.value}")
 
     @classmethod
     def _handle_bnt_event(cls, role : str) -> None:
