@@ -198,19 +198,28 @@ def create_image_by_ai(name: str):
     }
     output = client.run(model, input=inputs)
 
-    if output and isinstance(output, list):
-        image_url = output[0]
-        print(f"[{name}] 이미지 URL: {image_url}")
-
-        response = requests.get(image_url)
-        if response.status_code == 200:
-            with open(save_path, "wb") as f:
-                f.write(response.content)
+    print(output)
+    try:
+        with open(save_path, "wb") as file:
+            file.write(output.read())
             print(f"[{name}] 이미지 저장 성공: {save_path}")
-        else:
-            print(f"[{name}] 이미지 저장 실패: {response.status_code}")
-    else:
-        print(f"[{name}] 이미지 요청 실패")
+    except:
+        print(f"[{name}] 이미지 저장 실패: {output}")
+
+    # if output and isinstance(output, list):
+    #     image_url = output[0]
+    #     print(f"[{name}] 이미지 URL: {image_url}")
+
+    #     response = requests.get(image_url)
+    #     if response.status_code == 200:
+    #         with open(save_path, "wb") as f:
+    #             f.write(response.content)
+    #         print(f"[{name}] 이미지 저장 성공: {save_path}")
+    #     else:
+    #         print(f"[{name}] 이미지 저장 실패: {response.status_code}")
+    # else:
+    #     print(f"[{name}] 이미지 요청 실패")
+
 
     # JSON 필요시 아래 코드로 사용
     # payload = {
@@ -255,7 +264,8 @@ def create_image_by_ai(name: str):
 if __name__ == "__main__":
     # res = create_image_by_ai("메시지 기록")
     # print(res)
-    t = make_evidence_image("test6")
+    print("start")
+    t = make_evidence_image("a simple car")
     print(t)
 
     # CaseDataManager import 한 뒤에 테스트 할 때만 돌려보세용  
