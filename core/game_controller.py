@@ -98,6 +98,7 @@ class GameController(QObject):
         cls._state.record_state = True
         from tools.service import handler_record_start
         await handler_record_start()
+        cls._send_signal("record_toggled", True)
 
     
     @classmethod
@@ -111,6 +112,7 @@ class GameController(QObject):
         cls._state.record_state = False
         from tools.service import handler_record_stop
         await handler_record_stop()
+        cls._send_signal("record_toggled", False)
         
         if cls._state.phase == Phase.INTERROGATE:
             return False
