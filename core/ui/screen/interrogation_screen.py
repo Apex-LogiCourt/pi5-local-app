@@ -11,6 +11,7 @@ from ui.resizable_image import _get_image_path, _get_profile_image_path
 from ui.style_constants import DARK_BG_COLOR, WHITE_TEXT
 # Removed: from core.game_controller import GameController
 import re
+from qasync import asyncSlot
 
 #아이고 막 이렇게 해놨네 맵핑을 
 KOREAN_TO_ENGLISH_MAP = {
@@ -199,18 +200,22 @@ class InterrogationScreen(QWidget):
 
         self.setLayout(layout)
 
-    def handle_text_input_placeholder(self):
-        # This should eventually open a QInputDialog or a custom input widget
-        # For now, it might send a predefined question or open a simple dialog
-        # from PyQt5.QtWidgets import QInputDialog
-        # text, ok = QInputDialog.getText(self, '질문 입력', '질문할 내용을 입력하세요:')
-        # if ok and text:
-        #     self.question_text = text
-        #     self.question_label.setText(f"당신의 질문 : {self.question_text}")
-        #     if self.game_controller:
-        #         # self.game_controller.user_input(text) # Example
-        #         print(f"User input sent (placeholder): {text}")
-        QMessageBox.information(self, "알림", "텍스트 입력 기능은 구현 중입니다.")
+    @asyncSlot()
+    async def handle_text_input_placeholder(self):
+        from PyQt5.QtWidgets import QInputDialog
+
+        text, ok = QInputDialog.getText(self, '질문 입력', '질문할 내용을 입력하세요:')
+        if ok and text.strip():
+            self.question_text = text
+            self.question_label.setText(f"당신의 질문 : {self.question_text}")
+
+            if self.game_controller:
+                await self.game_controller.user_input(text)
+                print(f"심문 질문 전송: {text}")
+            else:
+                print("❌ game_controller 없음")
+        else:
+            print("⛔ 입력 취소 또는 공백")
 
 
     def show_evidences_placeholder(self):
@@ -229,16 +234,17 @@ class InterrogationScreen(QWidget):
         self.mic_on = is_on
         self.btn_mic.set_icon_on(self.mic_on)
 
-    def toggle_mic(self):
-        # self.mic_on = not self.mic_on # State will be set by signal
-        # self.btn_mic.set_icon_on(self.mic_on)
+    @asyncSlot()
+    async def toggle_mic(self):
         if self.game_controller:
-            if not self.mic_on: # If mic is currently off, send record_start
-                self.game_controller.record_start()
-            else: # If mic is currently on, send record_end
-                self.game_controller.record_end()
+            if not self.mic_on:  # If mic is currently off, send record_start
+                await self.game_controller.record_start()
+            else:  # If mic is currently on, send record_end
+                await self.game_controller.record_end()
         else:
             print("GameController not available in InterrogationScreen")
+
+        # 버튼 상태는 GameController의 시그널로 업데이트됨
 
 
     def handle_back(self):

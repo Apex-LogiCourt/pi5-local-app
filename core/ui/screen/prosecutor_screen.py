@@ -142,22 +142,23 @@ class ProsecutorScreen(QWidget):
         self.mic_on = is_on
         self.btn_mic.set_icon_on(self.mic_on)
 
-    def toggle_mic_action(self):
+    @asyncSlot()
+    async def toggle_mic_action(self):
         print("Mic 버튼 클릭됨")
 
         if self.game_controller:
             print("game_controller 연결됨 → mic_on =", self.mic_on)
 
             if not self.mic_on:
-                asyncio.create_task(self.game_controller.record_start())
+                await self.game_controller.record_start()
             else:
-                asyncio.create_task(self.game_controller.record_end())
+                await self.game_controller.record_end()
         else:
             print("❌ game_controller 없음")
 
-        # 버튼 상태 토글 (누락되었을 수 있으므로 추가)
-        self.mic_on = not self.mic_on
-        self.btn_mic.set_icon_on(self.mic_on)
+        # 버튼 상태는 GameController의 시그널로 업데이트됨
+        # self.mic_on = not self.mic_on
+        # self.btn_mic.set_icon_on(self.mic_on)
 
     def handle_switch_to_lawyer(self):
         if self.on_switch_to_lawyer:

@@ -550,17 +550,13 @@ class MainWindow(QWidget):
         # 더 세분화된 시그널 코드를 사용하는 것이 좋습니다. 현재 코드에는 이 부분이 명확하지 않습니다.
 
 
-        elif code == "record_start":
-            print("Signal 'record_start' received. Turning mic button ON.")
+        elif code == "record_toggled":
+            # arg는 boolean: True면 녹음 시작, False면 녹음 중지
+            is_on = arg if isinstance(arg, bool) else False
+            print(f"Signal 'record_toggled' received. Mic state: {is_on}")
             current_screen = self.stacked_layout.currentWidget()
             if hasattr(current_screen, 'set_mic_button_state'):
-                current_screen.set_mic_button_state(True)
-
-        elif code == "record_stop":
-            print("Signal 'record_stop' received. Turning mic button OFF.")
-            current_screen = self.stacked_layout.currentWidget()
-            if hasattr(current_screen, 'set_mic_button_state'):
-                current_screen.set_mic_button_state(False)
+                current_screen.set_mic_button_state(is_on)
         
         elif code == "error_occurred":
             error_message = str(arg) if arg else "알 수 없는 오류가 발생했습니다."
