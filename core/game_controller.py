@@ -149,7 +149,9 @@ class GameController(QObject):
         print(f"[일반 발언] {cls._state.turn.label()}의 done 상태 리셋")
 
         if cls._state.phase == Phase.DEBATE:
-            return await cls._handle_user_input_validation(text)
+            # 판사 개입 체크는 하되, 턴은 무조건 전환
+            await cls._handle_user_input_validation(text)
+            return True  # STT 입력 후 무조건 턴 전환
         
         if cls._state.phase == Phase.INTERROGATE:
             from tools.service import run_chain_streaming, handler_tts_service
