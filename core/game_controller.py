@@ -176,7 +176,15 @@ class GameController(QObject):
         print(f"[일반 발언] {cls._state.turn.label()}의 done 상태 리셋")
 
         # 판사 개입 체크는 하되, 턴은 무조건 전환
-        await cls._handle_user_input_validation(text)
+        validation_result = await cls._handle_user_input_validation(text)
+        
+        # 문맥 검증 통과 시 UI로 발언 전송 (role 정보 포함)
+        if validation_result:
+            cls._send_signal("debate", {
+                "role": cls._state.turn.label(),
+                "message": text
+            })
+        
         return True  # STT 입력 후 무조건 턴 전환
 
     @classmethod
@@ -239,7 +247,8 @@ class GameController(QObject):
                     cls._state.phase = Phase.INTERROGATE 
                     return await request_speak_judge(cls, {'role': '판사', 'message': temp.get("answer"), 'type':type_}, "interrogation_accepted")
             else :
-                cls._add_message(cls._state.turn, text)
+                # 문맥 검증 통과 (발언이 유효함)
+                # 메시지는 이미 user_input()에서 추가되었으므로 여기서는 중복 추가하지 않음
                 return True
 
     
