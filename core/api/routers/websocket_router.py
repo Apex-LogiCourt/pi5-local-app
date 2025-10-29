@@ -4,6 +4,7 @@ import json
 import asyncio
 from api.manager import websocket_manager
 from game_controller import GameController
+from data_models import Phase
 
 router = APIRouter(prefix="/ws", tags=["WebSocket"])
 
@@ -43,7 +44,15 @@ async def _receive_handler(websocket: WebSocket):
                 print(f"STT 수신: {text}")
 
                 # ➡ GameController 에 전달
-                await GameController.get_instance().user_input(text)
+                should_switch_turn = await GameController.get_instance().user_input(text)
+
+                # STT 처리 후 자동 턴 전환
+                if should_switch_turn:
+                    gc = GameController.get_instance()
+                    if gc._state.phase == Phase.DEBATE:
+                        GameController._switch_turn()
+                        current_turn = gc._state.turn
+                        print(f"[자동 턴 전환] 다음 차례: {current_turn.label()}")
 
     except Exception as e:
         print(f"WebSocket 오류: {e}")

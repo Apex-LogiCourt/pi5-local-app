@@ -127,7 +127,27 @@ class GameController(QObject):
         """
         if not text.strip():
             return False
+
+        # "이상입니다" 자동 감지 및 done 처리
+        normalized_text = text.rstrip('.').strip()
+        if normalized_text.endswith("이상입니다"):
+            cls._add_message(cls._state.turn, text)
+            cls.done()  # 발언 종료 처리
+            print(f"[자동 종료] '이상입니다' 감지하여 done 처리 완료")
+
+            # 양쪽 모두 done이면 판결로 넘어가므로 턴 전환 불필요
+            if all(cls._state.done_flags.values()):
+                return False  # 턴 전환 안 함 (판결 단계로 전환됨)
+            else:
+                return True  # 한쪽만 끝났으므로 턴 전환 필요
+
+        # 일반 발언 (이상입니다가 아닌 경우)
         cls._add_message(cls._state.turn, text)
+
+        # 일반 발언 시 현재 턴의 done 상태 리셋 (연속으로 이상입니다 해야 판결)
+        cls._state.done_flags[cls._state.turn] = False
+        print(f"[일반 발언] {cls._state.turn.label()}의 done 상태 리셋")
+
         if cls._state.phase == Phase.DEBATE:
             return await cls._handle_user_input_validation(text)
         
