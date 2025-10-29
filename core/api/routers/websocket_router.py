@@ -51,20 +51,18 @@ async def _receive_handler(websocket: WebSocket):
                 print(f"[디버그] should_switch_turn: {should_switch_turn}, phase: {gc._state.phase}, current_turn: {gc._state.turn.label()}")
 
                 if should_switch_turn:
-                    if gc._state.phase == Phase.DEBATE:
-                        GameController._switch_turn()
-                        current_turn = gc._state.turn
-                        print(f"[자동 턴 전환] 다음 차례: {current_turn.label()}")
+                    # Phase와 상관없이 항상 턴 전환
+                    GameController._switch_turn()
+                    current_turn = gc._state.turn
+                    print(f"[자동 턴 전환] 다음 차례: {current_turn.label()}")
 
-                        # 턴 전환을 WebSocket으로 알림
-                        turn_change_msg = json.dumps({
-                            "type": "turn_change",
-                            "current_turn": current_turn.value,
-                            "current_turn_label": current_turn.label()
-                        })
-                        await websocket_manager.broadcast(turn_change_msg)
-                    else:
-                        print(f"[경고] Phase가 DEBATE가 아님: {gc._state.phase}")
+                    # 턴 전환을 WebSocket으로 알림
+                    turn_change_msg = json.dumps({
+                        "type": "turn_change",
+                        "current_turn": current_turn.value,
+                        "current_turn_label": current_turn.label()
+                    })
+                    await websocket_manager.broadcast(turn_change_msg)
 
     except Exception as e:
         print(f"WebSocket 오류: {e}")
