@@ -143,18 +143,7 @@ class GameController(QObject):
             else:
                 return True  # 한쪽만 끝났으므로 턴 전환 필요
 
-        # 일반 발언 (이상입니다가 아닌 경우)
-        cls._add_message(cls._state.turn, text)
-
-        # 일반 발언 시 현재 턴의 done 상태 리셋 (연속으로 이상입니다 해야 판결)
-        cls._state.done_flags[cls._state.turn] = False
-        print(f"[일반 발언] {cls._state.turn.label()}의 done 상태 리셋")
-
-        if cls._state.phase == Phase.DEBATE:
-            # 판사 개입 체크는 하되, 턴은 무조건 전환
-            await cls._handle_user_input_validation(text)
-            return True  # STT 입력 후 무조건 턴 전환
-        
+        # 심문 모드와 토론 모드 분리 처리
         if cls._state.phase == Phase.INTERROGATE:
             from tools.service import run_chain_streaming, handler_tts_service
             cls._state.current_profile = it._current_profile
@@ -177,9 +166,18 @@ class GameController(QObject):
             response_text = await run_chain_streaming(it.build_ask_chain(text, cls._state.current_profile), handle_response)
             asyncio.create_task(handler_tts_service(response_text, cls._state.current_profile.voice))
             cls._add_message(cls._state.current_profile.name, response_text)
-            
-        # print(f"user_input() called, 현재 턴{cls._state.turn}")
-        return True
+            return True  # 심문 모드에서는 턴 전환 (질문-답변 구조)
+        
+        # 일반 발언 (이상입니다가 아닌 경우) - DEBATE 모드 전용
+        cls._add_message(cls._state.turn, text)
+
+        # 일반 발언 시 현재 턴의 done 상태 리셋 (연속으로 이상입니다 해야 판결)
+        cls._state.done_flags[cls._state.turn] = False
+        print(f"[일반 발언] {cls._state.turn.label()}의 done 상태 리셋")
+
+        # 판사 개입 체크는 하되, 턴은 무조건 전환
+        await cls._handle_user_input_validation(text)
+        return True  # STT 입력 후 무조건 턴 전환
 
     @classmethod
     def interrogation_end(cls) -> None:
