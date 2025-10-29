@@ -156,20 +156,25 @@ class GameController(QObject):
         if cls._state.phase == Phase.INTERROGATE:
             from tools.service import run_chain_streaming, handler_tts_service
             cls._state.current_profile = it._current_profile
-            
-            
+
+            # 안전 장치: current_profile이 None이면 에러 처리
+            if cls._state.current_profile is None:
+                error_msg = "심문 대상이 설정되지 않았습니다. 변론 화면으로 돌아갑니다."
+                print(f"[GameController] 에러: {error_msg}")
+                cls._send_signal("error_occurred", {"message": error_msg})
+                cls._state.phase = Phase.DEBATE
+                return False
+
             def handle_response(sentence):
                 # 심문 응답을 처리하는 콜백
-                # asyncio.create_task(handler_tts_service(sentence, cls._state.current_profile.voice))
                 cls._send_signal("interrogation", {
-                    "role": cls._state.current_profile.name if cls._state.current_profile else "증인",
+                    "role": cls._state.current_profile.name,
                     "message": sentence
                 })
-                # cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", sentence)
-                
+
             response_text = await run_chain_streaming(it.build_ask_chain(text, cls._state.current_profile), handle_response)
             asyncio.create_task(handler_tts_service(response_text, cls._state.current_profile.voice))
-            cls._add_message(cls._state.current_profile.name if cls._state.current_profile else "증인", response_text)
+            cls._add_message(cls._state.current_profile.name, response_text)
             
         # print(f"user_input() called, 현재 턴{cls._state.turn}")
         return True

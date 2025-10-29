@@ -110,18 +110,58 @@ class Interrogator:
         cls._evidence = case_data.evidences
 
     @classmethod
+    def set_current_profile(cls, profile: Profile) -> None:
+        """Profile 객체를 직접 설정 (권장)"""
+        cls._current_profile = profile
+        print(f"[Interrogator] 현재 심문 대상 설정: {profile.name} ({profile.type})")
+
+    @classmethod
+    def set_current_profile_by_name(cls, name: str) -> bool:
+        """이름으로 Profile을 찾아 _current_profile에 설정"""
+        if cls._profiles is None:
+            print("[Interrogator] 에러: profiles가 로드되지 않았습니다.")
+            return False
+
+        for profile in cls._profiles:
+            if profile.name == name:
+                cls._current_profile = profile
+                print(f"[Interrogator] 현재 심문 대상 설정: {profile.name} ({profile.type})")
+                return True
+
+        print(f"[Interrogator] 경고: '{name}' 이름의 Profile을 찾을 수 없습니다.")
+        return False
+
+    @classmethod
     def build_ask_chain(cls, question: str, profile : Profile):
-        # 모든 변수를 미리 포맷팅된 텍스트로 준비
+        # Profile 정보를 구조화하여 프롬프트 생성
         formatted_prompt = f"""
-                당신은 재판에 참석한 {profile.type}입니다.
-                당신의 역할은 사건에 대한 질문에 인간적으로 답변하는 것입니다.
-                사건 개요: {cls._case.outline}
-                당신의 정보 : {profile.__str__()}
-                증거 : {cls._evidence.__str__()}
-                질문: {question}
-                                                             
-                답변:
-            """
+당신은 재판에 참석한 {profile.type}입니다.
+
+## 당신의 신상 정보
+- 이름: {profile.name}
+- 나이: {profile.age}세
+- 성별: {profile.gender}
+- 성격: {profile.personality}
+- 출석 배경: {profile.context}
+
+## 사건 개요
+{cls._case.outline}
+
+## 관련 증거
+{cls._evidence.__str__()}
+
+## 답변 지침
+1. 당신의 성격({profile.personality})을 반영하여 답변하세요.
+2. 당신의 출석 배경({profile.context})을 고려하여 답변하세요.
+3. 알지 못하는 것은 솔직하게 "모른다"고 답변하세요.
+4. 인간적이고 자연스럽게 답변하세요.
+5. 답변은 2-3문장으로 간결하게 작성하세요.
+
+## 질문
+{question}
+
+## 답변
+"""
         
         # 단순한 프롬프트 템플릿 생성
         prompt = ChatPromptTemplate.from_template(formatted_prompt)

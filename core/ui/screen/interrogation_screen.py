@@ -84,8 +84,15 @@ class InterrogationScreen(QWidget):
         self.mic_on = False
 
         self.profile_title = target_character_title # e.g., "이름 : 우민영 (피고)"
-        self.dialogue_text = "저는 아무것도 모릅니다" # Initial placeholder
-        self.question_text = "무엇을 보았죠?" # Initial placeholder for user's question
+
+        # Profile 정보 기반 초기 메시지 생성 (하드코딩 제거)
+        current_profile = game_controller._interrogator._current_profile
+        if current_profile:
+            self.dialogue_text = f"안녕하세요, 저는 {current_profile.name}입니다."
+        else:
+            self.dialogue_text = "안녕하세요."
+
+        self.question_text = ""  # 초기 질문은 비워둠
 
         self.init_ui()
 

@@ -314,9 +314,12 @@ class MainWindow(QWidget):
         for p_obj in self.case_data.profiles:
             item_text = f"{p_obj.name} ({self.type_map.get(p_obj.type, p_obj.type)})"
             list_item = QListWidgetItem(item_text)
-            # GameController에 전달할 정보로 Profile 객체 자체나 고유 ID를 저장하는 것이 더 좋을 수 있습니다.
-            # 여기서는 GameController에서 Profile 객체를 이름으로 찾을 수 있다고 가정하고 title을 저장합니다.
-            list_item.setData(Qt.UserRole, {"name": p_obj.name, "role_display": self.type_map.get(p_obj.type, p_obj.type)})
+            # Profile 객체 자체를 저장하여 직접 전달
+            list_item.setData(Qt.UserRole, {
+                "name": p_obj.name,
+                "role_display": self.type_map.get(p_obj.type, p_obj.type),
+                "profile": p_obj  # Profile 객체 직접 저장
+            })
             list_widget.addItem(list_item)
         
         layout.addWidget(QLabel("심문할 대상을 선택하세요:"))
@@ -348,10 +351,17 @@ class MainWindow(QWidget):
         if dialog.exec_() == QDialog.Accepted and selected_character_data:
             # InterrogationScreen에 전달할 title 문자열 생성
             target_character_title = f"이름: {selected_character_data['name']} ({selected_character_data['role_display']})"
-            self.show_interrogation_screen(calling_screen_type, target_character_title)
-            # GameController에 심문 대상 알림 (GameController가 Profile 객체를 이름으로 찾도록 함)
-            if hasattr(self.game_controller._interrogator, 'set_current_profile_by_name'): # Interrogator에 메소드가 있다고 가정
+
+            # Interrogator에 선택된 Profile 객체 직접 전달
+            if 'profile' in selected_character_data:
+                selected_profile = selected_character_data['profile']
+                self.game_controller._interrogator.set_current_profile(selected_profile)
+                print(f"[MainWindow] 심문 대상 설정: {selected_profile.name}")
+            else:
+                # fallback: 이름으로 찾기
                 self.game_controller._interrogator.set_current_profile_by_name(selected_character_data['name'])
+
+            self.show_interrogation_screen(calling_screen_type, target_character_title)
 
 
     def show_interrogation_screen(self, previous_screen_type: str, target_character_title: str):
