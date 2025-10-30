@@ -39,8 +39,9 @@ def get_profile_pixmap(name: str):
     if romanized:
         # _get_profile_image_path expects only the filename, not the "profile/" prefix
         return QPixmap(_get_profile_image_path(f"{romanized}.png"))
-    print(f"Warning: Could not get profile pixmap for {name}")
-    return QPixmap(_get_profile_image_path(f"{random.choice(list(KOREAN_TO_ENGLISH_MAP.values()))}.png"))
+    rand_name = random.choice(list(KOREAN_TO_ENGLISH_MAP.values()))
+    print(f"Warning: Could not get profile pixmap for {name}, replace tp {rand_name}.")
+    return QPixmap(_get_profile_image_path(f"{rand_name}.png"))
 
 
 class MicButton(QPushButton):
