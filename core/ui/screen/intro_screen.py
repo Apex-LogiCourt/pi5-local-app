@@ -14,6 +14,7 @@ from ui.style_constants import (
 from ui.resizable_image import _get_image_path, _get_profile_image_path
 # Removed: from core.data_models import Evidence (data will be passed)
 import re
+import random
 
 # 한글 이름을 영문 파일명으로 매핑 (can be moved to a utils file if shared more)
 KOREAN_TO_ENGLISH_MAP = {
@@ -54,7 +55,11 @@ def get_profile_image_label(name: str) -> QLabel:
             else:
                 label.setPixmap(pix)
         else:
-            label.setText(f"{name}\n(이미지 없음)")
+            roma_name = random.choice(list(KOREAN_TO_ENGLISH_MAP.values()))
+            img_path = _get_profile_image_path(f"{roma_name}.png")
+            pix = QPixmap(img_path)
+            label.setPixmap(pix)
+            # label.setText(f"{name}\n(이미지 없음)")
     except Exception as e:
         print(f"Error getting profile image for {name}: {e}")
         label.setText(f"{name}\n(이미지 오류)")

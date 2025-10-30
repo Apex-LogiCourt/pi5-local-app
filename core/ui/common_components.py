@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 from ui.resizable_image import _get_image_path, _get_profile_image_path # Relative to ui/
 import re
+import random
 
 KOREAN_TO_ENGLISH_MAP = {
     "은영": "Eunyoung", "봄달": "Bomdal", "지훈": "Jihoon", "소현": "Sohyun",
@@ -27,10 +28,10 @@ def get_profile_pixmap(name: str):
         pix = QPixmap(path)
         if pix.isNull():
             print(f"Warning: Profile image not found or failed to load: {path} for name {name} (tried {simple_name}, {romanized})")
-            return None
+            return QPixmap(_get_profile_image_path(f"{random.choice(list(KOREAN_TO_ENGLISH_MAP.values()))}.png"))
         return pix
     print(f"Warning: Could not find romanized name for profile: {name} (tried {simple_name})")
-    return None
+    return QPixmap(_get_profile_image_path(f"{random.choice(list(KOREAN_TO_ENGLISH_MAP.values()))}.png"))
 
 
 def extract_name_and_role(title_line):

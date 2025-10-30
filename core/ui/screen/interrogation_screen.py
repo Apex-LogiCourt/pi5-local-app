@@ -11,6 +11,7 @@ from ui.resizable_image import _get_image_path, _get_profile_image_path
 from ui.style_constants import DARK_BG_COLOR, WHITE_TEXT
 # Removed: from core.game_controller import GameController
 import re
+import random
 from qasync import asyncSlot
 
 #아이고 막 이렇게 해놨네 맵핑을 
@@ -39,7 +40,7 @@ def get_profile_pixmap(name: str):
         # _get_profile_image_path expects only the filename, not the "profile/" prefix
         return QPixmap(_get_profile_image_path(f"{romanized}.png"))
     print(f"Warning: Could not get profile pixmap for {name}")
-    return None
+    return QPixmap(_get_profile_image_path(f"{random.choice(list(KOREAN_TO_ENGLISH_MAP.values()))}.png"))
 
 
 class MicButton(QPushButton):

@@ -118,7 +118,7 @@ class ResultScreen(QWidget):
     def prepare_for_results(self):
         """Called by MainWindow when switching to this screen before verdict signals arrive."""
         self.judgement_summary_text = "🧑‍⚖️ AI 판결 요약:\n"
-        self.case_truth_text = "\n\n🕵️ 사건의 진실:\n"
+        self.case_truth_text = "\n\n\n"
         self.result_text_display.setPlainText(
             self.judgement_summary_text + "...\n" + self.case_truth_text + "..."
         )
