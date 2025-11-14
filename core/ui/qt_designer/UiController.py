@@ -49,8 +49,10 @@ class UiController(QObject):
         self.game_controller._signal.connect(self.receive_game_signal)
 
     def startWindow(self):
-        window = self.startWindowInstance
-        window.show()
+        # app = QApplication(sys.argv)
+        # window = StartWindow()
+        # window.show()
+        # app.exec_()
         pass
 
     def init_game_controller(self):
@@ -272,10 +274,10 @@ if __name__ == "__main__" :
     #QApplication : 프로그램을 실행시켜주는 클래스
     app = QApplication(sys.argv) 
 
-    # startWindowClass의 인스턴스 생성
+    #startWindowClass의 인스턴스 생성
     # startWindow = startWindowClass()
 
-    # 프로그램 화면을 보여주는 코드
+    #프로그램 화면을 보여주는 코드
     # startWindow.show()
 
     #프로그램을 이벤트루프로 진입시키는(프로그램을 작동시키는) 코드
