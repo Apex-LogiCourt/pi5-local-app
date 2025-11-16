@@ -1,7 +1,7 @@
 import json
 import random
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Dict
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -9,14 +9,6 @@ from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
 load_dotenv()
 
-#==============================================
-# 템플릿 갈아끼면 쉽게 사용 가능
-# username_case_templates.py 와 같은 형식으로 사용 가능
-#============================================== 
-# from .prompt_templates.gunrein_case_templates import (
-#     CASE_SUMMARY_TEMPLATE,
-#     WITNESS_PROFILES_TEMPLATE,
-# )
 
 from .prompt_templates.ex_case_templates import (
     CASE_SUMMARY_TEMPLATE,
@@ -24,10 +16,11 @@ from .prompt_templates.ex_case_templates import (
     CASE_BEHIND_TEMPLATE,
 )
 
-#=============기존 코드 보관========================
-#========================================(테스트종료후 복구)
-def get_llm(model="gpt-4o-mini", temperature=1.0):
-    llm = ChatOpenAI(model=model, temperature=temperature)  
+def get_llm(model="gpt-4o", temperature=1.0):
+    if model == "gpt-5-mini":
+        llm = ChatOpenAI(model=model, temperature=1.0)
+    else:
+        llm = ChatOpenAI(model=model, temperature=temperature)
     return llm
 
 #----------------------------
@@ -45,33 +38,34 @@ def select_random_characters(num_characters: int = 4) -> List[Dict]:
 
 # ---------------------------- 사건 요약 체인 ----------------------------
 
-def format_gender(gender: str) -> str:
-    return "남성" if gender == "남자" else "여성"
-
-def build_case_chain(selected_characters: List[Dict]):
+def map_character_info(selected_characters: List[Dict]) -> Dict[str, str]:
     """
-    선택된 캐릭터를 사용하여 사건 개요 생성을 위한 LLM 체인 반환.
+    선택된 캐릭터 정보를 템플릿 변수로 매핑
+    순서: 피고(0), 피해자(1), 목격자(2), 참고인(3)
     """
-    # 캐릭터 정보 템플릿 변수에 개별적으로 매핑
-    # 순서: 피고(0), 피해자(1), 목격자(2), 참고인(3)
-    character_roles = {
+    return {
         "피고_이름": selected_characters[0]['name'],
         "피고_나이": selected_characters[0]['age'],
-        "피고_성별": format_gender(selected_characters[0]['gender']),
+        "피고_성별": selected_characters[0]['gender'],
         
         "피해자_이름": selected_characters[1]['name'],
         "피해자_나이": selected_characters[1]['age'],
-        "피해자_성별": format_gender(selected_characters[1]['gender']),
+        "피해자_성별": selected_characters[1]['gender'],
         
         "목격자_이름": selected_characters[2]['name'],
         "목격자_나이": selected_characters[2]['age'],
-        "목격자_성별": format_gender(selected_characters[2]['gender']),
+        "목격자_성별": selected_characters[2]['gender'],
         
         "참고인_이름": selected_characters[3]['name'],
         "참고인_나이": selected_characters[3]['age'],
-        "참고인_성별": format_gender(selected_characters[3]['gender']),
+        "참고인_성별": selected_characters[3]['gender'],
     }
 
+def build_case_chain(selected_characters: List[Dict]):
+    """
+    선택된 캐릭터를 사용하여 사건 개요 생성을 위한 LLM 체인 반환함
+    """
+    character_roles = map_character_info(selected_characters)
     formatted_template = CASE_SUMMARY_TEMPLATE.format(**character_roles)
     llm = get_llm()
     prompt = ChatPromptTemplate.from_template(formatted_template)
@@ -80,41 +74,13 @@ def build_case_chain(selected_characters: List[Dict]):
     return chain
 
 
-
-# ----기존 케이스 빌드---------
-# 사건 개요 생성을 위한 체인을 반환하는 함수
-# def build_case_chain():
-#     llm = get_llm() # 모델선택 / 온도설정
-#     prompt = ChatPromptTemplate.from_template(CASE_SUMMARY_TEMPLATE)
-#     chain = prompt | llm | StrOutputParser()
-#     return chain
-
-# 등장 인물 생성 | 매개 변수 case_summary(str)
-
-
 def build_character_chain(case_summary: str, selected_characters: List[Dict]):
     """
     사건 개요를 기반으로 인물 소개 생성 체인 반환.
     """
-    # 캐릭터 정보 템플릿 변수에 개별적으로 매핑
     template_vars = {
         "case_summary": case_summary,
-        
-        "피고_이름": selected_characters[0]['name'],
-        "피고_나이": selected_characters[0]['age'],
-        "피고_성별": format_gender(selected_characters[0]['gender']),
-        
-        "피해자_이름": selected_characters[1]['name'],
-        "피해자_나이": selected_characters[1]['age'],
-        "피해자_성별": format_gender(selected_characters[1]['gender']),
-        
-        "목격자_이름": selected_characters[2]['name'],
-        "목격자_나이": selected_characters[2]['age'],
-        "목격자_성별": format_gender(selected_characters[2]['gender']),
-        
-        "참고인_이름": selected_characters[3]['name'],
-        "참고인_나이": selected_characters[3]['age'],
-        "참고인_성별": format_gender(selected_characters[3]['gender']),
+        **map_character_info(selected_characters)
     }
     
     formatted_template = CHARACTER_TEMPLATE.format(**template_vars)
@@ -129,26 +95,10 @@ def build_case_behind_chain(case_summary: str, character: str, selected_characte
     """
     사건 개요와 특정 인물을 바탕으로 사건의 진실을 생성하는 체인.
     """
-    # 템플릿 변수 준비
     template_vars = {
         "case_summary": case_summary,
         "character": character,
-        
-        "피고_이름": selected_characters[0]['name'],
-        "피고_나이": selected_characters[0]['age'],
-        "피고_성별": format_gender(selected_characters[0]['gender']),
-        
-        "피해자_이름": selected_characters[1]['name'],
-        "피해자_나이": selected_characters[1]['age'],
-        "피해자_성별": format_gender(selected_characters[1]['gender']),
-        
-        "목격자_이름": selected_characters[2]['name'],
-        "목격자_나이": selected_characters[2]['age'],
-        "목격자_성별": format_gender(selected_characters[2]['gender']),
-        
-        "참고인_이름": selected_characters[3]['name'],
-        "참고인_나이": selected_characters[3]['age'],
-        "참고인_성별": format_gender(selected_characters[3]['gender']),
+        **map_character_info(selected_characters)
     }
     
     formatted_template = CASE_BEHIND_TEMPLATE.format(**template_vars)
@@ -157,14 +107,10 @@ def build_case_behind_chain(case_summary: str, character: str, selected_characte
     chain = prompt | llm | StrOutputParser()
     return chain
 
-# ===================================================
-# ============================================여기까지 기존코드
 
-# 테스트 코드 (컨트롤러 호출 예시) 
 if __name__ == "__main__":
-    story = {} # 사건 개요 저장
+    story = {} 
     
-    # 캐릭터를 한 번만 선택
     selected_characters = select_random_characters(4)
     print("=== 선택된 캐릭터 정보 ===")
     for i, char in enumerate(selected_characters):

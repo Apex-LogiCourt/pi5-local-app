@@ -48,7 +48,8 @@ class CaseDataManager:
         await cls.generate_case_stream()  
         await cls.generate_profiles_stream()  
         await cls.generate_evidences()
-        await cls.generate_case_behind()
+        # await cls.generate_case_behind()
+        # print(cls._case_data)
 
         return cls._case_data
     
