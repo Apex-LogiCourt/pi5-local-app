@@ -6,13 +6,13 @@ import asyncio
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot, QTimer
+from PyQt5.QtCore import pyqtSlot
 from data_models import CaseData, Evidence, Profile
 from game_controller import GameController
 
 from ui.qt_designer.windows.gameDescriptionWindow import GameDescriptionWindow
 from ui.qt_designer.windows.evidenceWindow import EvidenceWindow
-from ui.qt_designer.windows.common import BaseCourtWindow, LawyerWindow, ProsecutorWindow
+from ui.qt_designer.windows.common import LawyerWindow, ProsecutorWindow
 from ui.qt_designer.windows.overviewWindow import OverviewWindow
 from ui.qt_designer.windows.judgeWindow import JudgeWindow
 from ui.qt_designer.windows.warningWindow import WarningWindow
@@ -21,6 +21,7 @@ from ui.qt_designer.windows.interrogationWindow import InterrogationWindow
 from ui.qt_designer.windows.textInputWindow import TextInputWindow
 from ui.qt_designer.windows.startWindow import StartWindow
 from PyQt5.QtCore import pyqtSignal, QObject, pyqtSlot
+from ui.type_writer import Typewriter
 
 import ui.qt_designer.resource_rc 
 
@@ -47,6 +48,11 @@ class UiController(QObject):
         print("슬롯 연결 직전:", self.receive_game_signal)
 
         self.game_controller._signal.connect(self.receive_game_signal)
+        self.typewriter = Typewriter(
+            update_fn=None,
+            char_interval=30,     # 글자 속도 (ms)
+            sentence_pause=800    # 한 문장 당 다 찍고 나서 쉬는 시간 (ms)
+        )
 
     def startWindow(self):
         # app = QApplication(sys.argv)
@@ -136,10 +142,10 @@ class UiController(QObject):
         if code == "no_context":
             if isinstance(arg, dict):
                 self.warningWindowInstance.set_label_text(arg.get("message"))
-                self.warningWindowInstance.show()
             else:
                 self.warningWindowInstance.set_label_text("재판과 관련 없는 내용입니다.")
-                self.warningWindowInstance.show()
+
+            self.warningWindowInstance.show()
 
         elif code == "interrogation_accepted":
             if isinstance(arg, dict):
@@ -183,24 +189,15 @@ class UiController(QObject):
 
         elif code == "interrogation": # GameController의 user_input에서 이 시그널을 사용 ("interrogation_dialogue" 대신)
             self.isInterrogation = True
+            if self.typewriter.update_fn is not self.interrogationWindowInstance.update_profile_text_label:
+                self.typewriter.update_fn = self.interrogationWindowInstance.update_profile_text_label
+            
             if isinstance(arg, dict):
-                self.interrogationWindowInstance.update_profile_text_label(arg.get("role","??") + " : " + arg.get("message","..."))
-            else:
-                self.interrogationWindowInstance.update_profile_text_label("AI" + " : " + str(arg))
-        
+                msg = f"{arg.get('role', '??')} : {arg.get('message', '...')}"
+            self.typewriter.enqueue(msg)
 
-        # GameController 이슈에 명시된 'verdict' 시그널은 판결 '내용' 스트리밍을 위한 것일 수 있습니다.
-        # 현재 GameController 코드에서는 'judgement' 시그널로 판결 '시작'을 알리고 있습니다.
-        # 만약 판결 내용이 스트리밍된다면, 별도의 시그널 이름(예: "verdict_chunk", "truth_chunk")을 사용하거나
-        # 'verdict' 시그널의 arg가 실제 판결 내용 문자열이어야 합니다.
-        # 아래는 임시로 "verdict" 시그널이 판결 내용 청크라고 가정하고 작성.
-        elif code == "verdict": # 판결 내용 청크 (가정)
+        elif code == "verdict": 
             self.judgeWindowInstance.set_judge_text(str(arg))
-            # self.judgeWindowInstance.set_judge_text_add(str(arg))
-
-        # 만약 GameController가 판결 요약과 진실을 구분해서 보낸다면,
-        # "verdict_summary_chunk", "verdict_summary_done", "truth_chunk", "truth_done" 같은
-        # 더 세분화된 시그널 코드를 사용하는 것이 좋습니다. 현재 코드에는 이 부분이 명확하지 않습니다.
 
 
         elif code == "record_start":
@@ -263,11 +260,6 @@ class UiController(QObject):
     def open_start_window(self):
         self.startWindowInstance.show()
         
-    def _handle_text_input(self, text):
-        """텍스트 입력 처리"""
-        print(f"입력받은 텍스트: {text}")
-
-
 
 
 if __name__ == "__main__" :
