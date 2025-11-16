@@ -51,49 +51,49 @@
     },
     {
       "name": "남기효",
-      "gender": "남자",
+      "gender": "남성",
       "age": 31,
       "voice": "nes_c_kihyo",
       "image": "Kihyo.png"
     },
     {
       "name": "유승표",
-      "gender": "남자",
+      "gender": "남성",
       "age": 70,
       "voice": "nseungpyo",
       "image": "Seungpyo.png"
     },
     {
       "name": "도원탁",
-      "gender": "남자",
+      "gender": "남성",
       "age": 75,
       "voice": "nwontak",
       "image": "Wontak.png"
     },
     {
       "name": "성이안",
-      "gender": "남자",
+      "gender": "남성",
       "age": 35,
       "voice": "nian",
       "image": "Ian.png"
     },
     {
       "name": "강주안",
-      "gender": "남자",
+      "gender": "남성",
       "age": 45,
       "voice": "njooahn",
       "image": "Jooahn.png"
     },
     {
       "name": "최지훈",
-      "gender": "남자",
+      "gender": "남성",
       "age": 47,
       "voice": "njihun",
       "image": "Jihoon.png"
     },
     {
       "name": "최상도",
-      "gender": "남자",
+      "gender": "남성",
       "age": 38,
       "voice": "nsangdo",
       "image": "Sangdo.png"
