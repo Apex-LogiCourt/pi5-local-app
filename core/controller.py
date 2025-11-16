@@ -45,13 +45,15 @@ class CaseDataManager:
 
     @classmethod
     async def initialize(cls) -> CaseData:
-        await cls.generate_case_stream()  # 비동기 호출
-        await cls.generate_profiles_stream()  # 비동기 호출  
-        await cls.generate_evidences()  # 비동기 호출
+        await cls.generate_case_stream()  
+        await cls.generate_profiles_stream()  
+        await cls.generate_evidences()
+        await cls.generate_case_behind()
+
         return cls._case_data
     
     #==============================================
-    # case_builder에서 chain을 받아오고 실행 -> chat.py에서 호출됨 
+    # case_builder에서 chain을 받아오고 실행 
 
     @classmethod
     async def generate_case_stream(cls, callback=None):
@@ -69,7 +71,6 @@ class CaseDataManager:
         chain = build_character_chain(cls._case.outline, cls._selected_characters)
         result = cls._handle_stream(chain, callback)
         
-        # 비동기 태스크가 아닌 직접 await로 처리하여 순서 보장
         await cls._parse_and_store_profiles(result)
         return result
     
@@ -144,7 +145,6 @@ class CaseDataManager:
     async def _parse_and_store_profiles(cls, result: str):
         print("[Debug] parse_and_store_profiles 실행")
         profiles = cls._parse_character_template(result)
-        print(f"[Debug] 파싱된 프로필 수: {len(profiles)}")
         for profile in profiles:
             print(f"[Debug] {profile.type}: {profile.name}")
         cls.set_profiles(profiles)
@@ -273,51 +273,7 @@ class CaseDataManager:
         return cls._case_data
     
 
-#==============================================
-# interrogator.py의 함수
-# 단순히 함수 호출 목적
-# interrogator.py -> chat.py로 넘겨줌
-# 삭제 예정 
-#============================================== 
-
-def ask_witness_wrapper(question, name, type, case_summary):
-    from .interrogation.interrogator import ask_witness
-    return ask_witness(question, name, type, case_summary)
-
-# def ask_witness_wrapper(question: str, name: str, wtype: str, case_summary: str) -> str:
-# from interrogation.interrogator import ask_witness
-# return ask_witness(question, name, wtype, case_summary)
-
-def ask_defendant_wrapper(question, defendant_name, case_summary):
-    from .interrogation.interrogator import ask_defendant
-    return ask_defendant(question, defendant_name, case_summary)
-
-
-#==============================================
-# verdict.py의 함수
-# 단순히 함수 호출 목적
-# verdict.py -> chat.py로 넘겨줌
-# 삭제 예정 
-#==============================================  
-
-def get_judge_result_wrapper(message_list):
-    from verdict import get_judge_result
-    return get_judge_result(message_list)
-
-#============================================
-
-
-
-
-
-
-
 if __name__ == "__main__":
-    # asyncio.run(CaseDataManager.initialize())  # 비동기 호출
-    # asyncio.run(CaseDataManager.generate_case_stream())  # 비동기 호출
-    # asyncio.run(CaseDataManager.generate_profiles_stream())  # 비동기 호출  
-    # asyncio.run(CaseDataManager.generate_evidences())  # 비동기 호출
-    # print(CaseDataManager.get_case_data())
 
     cd = CaseDataManager.get_instance()
 
