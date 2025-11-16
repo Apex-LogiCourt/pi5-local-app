@@ -241,30 +241,8 @@ class CaseDataManager:
     # 호출 방식 예시 : CaseDataManager.get_case_data()
 
     @classmethod
-    def set_case(cls, case: Case):
-        cls._case = case
-
-    @classmethod
     def set_profiles(cls, profiles: List[Profile]):
         cls._profiles = profiles
-
-    @classmethod
-    def set_evidences(cls, evidences: List[Evidence]):
-        cls._evidences = evidences
-
-    #==============================================
-
-    @classmethod
-    def get_case(cls) -> Case:
-        return cls._case
-    
-    @classmethod
-    def get_profiles(cls) -> List[Profile]:
-        return cls._profiles
-    
-    @classmethod
-    def get_evidences(cls) -> List[Evidence]:
-        return cls._evidences
     
     @classmethod
     def get_case_data(cls) -> CaseData:
