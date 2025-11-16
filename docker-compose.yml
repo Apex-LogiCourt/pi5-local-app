@@ -1,74 +1,55 @@
 services:
-  # Mac에서 qemu 관련 전체 주석 처리 
-  # qemu: 
-  #   image: multiarch/qemu-user-static
-  #   container_name: qemu_setup
-  #   privileged: true
-  #   command: ["--reset", "-p", "yes"]
-  #   deploy:
-  #     restart_policy:
-  #       condition: on-failure
-  # 이부분 까지 주석 처리 
-
   base:
-    # image: logicourt-base:latest
     platform: linux/arm64
     build:
       context: .
       dockerfile: Dockerfile.base
-    # depends_on: # Mac에서 qemu 관련 주석 처리
-    #   - qemu
+    image: logicourt-base:latest
     command: echo "Base image built!"
-  
-    
-  # core:
-  #   build:
-  #     context: ./core
-  #     dockerfile: Dockerfile
-  #     platforms:
-  #       - linux/arm64
-  #   depends_on:
-  #     - base
-  #     # - qemu # Mac에서 qemu 관련 주석 처리
-  #   volumes:
-  #     - ./core:/app 
-  #     - data:/data  # 공유 볼륨을 마운트
-  #   # command: streamlit run chat.py 
-  #   command: uvicorn main:app --host 0.0.0.0 --port 8000 
-  #   ports:
-  #     - "8501:8501"  # Streamlit 기본 포트
-  #     - "8000:8000"  # hardware 통신용 포트
-  #   networks:
-  #     - logicourt_network
-  #   expose:
-  #     - "8000"
 
-  # rag:
-  #   build:
-  #     context: ./rag
-  #     dockerfile: Dockerfile
-  #   depends_on:
-  #     - base
-  #   volumes:
-  #     - data:/data  # 공유 볼륨을 마운트
+  core:
+    platform: linux/arm64
+    build:
+      context: ./core
+      dockerfile: Dockerfile
+    depends_on:
+      - base
+    volumes:
+      - ./core:/app  # 개발용 코드 마운트
+      - data:/data  # 공유 데이터
+      - /tmp/.X11-unix:/tmp/.X11-unix  # X11 소켓 (PyQt5 GUI용)
+    environment:
+      - DISPLAY=${DISPLAY:-:0}  # X11 디스플레이
+      - QT_X11_NO_MITSHM=1  # Qt X11 공유 메모리 비활성화
+    env_file:
+      - .env
+    command: python main.py  # PyQt5 GUI 실행
+    ports:
+      - "8000:8000"  # FastAPI 서버 (백엔드 API)
+    networks:
+      - logicourt_network
+    privileged: true  # 하드웨어 접근용
+    restart: unless-stopped
 
-  # hardware:
-  #   image: logicourt-base:latest
-  #   platform: linux/arm6
-  #   build:
-  #     context: ./hardware
-  #     dockerfile: Dockerfile
-  #   depends_on:
-  #     - base
-  #   volumes:
-  #     - data:/data  # 공유 볼륨을 마운트
-  #   command: uvicorn main:app --host 0.0.0.0 --port 8300 
-  #   ports:
-  #     - "8300:8300"  # hardware 통신용 포트
-  #   networks:
-  #     - logicourt_network
-  #   expose:
-  #     - "8300"
+  hardware:
+    platform: linux/arm64  # arm6 → arm64 수정
+    build:
+      context: ./hardware
+      dockerfile: Dockerfile
+    depends_on:
+      - base
+    volumes:
+      - ./hardware:/app
+      - data:/data
+    env_file:
+      - .env
+    command: uvicorn main:app --host 0.0.0.0 --port 8300
+    ports:
+      - "8300:8300"
+    networks:
+      - logicourt_network
+    privileged: true  # GPIO 접근용
+    restart: unless-stopped
 
 volumes:
   data:

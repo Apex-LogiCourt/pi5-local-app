@@ -1,5 +1,4 @@
-# Python 3.11 베이스 이미지 사용
-FROM --platform=linux/arm64 logicourt-base:latest
+FROM logicourt-base:latest
 
 # 작업 디렉토리 설정
 WORKDIR /app
