@@ -31,9 +31,11 @@ async def sse_data_handler(raw_data: str):
         data = raw_data.removeprefix("data:").strip()
     else:
         return
-    
+
+    evidence_id = None  # 에러 처리를 위해 미리 선언
     try:
         parsed = json.loads(data)
+        evidence_id = parsed.get("id")  # ID를 미리 추출
         filtered = {
             "name": parsed["name"],
             "type": parsed["type"],
@@ -41,37 +43,68 @@ async def sse_data_handler(raw_data: str):
             "picture": parsed["picture"]
         }
         evidence = Evidence.from_dict(filtered)
-        evidence.id = parsed["id"]
-        print(f"[HW/sse] {evidence}")
+        evidence.id = evidence_id
+        print(f"[HW/sse] 증거 데이터 수신 성공: {evidence}")
         asyncio.create_task(evidence_ack(id=str(evidence.id), status="received"))
         # update_and_sand_image(evidence.id, evidence)
         await asyncio.to_thread(update_and_sand_image, evidence.id, evidence) #blocking 부분 스레드로 처리
         return evidence
     except (json.JSONDecodeError, KeyError) as e:
         print(f"[HW/sse] sse data convert error: {e}")
-        asyncio.create_task(evidence_ack(id=str(evidence.id), status="failed"))
+        # evidence_id가 있으면 failed ack 전송
+        if evidence_id is not None:
+            asyncio.create_task(evidence_ack(id=str(evidence_id), status="failed"))
         return None
 
 async def handle_button_press(press_id: str):
-    response = httpx.post(f'http://localhost:8000/api/press/{press_id}')
-    data = response.json()
-    # print(data)
-    # 받는 응답: {"status": "ok", "role": "prosecutor"}
-    return data
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(f'http://localhost:8000/api/press/{press_id}')
+            response.raise_for_status()  # HTTP 에러 체크
+            data = response.json()
+            # print(data)
+            # 받는 응답: {"status": "ok", "role": "prosecutor"}
+            return data
+    except httpx.RequestError as e:
+        print(f"[HW/http] button press 요청 실패: {e}")
+        return None
+    except Exception as e:
+        print(f"[HW/http] button press 처리 중 오류: {e}")
+        return None
 
 async def handle_nfc(id: str):
-    response = httpx.post(f'http://localhost:8000/evidence/{id}')
-    data = response.json()
-    print(data)
-    # 받는 응답: {"id": 1, "status": "ok"}
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(f'http://localhost:8000/evidence/{id}')
+            response.raise_for_status()  # HTTP 에러 체크
+            data = response.json()
+            print(f"[HW/http] 증거카드 {id}번 등록 성공: {data}")
+            # 받는 응답: {"id": 1, "status": "ok"}
+            return data
+    except httpx.RequestError as e:
+        print(f"[HW/http] 증거카드 {id}번 등록 요청 실패: {e}")
+        return None
+    except Exception as e:
+        print(f"[HW/http] 증거카드 {id}번 등록 처리 중 오류: {e}")
+        return None
 
 async def evidence_ack(id: str, status: str):
-    response = httpx.post('http://localhost:8000/evidence/ack', json={ "id": id, "status": status})
-    # status 값은 "received" 또는 "faild" 중 하나
-    # faild일 경우에 evidence 객체를 돌려줌 
-    # recived 일 떄 받는 응답: {"id": 1, "status": "ok"}
-    data = response.json()
-    # print(data)
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post('http://localhost:8000/evidence/ack', json={"id": id, "status": status})
+            response.raise_for_status()  # HTTP 에러 체크
+            # status 값은 "received" 또는 "failed" 중 하나
+            # failed일 경우에 evidence 객체를 돌려줌
+            # received 일 때 받는 응답: {"id": 1, "status": "ok"}
+            data = response.json()
+            # print(data)
+            return data
+    except httpx.RequestError as e:
+        print(f"[HW/http] evidence ack 요청 실패 (id={id}, status={status}): {e}")
+        return None
+    except Exception as e:
+        print(f"[HW/http] evidence ack 처리 중 오류: {e}")
+        return None
 
 
 # ===================
