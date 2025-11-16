@@ -2,7 +2,7 @@ import sys
 import os
 from PyQt5.QtWidgets import QDialog, QApplication
 from PyQt5 import uic
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap
 import asyncio
 
@@ -63,7 +63,19 @@ class InterrogationWindow(QDialog):
         self.textLabel.setText(f"[{self.type}]: {message}")
 
     def update_profile_text_label(self, message):
-        self.profileTextLabel.setText(f"[{self.type}]: {message}")
+        lbl = self.profileTextLabel
+        lbl.setWordWrap(True)                           # 줄바꿈 켜기
+        lbl.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        lbl.setText(f"[{self.type}]: {message}")
+
+        # 텍스트 길어지면 줄바꿈 하는 코드를 추가함
+        fm = lbl.fontMetrics()
+        max_width = lbl.contentsRect().width()          
+
+        rect = fm.boundingRect(0, 0, max_width, 1000,
+                            Qt.TextWordWrap, message)
+
+        lbl.setFixedHeight(rect.height() + 10)   
 
         
     def set_main_text(self, text):
