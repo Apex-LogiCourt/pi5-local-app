@@ -30,6 +30,10 @@
 }
 
 /* 공통 스타일 */
+QLabel {
+    background-color: transparent;
+}
+
 QProgressBar {
     border: 1px solid #555;
     border-radius: 8px;
@@ -69,541 +73,742 @@ QProgressBar::chunk {
 }
 </string>
   </property>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>32</x>
-     <y>32</y>
-     <width>141</width>
-     <height>34</height>
-    </rect>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>10</number>
    </property>
-   <property name="font">
-    <font>
-     <family>나눔고딕 ExtraBold</family>
-     <pointsize>28</pointsize>
-    </font>
+   <property name="leftMargin">
+    <number>20</number>
    </property>
-   <property name="styleSheet">
-    <string notr="true">color: white;</string>
+   <property name="topMargin">
+    <number>20</number>
    </property>
-   <property name="text">
-    <string>점수 리포트</string>
+   <property name="rightMargin">
+    <number>20</number>
    </property>
-  </widget>
-  <widget class="QWidget" name="horizontalLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>79</y>
-     <width>1391</width>
-     <height>621</height>
-    </rect>
+   <property name="bottomMargin">
+    <number>20</number>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_2">
-    <property name="spacing">
-     <number>16</number>
-    </property>
-    <property name="leftMargin">
-     <number>12</number>
-    </property>
-    <property name="topMargin">
-     <number>5</number>
-    </property>
-    <property name="rightMargin">
-     <number>12</number>
-    </property>
-    <property name="bottomMargin">
-     <number>5</number>
-    </property>
-    <item>
-     <widget class="QWidget" name="panPros" native="true">
-      <property name="styleSheet">
-       <string notr="true">QWidget#panPros {
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>40</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>50</height>
+      </size>
+     </property>
+     <property name="font">
+      <font>
+       <family>나눔고딕 ExtraBold</family>
+       <pointsize>32</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: white;</string>
+     </property>
+     <property name="text">
+      <string>점수 리포트</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="spacing">
+      <number>16</number>
+     </property>
+     <property name="leftMargin">
+      <number>12</number>
+     </property>
+     <property name="topMargin">
+      <number>5</number>
+     </property>
+     <property name="rightMargin">
+      <number>12</number>
+     </property>
+     <property name="bottomMargin">
+      <number>5</number>
+     </property>
+     <item>
+      <widget class="QWidget" name="panPros" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>1</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>600</width>
+         <height>500</height>
+        </size>
+       </property>
+        <property name="styleSheet">
+         <string notr="true">QWidget#panPros {
     background-color: #1c1f29;
     border: 2px solid #4d59e5;
     border-radius: 12px;
 }</string>
-      </property>
-      <widget class="QLabel" name="lblProsHeader">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>20</y>
-         <width>200</width>
-         <height>22</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕 ExtraBold</family>
-         <pointsize>14</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #c7d1fa;</string>
-       </property>
-       <property name="text">
-        <string>검사 (Prosecution)</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblDebateLabelPros">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>58</y>
-         <width>200</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕 ExtraBold</family>
-         <pointsize>13</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #e5ebf5;</string>
-       </property>
-       <property name="text">
-        <string>주장 (Debate) · 15점</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblDebateSpecPros">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>85</y>
-         <width>640</width>
-         <height>40</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕</family>
-         <pointsize>11</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #e5ebf5;</string>
-       </property>
-       <property name="text">
-        <string>논리적 구조가 명확함: +10점
+        </property>
+        <widget class="QLabel" name="imgProsecutor">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>680</width>
+           <height>620</height>
+          </rect>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QLabel#imgProsecutor {
+    background-color: transparent;
+}</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="scaledContents">
+          <bool>false</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lblProsHeader">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>20</y>
+          <width>200</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕 ExtraBold</family>
+          <pointsize>16</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #c7d1fa;</string>
+        </property>
+        <property name="text">
+         <string>검사 (Prosecution)</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblDebateLabelPros">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>58</y>
+          <width>200</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕 ExtraBold</family>
+          <pointsize>15</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #e5ebf5;</string>
+        </property>
+        <property name="text">
+         <string>주장 (Debate) · 15점</string>
+        </property>
+       </widget>
+       <widget class="QProgressBar" name="progressDebate">
+        <property name="geometry">
+         <rect>
+          <x>230</x>
+          <y>58</y>
+          <width>410</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="value">
+         <number>75</number>
+        </property>
+        <property name="textVisible">
+         <bool>true</bool>
+        </property>
+        <property name="format">
+         <string>%p%</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblDebateSpecPros">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>85</y>
+          <width>640</width>
+          <height>40</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #e5ebf5;</string>
+        </property>
+        <property name="text">
+         <string>논리적 구조가 명확함: +10점
 판사의 경고를 받을 정도의 가벼운 일탈: -5점</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblExamLabelPros">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>135</y>
-         <width>250</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕 ExtraBold</family>
-         <pointsize>13</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #e5ebf5;</string>
-       </property>
-       <property name="text">
-        <string>심문 (Examination) · 20점</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblExamSpecPros">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>162</y>
-         <width>640</width>
-         <height>40</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕</family>
-         <pointsize>11</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #e5ebf5;</string>
-       </property>
-       <property name="text">
-        <string>논리적 구조가 명확함: +10점
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblExamLabelPros">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>135</y>
+          <width>250</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕 ExtraBold</family>
+          <pointsize>15</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #e5ebf5;</string>
+        </property>
+        <property name="text">
+         <string>심문 (Examination) · 20점</string>
+        </property>
+       </widget>
+       <widget class="QProgressBar" name="progressExam">
+        <property name="geometry">
+         <rect>
+          <x>280</x>
+          <y>135</y>
+          <width>360</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="value">
+         <number>65</number>
+        </property>
+        <property name="textVisible">
+         <bool>true</bool>
+        </property>
+        <property name="format">
+         <string>%p%</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblExamSpecPros">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>162</y>
+          <width>640</width>
+          <height>40</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #e5ebf5;</string>
+        </property>
+        <property name="text">
+         <string>논리적 구조가 명확함: +10점
 판사의 경고를 받을 정도의 가벼운 일탈: -5점</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblRebuttalLabelPros">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>212</y>
-         <width>200</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕 ExtraBold</family>
-         <pointsize>13</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #e5ebf5;</string>
-       </property>
-       <property name="text">
-        <string>반박 (Rebuttal) · 10점</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblRebuttalSpecPros">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>239</y>
-         <width>640</width>
-         <height>40</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕</family>
-         <pointsize>11</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #e5ebf5;</string>
-       </property>
-       <property name="text">
-        <string>논리적 구조가 명확함: +10점
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblRebuttalLabelPros">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>212</y>
+          <width>200</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕 ExtraBold</family>
+          <pointsize>15</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #e5ebf5;</string>
+        </property>
+        <property name="text">
+         <string>반박 (Rebuttal) · 10점</string>
+        </property>
+       </widget>
+       <widget class="QProgressBar" name="progressRebuttal">
+        <property name="geometry">
+         <rect>
+          <x>230</x>
+          <y>212</y>
+          <width>410</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="value">
+         <number>50</number>
+        </property>
+        <property name="textVisible">
+         <bool>true</bool>
+        </property>
+        <property name="format">
+         <string>%p%</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblRebuttalSpecPros">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>239</y>
+          <width>640</width>
+          <height>40</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #e5ebf5;</string>
+        </property>
+        <property name="text">
+         <string>논리적 구조가 명확함: +10점
 판사의 경고를 받을 정도의 가벼운 일탈: -5점</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblProsComment">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>295</y>
+          <width>640</width>
+          <height>200</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕</family>
+          <pointsize>14</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #d1d6e5;</string>
+        </property>
+        <property name="text">
+         <string>[검사 총평] 검사는 핵심 쟁점을 또렷하게 세운 뒤, 사건 진행 과정을 단계별로 풀어내며 배심원이 따라가기 쉬운 구조를 만들었다. 특히 증언과 규칙을 연결해 &quot;그래서 이 행동이 왜 문제인가&quot;를 조리 있게 설명한 부분은 설득력 측면에서 높은 점수를 줄 수 있다.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblProsTotalScore">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>520</y>
+          <width>150</width>
+          <height>30</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕 ExtraBold</family>
+          <pointsize>24</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffe599;</string>
+        </property>
+        <property name="text">
+         <string>총점 45점</string>
+        </property>
+       </widget>
       </widget>
-      <widget class="QLabel" name="lblProsComment">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>295</y>
-         <width>640</width>
-         <height>200</height>
-        </rect>
+     </item>
+     <item>
+      <widget class="QWidget" name="panAtt" native="true">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>1</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕</family>
-         <pointsize>12</pointsize>
-        </font>
+       <property name="minimumSize">
+        <size>
+         <width>600</width>
+         <height>500</height>
+        </size>
        </property>
-       <property name="styleSheet">
-        <string notr="true">color: #d1d6e5;</string>
-       </property>
-       <property name="text">
-        <string>[검사 총평] 검사는 핵심 쟁점을 또렷하게 세운 뒤, 사건 진행 과정을 단계별로 풀어내며 배심원이 따라가기 쉬운 구조를 만들었다. 특히 증언과 규칙을 연결해 "그래서 이 행동이 왜 문제인가"를 조리 있게 설명한 부분은 설득력 측면에서 높은 점수를 줄 수 있다.</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblProsTotalScore">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>510</y>
-         <width>150</width>
-         <height>30</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕 ExtraBold</family>
-         <pointsize>18</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #ffe599;</string>
-       </property>
-       <property name="text">
-        <string>총점 45점</string>
-       </property>
-      </widget>
-     </widget>
-    </item>
-    <item>
-     <widget class="QWidget" name="panAtt" native="true">
-      <property name="styleSheet">
-       <string notr="true">QWidget#panAtt {
+        <property name="styleSheet">
+         <string notr="true">QWidget#panAtt {
     background-color: #1c1f29;
     border: 2px solid #33b273;
     border-radius: 12px;
 }</string>
-      </property>
-      <widget class="QLabel" name="lblAttHeader">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>20</y>
-         <width>200</width>
-         <height>22</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕 ExtraBold</family>
-         <pointsize>14</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #c2f2db;</string>
-       </property>
-       <property name="text">
-        <string>변호인 (Attorney)</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblDebateLabelAtt">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>58</y>
-         <width>200</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕 ExtraBold</family>
-         <pointsize>13</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #e5ebf5;</string>
-       </property>
-       <property name="text">
-        <string>주장 (Debate) · 15점</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblDebateSpecAtt">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>85</y>
-         <width>640</width>
-         <height>40</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕</family>
-         <pointsize>11</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #e5ebf5;</string>
-       </property>
-       <property name="text">
-        <string>논리적 구조가 명확함: +10점
+        </property>
+        <widget class="QLabel" name="imgAttorney">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>680</width>
+           <height>620</height>
+          </rect>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QLabel#imgAttorney {
+    background-color: transparent;
+}</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="scaledContents">
+          <bool>false</bool>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+        <widget class="QLabel" name="lblAttHeader">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>20</y>
+          <width>200</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕 ExtraBold</family>
+          <pointsize>16</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #c2f2db;</string>
+        </property>
+        <property name="text">
+         <string>변호인 (Attorney)</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblDebateLabelAtt">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>58</y>
+          <width>200</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕 ExtraBold</family>
+          <pointsize>15</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #e5ebf5;</string>
+        </property>
+        <property name="text">
+         <string>주장 (Debate) · 15점</string>
+        </property>
+       </widget>
+       <widget class="QProgressBar" name="progressDebate2">
+        <property name="geometry">
+         <rect>
+          <x>230</x>
+          <y>58</y>
+          <width>410</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="value">
+         <number>67</number>
+        </property>
+        <property name="textVisible">
+         <bool>true</bool>
+        </property>
+        <property name="format">
+         <string>%p%</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblDebateSpecAtt">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>85</y>
+          <width>640</width>
+          <height>40</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #e5ebf5;</string>
+        </property>
+        <property name="text">
+         <string>논리적 구조가 명확함: +10점
 판사의 경고를 받을 정도의 가벼운 일탈: -5점</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblExamLabelAtt">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>135</y>
-         <width>250</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕 ExtraBold</family>
-         <pointsize>13</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #e5ebf5;</string>
-       </property>
-       <property name="text">
-        <string>심문 (Examination) · 20점</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblExamSpecAtt">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>162</y>
-         <width>640</width>
-         <height>40</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕</family>
-         <pointsize>11</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #e5ebf5;</string>
-       </property>
-       <property name="text">
-        <string>논리적 구조가 명확함: +10점
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblExamLabelAtt">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>135</y>
+          <width>250</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕 ExtraBold</family>
+          <pointsize>15</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #e5ebf5;</string>
+        </property>
+        <property name="text">
+         <string>심문 (Examination) · 20점</string>
+        </property>
+       </widget>
+       <widget class="QProgressBar" name="progressExam2">
+        <property name="geometry">
+         <rect>
+          <x>280</x>
+          <y>135</y>
+          <width>360</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="value">
+         <number>60</number>
+        </property>
+        <property name="textVisible">
+         <bool>true</bool>
+        </property>
+        <property name="format">
+         <string>%p%</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblExamSpecAtt">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>162</y>
+          <width>640</width>
+          <height>40</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #e5ebf5;</string>
+        </property>
+        <property name="text">
+         <string>논리적 구조가 명확함: +10점
 판사의 경고를 받을 정도의 가벼운 일탈: -5점</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblRebuttalLabelAtt">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>212</y>
-         <width>200</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕 ExtraBold</family>
-         <pointsize>13</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #e5ebf5;</string>
-       </property>
-       <property name="text">
-        <string>반박 (Rebuttal) · 10점</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblRebuttalSpecAtt">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>239</y>
-         <width>640</width>
-         <height>40</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕</family>
-         <pointsize>11</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #e5ebf5;</string>
-       </property>
-       <property name="text">
-        <string>논리적 구조가 명확함: +10점
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblRebuttalLabelAtt">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>212</y>
+          <width>200</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕 ExtraBold</family>
+          <pointsize>15</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #e5ebf5;</string>
+        </property>
+        <property name="text">
+         <string>반박 (Rebuttal) · 10점</string>
+        </property>
+       </widget>
+       <widget class="QProgressBar" name="progressRebuttal2">
+        <property name="geometry">
+         <rect>
+          <x>230</x>
+          <y>212</y>
+          <width>410</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="value">
+         <number>40</number>
+        </property>
+        <property name="textVisible">
+         <bool>true</bool>
+        </property>
+        <property name="format">
+         <string>%p%</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblRebuttalSpecAtt">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>239</y>
+          <width>640</width>
+          <height>40</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕</family>
+          <pointsize>13</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #e5ebf5;</string>
+        </property>
+        <property name="text">
+         <string>논리적 구조가 명확함: +10점
 판사의 경고를 받을 정도의 가벼운 일탈: -5점</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblAttComment">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>295</y>
+          <width>640</width>
+          <height>200</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕</family>
+          <pointsize>14</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #d1e5db;</string>
+        </property>
+        <property name="text">
+         <string>[변호인 총평] 변호인은 정면 승부보다는, 상대의 주장 속 작은 빈틈을 집요하게 파고드는 스타일을 보여줬다. 과장된 해석이 개입된 지점과, 다른 가능성이 열려 있는 부분들을 하나씩 짚어내면서 &quot;정확히는 아직 단정할 수 없다&quot;는 인상을 심어준 점이 인상적이다. 다만 역공 국면에서 상대의 모순을 증거와 함께 크게 부각시키는 연출이 조금만 더 정교했더라면, 점수 차이를 크게 줄일 수 있었을 것이다.</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QLabel" name="lblAttTotalScore">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>520</y>
+          <width>150</width>
+          <height>30</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <family>나눔고딕 ExtraBold</family>
+          <pointsize>24</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #ffe599;</string>
+        </property>
+        <property name="text">
+         <string>총점 40점</string>
+        </property>
+       </widget>
       </widget>
-      <widget class="QLabel" name="lblAttComment">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>295</y>
-         <width>640</width>
-         <height>200</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕</family>
-         <pointsize>12</pointsize>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #d1e5db;</string>
-       </property>
-       <property name="text">
-        <string>[변호인 총평] 변호인은 정면 승부보다는, 상대의 주장 속 작은 빈틈을 집요하게 파고드는 스타일을 보여줬다. 과장된 해석이 개입된 지점과, 다른 가능성이 열려 있는 부분들을 하나씩 짚어내면서 "정확히는 아직 단정할 수 없다"는 인상을 심어준 점이 인상적이다. 다만 역공 국면에서 상대의 모순을 증거와 함께 크게 부각시키는 연출이 조금만 더 정교했더라면, 점수 차이를 크게 줄일 수 있었을 것이다.</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-      <widget class="QLabel" name="lblAttTotalScore">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>510</y>
-         <width>150</width>
-         <height>30</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>나눔고딕 ExtraBold</family>
-         <pointsize>18</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">color: #ffe599;</string>
-       </property>
-       <property name="text">
-        <string>총점 40점</string>
-       </property>
-      </widget>
-     </widget>
-    </item>
-   </layout>
-  </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>
