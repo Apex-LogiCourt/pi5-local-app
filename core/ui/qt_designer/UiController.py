@@ -51,7 +51,7 @@ class UiController(QObject):
         self.typewriter = Typewriter(
             update_fn=None,
             char_interval=30,     # 글자 속도 (ms)
-            sentence_pause=800    # 한 문장 당 다 찍고 나서 쉬는 시간 (ms)
+            sentence_pause=1000    # 한 문장 당 다 찍고 나서 쉬는 시간 (ms)
         )
 
     def startWindow(self):
