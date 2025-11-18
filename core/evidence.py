@@ -151,20 +151,48 @@ def get_evidence_name_for_prompt(name):
     })
     return res
 
+def get_generic_evidence_name(name):
+    """사람 이름이 포함된 증거품 이름을 일반화된 이름으로 변환"""
+    llm = get_llm()
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", """당신은 증거품 이름을 일반화하는 어시스턴트입니다.
+        증거품 이름에서 사람 이름(고유명사)을 제거하고 일반적인 증거품 명칭으로 변환하세요.
+        
+        예시:
+        - "안기효의 증언" → "목격자 진술서"
+        - "김민수의 일기장" → "개인 일기장"
+        - "이영희의 편지" → "편지"
+        - "박철수의 통화기록" → "통화기록"
+        - "CCTV 영상" → "CCTV 영상" (사람 이름이 없으면 그대로)
+        
+        출력은 간결한 명사형으로만 작성하고, 설명이나 부가 정보는 포함하지 마세요."""),
+        ("human", "증거품 이름: {evidence_name}")
+    ])
+    chain = prompt | llm | StrOutputParser()
+    res = chain.invoke({
+        "evidence_name": name,
+    })
+    return res.strip()
+
 def create_image_by_ai(name: str):
     import json
     import requests
     import datetime
     from dotenv import dotenv_values
+    import os
     
     env = dotenv_values()
     # key = "Token " + env.get("REPLICATE_API_KEY") # 직접 요청시 사용하는 키
     key = env.get("REPLICATE_API_KEY")
     today = datetime.datetime.now()
     formatted_date = today.strftime("%y-%m-%d")
-    new_name = name.replace(" ", "-")
+    timestamp = today.strftime("%Y-%m-%d %H:%M:%S")
+    
+    # 사람 이름이 포함된 경우 일반화된 이름으로 변환
+    generic_name = get_generic_evidence_name(name)
+    new_name = generic_name.replace(" ", "-")
 
-    prompt_name = get_evidence_name_for_prompt(name)
+    prompt_name = get_evidence_name_for_prompt(generic_name)
     save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + ".png"
 
     import replicate
@@ -189,6 +217,38 @@ def create_image_by_ai(name: str):
     except Exception as e:
         print(f"[{name}] 이미지 저장 실패: {output}")
         print(f"[{name}] 에러: {e}")
+    
+    # JSON 로그 파일에 메타데이터 저장
+    log_json_path = "data/evidence_resource/evidence_log.json"
+    evidence_data = {
+        "timestamp": timestamp,
+        "original_name": name,
+        "generic_name": generic_name,
+        "prompt_name": prompt_name,
+        "file_path": save_path
+    }
+    
+    # 기존 JSON 파일이 있으면 읽어오기
+    if os.path.exists(log_json_path):
+        try:
+            with open(log_json_path, "r", encoding="utf-8") as f:
+                log_data = json.load(f)
+        except:
+            log_data = []
+    else:
+        log_data = []
+    
+    # 새 데이터 추가
+    log_data.append(evidence_data)
+    
+    # JSON 파일에 저장
+    try:
+        os.makedirs(os.path.dirname(log_json_path), exist_ok=True)
+        with open(log_json_path, "w", encoding="utf-8") as f:
+            json.dump(log_data, f, ensure_ascii=False, indent=2)
+        print(f"[{name}] JSON 로그 저장 성공: {log_json_path}")
+    except Exception as e:
+        print(f"[{name}] JSON 로그 저장 실패: {e}")
 
     # if output and isinstance(output, list):
     #     image_url = output[0]
