@@ -23,8 +23,10 @@ class OverviewWindow(QDialog):
         self.set_overview_text(self.case_outline)
     
     def set_overview_text(self, text):
-        """사건 개요 텍스트 설정"""
-        self.overviewText.setPlainText(text)
+        """사건 개요 텍스트 설정 (마크다운을 HTML로 변환하여 표시)"""
+        from tools.service import markdown_to_html
+        html_text = markdown_to_html(text)
+        self.overviewText.setHtml(html_text)
 
 
 # 테스트용 메인 함수
