@@ -19,6 +19,17 @@ class OverviewWindow(QDialog):
     
     def setup_ui(self):
         """UI 초기 설정"""
+        # QTextEdit에 QSS 적용 (strong, b 태그에 나눔고딕 ExtraBold 적용)
+        self.overviewText.setStyleSheet("""
+            QTextEdit {
+                font-family: "나눔고딕";
+            }
+        """)
+        # HTML strong/b 태그 스타일은 document().setDefaultStyleSheet로 설정
+        self.overviewText.document().setDefaultStyleSheet("""
+            strong { font-family: "나눔고딕 ExtraBold"; }
+            b { font-family: "나눔고딕 ExtraBold"; }
+        """)
         # 사건 개요 초기 텍스트 설정
         self.set_overview_text(self.case_outline)
     

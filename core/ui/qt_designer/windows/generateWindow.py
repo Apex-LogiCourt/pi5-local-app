@@ -23,6 +23,13 @@ class GenerateWindow(QDialog):
         # self.overviewText.setPlainText(self.case_outline)
         from data_models import Case
         from ui.type_writer import Typewriter
+        
+        # QTextEdit에 QSS 적용 (strong, b 태그에 나눔고딕 ExtraBold 적용)
+        self.overviewText.document().setDefaultStyleSheet("""
+            strong { font-family: "나눔고딕 ExtraBold"; }
+            b { font-family: "나눔고딕 ExtraBold"; }
+        """)
+        
         self.typewriter = Typewriter(update_fn=self.overviewText.setHtml, html_mode=True)
         self.typewriter.enqueue(self.case_outline)
     
