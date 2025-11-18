@@ -30,6 +30,7 @@ CREATE_EVIDENCE_TEMPLATE = """
 ]
 
 "type" 필드를 기준으로 attorney 2개, prosecutor 2개를 포함해야 합니다.
+검사에게 유리한 증거를 2개, 변호사에게 유리한 증거를 2개 제공해주세요.
 그러나 출력은 하나의 리스트 형태로 제공해야 하며, "attorney": [...], "prosecutor": [...] 같은 형식은 사용하지 마세요.
 """
 
