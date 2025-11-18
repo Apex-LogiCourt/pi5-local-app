@@ -43,16 +43,21 @@ class UiController(QObject):
             raise Exception("싱글톤 클래스는 직접 생성할 수 없습니다. get_instance() 메서드를 사용하세요.")
         UiController._instance = self
         self.game_controller = GameController.get_instance()
-        self.init_game_controller()
         self.isTurnProsecutor = True # 처음에는 검사 턴으로 시작
-        print("슬롯 연결 직전:", self.receive_game_signal)
+
+        self.startWindowInstance = StartWindow(self._instance, self.game_controller)
+        self.startWindowInstance.set_button_state(True, "게임 시작")  # 시작 버튼 활성화
+        self.generateWindowInstance = GenerateWindow(self._instance, "")
+
+        # # Typewriter 먼저 생성 (신호 연결 전에!)
+        # self.typewriter = Typewriter(
+        #     update_fn=self.overviewWindowInstance.update_overview_text,  # overview에 출력
+        #     char_interval=30,     # 글자 속도 (ms)
+        #     sentence_pause=1000    # 한 문장 당 다 찍고 나서 쉬는 시간 (ms)
+        # )
 
         self.game_controller._signal.connect(self.receive_game_signal)
-        self.typewriter = Typewriter(
-            update_fn=None,
-            char_interval=30,     # 글자 속도 (ms)
-            sentence_pause=1000    # 한 문장 당 다 찍고 나서 쉬는 시간 (ms)
-        )
+        self.startWindowInstance.show()
 
     def startWindow(self):
         # app = QApplication(sys.argv)
@@ -62,27 +67,11 @@ class UiController(QObject):
         pass
 
     def init_game_controller(self):
-        print("Requesting GameController initialization...")
-        self.setStartButtonState(False, "컨트롤러 초기화 중...")
-        if hasattr(GameController, '_is_initialized'):
-            if GameController._is_initialized:
-                print("GameController is already initialized. Loading case data...")
-                self.is_gc_initialized = True
-                self.case_data = GameController._case_data
-                self.setStartButtonState(True, "게임 시작")
-                self.createWindowInstance()
-                self.startWindowInstance.show()
-            else:
-                print("GameController is not initialized. Attempting to initialize...")
-                asyncio.ensure_future(GameController.initialize())
-        else:
-            print("ERROR: GameController does not have a class method 'initialize'.")
-            self.setStartButtonState(False, "컨트롤러 오류 (재시도)")
+        pass
     
     def createWindowInstance(self):
-        self.startWindowInstance = StartWindow(self._instance, self.game_controller)
         self.descriptionWindowInstance = GameDescriptionWindow(self._instance)
-        self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
+        # self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
         self.interrogationWindowInstance = None
         # self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, self.case_data.profiles)
         self.judgeWindowInstance = JudgeWindow(self._instance, self.game_controller, self.case_data)
@@ -92,6 +81,7 @@ class UiController(QObject):
         self.textInputWindowInstance = TextInputWindow(self._instance, self.game_controller)
         self.evidenceWindowInstance = EvidenceWindow(self.case_data.evidences) #evidence: List
         self.warningWindowInstance = WarningWindow("재판과 관련 없는 내용입니다.")
+        
 
     def hideAllWindow(self):
         self.startWindowInstance.hide()
@@ -139,7 +129,21 @@ class UiController(QObject):
     def receive_game_signal(self, code: str, arg=None):
         print(f"[{self.__class__.__name__}] Signal Received: Code='{code}', ArgType='{type(arg)}', ArgValue='{str(arg)[:100]}...'") # Log arg value safely
 
-        if code == "no_context":
+
+            
+        if code == "initialization_failed":
+            # 초기화 실패 시 에러 메시지
+            print(f"[UiController] ❌ 초기화 실패: {arg}")
+            QMessageBox.critical(None, "초기화 실패", f"케이스 데이터 생성에 실패했습니다:\n{arg}")
+            self.startWindowInstance.set_button_state(True, "게임 시작 (재시도)")
+
+        elif code == "initialized":
+            if arg is not None:
+                self.case_data = arg
+                self.createWindowInstance()
+            
+
+        elif code == "no_context":
             if isinstance(arg, dict):
                 self.warningWindowInstance.set_label_text(arg.get("message"))
             else:

@@ -42,26 +42,26 @@ class CaseDataManager:
             cls._instance = cls()
         return cls._instance
 
-    @classmethod
-    async def initialize(cls) -> CaseData:
-        """데이터 초기화 함수 (stub 데이터 사용)"""
-        from tools.stub import stub_case_data
-        cls._case_data = stub_case_data()
-        cls._case = cls._case_data.case
-        cls._profiles = cls._case_data.profiles
-        cls._evidences = cls._case_data.evidences
-        return cls._case_data
-
     # @classmethod
     # async def initialize(cls) -> CaseData:
-    #     """실제 데이터 초기화 함수"""
-    #     await cls.generate_case_stream()  
-    #     await cls.generate_profiles_stream()  
-    #     await cls.generate_evidences()
-    #     # await cls.generate_case_behind()
-    #     # print(cls._case_data)
-
+    #     """데이터 초기화 함수 (stub 데이터 사용)"""
+    #     from tools.stub import stub_case_data
+    #     cls._case_data = stub_case_data()
+    #     cls._case = cls._case_data.case
+    #     cls._profiles = cls._case_data.profiles
+    #     cls._evidences = cls._case_data.evidences
     #     return cls._case_data
+
+    @classmethod
+    async def initialize(cls) -> CaseData:
+        """실제 데이터 초기화 함수"""
+        await cls.generate_case_stream()  
+        await cls.generate_profiles_stream()  
+        await cls.generate_evidences()
+        # await cls.generate_case_behind()
+        # print(cls._case_data)
+
+        return cls._case_data
     
     #==============================================
     # case_builder에서 chain을 받아오고 실행 
@@ -69,13 +69,15 @@ class CaseDataManager:
     @classmethod
     async def generate_case_stream(cls, callback=None):
         """먼저 캐릭터들을 선택하고 클래스 변수에 저장"""
+        print("[CaseDataManager] generate_case_stream 실행")
         from case_generation.case_builder import build_case_chain, select_random_characters
         cls._selected_characters = select_random_characters(4)
         chain = build_case_chain(cls._selected_characters)
         result = cls._handle_stream(chain, callback)
-        # from tools.service import run_chain_streaming
-        # result = run_chain_streaming(chain)
+        from tools.service import run_chain_streaming
+        result = run_chain_streaming(chain, callback)
         cls._case = Case(outline=result, behind="")
+        print("[CaseDataManager] generate_case_stream 완료")
         return result
     
     @classmethod

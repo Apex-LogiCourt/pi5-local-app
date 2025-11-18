@@ -26,6 +26,10 @@ class OverviewWindow(QDialog):
         """사건 개요 텍스트 설정"""
         self.overviewText.setPlainText(text)
 
+    def update_overview_text(self, text):
+        """사건 개요 텍스트 업데이트 (typewriter용)"""
+        self.overviewText.setPlainText(text)
+
 # 테스트용 메인 함수
 if __name__ == "__main__":
     app = QApplication(sys.argv)

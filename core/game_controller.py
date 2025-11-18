@@ -40,7 +40,6 @@ class GameController(QObject):
         GameController._instance = self
         self.signal = pyqtSignal()
 
-
         self._signal_emitter = SignalEmitter()
         self._signal = self._signal_emitter.signal  # SignalEmitter의 signal을 GameController의 _signal로 설정
         # GameState에 초기 데이터 반영
@@ -51,40 +50,46 @@ class GameController(QObject):
 
     @classmethod
     async def initialize(cls) -> None:
-        """게임 초기화 및 데이터 로드"""
+        """게임 초기화 및 데이터 로드 (백그라운드 실행)"""
         cls._state = GameState()
-        cls._case_data = await CaseDataManager.initialize()
-        cls._is_initialized = True
-
-        cls._state.messages.append({"role":"system", "content": cls._case_data.case.outline})
-        cls._state.messages.append({"role":"system", "content": cls._case_data.profiles.__str__()})
-        cls._state.messages.append({"role":"system", "content": cls._case_data.evidences.__str__()})
-
+        
+        print("[GameController] 케이스 데이터 생성 시작 (전체 초기화)...")
+        task = asyncio.create_task(CaseDataManager.generate_case_stream())  # 전체 CaseData 생성
+        task.add_done_callback(cls._on_initialization_complete)
+        
         # LangGraph 워크플로우 초기화
         cls._workflow = create_game_workflow()
         print(f"[GameController] LangGraph workflow initialized")
-
-        from tools.service import handler_send_initial_evidence
-        handler_send_initial_evidence(cls._case_data.evidences)
-        print(f"[GameController] initialize() ended")
-
-
-        return cls._case_data
+        
+        return None
+    
+    @classmethod
+    def _on_initialization_complete(cls, task):
+        """초기화 완료 시 자동 호출되는 콜백"""
+        try:
+            cls._case_data = task.result()
+            cls._is_initialized = True
+            cls._send_signal("initialized", None)
+        except Exception as e:
+            print(f"[GameController] 초기화 실패: {e}")
+            import traceback
+            traceback.print_exc()
+            cls._send_signal("initialized", str(e))
 
     @classmethod
     async def start_game(cls) -> bool :
         """게임을 INIT → DEBATE 상태로 시작하고, system 메시지 초기화."""
-        if cls._is_initialized is False:
-            return False
-
-        if cls._is_initialized is True:
-            cls._state.phase = Phase.DEBATE
-
-        from tools.service import handler_tts_service
-        asyncio.create_task(handler_tts_service(cls._case_data.case.outline))
-        it.set_case_data()
-        cls._send_signal("initialized", cls._case_data)
-
+        
+        # 초기화 완료될 때까지 대기
+        print("[GameController] 초기화 완료 대기 중...")
+        timeout = 60
+        elapsed = 0
+        while not cls._is_initialized or cls._case_data is None:
+            if elapsed >= timeout:
+                raise TimeoutError("초기화 시간 초과 (60초)")
+            await asyncio.sleep(0.5)
+            elapsed += 0.5
+        
         return True
     
 

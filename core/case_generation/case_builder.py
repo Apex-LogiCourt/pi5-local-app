@@ -16,7 +16,7 @@ from .prompt_templates.ex_case_templates import (
     CASE_BEHIND_TEMPLATE,
 )
 
-def get_llm(model="gpt-4o", temperature=1.0):
+def get_llm(model="gpt-4o-mini", temperature=1.0):
     if model == "gpt-5-mini":
         llm = ChatOpenAI(model=model, temperature=1.0)
     else:
