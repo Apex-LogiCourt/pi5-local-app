@@ -118,11 +118,8 @@ def interrogate_node(state: GameWorkflowState) -> GameWorkflowState:
     if not current_profile:
         current_profile = it._current_profile
 
-    # Interrogator 클래스의 build_ask_chain 메서드 사용
-    chain = it.build_ask_chain(user_input, current_profile)
-
-    # 응답 생성
-    response_text = chain.invoke({})
+    # Interrogator가 대화 메모리를 관리하며 응답 텍스트를 직접 반환
+    response_text = it.build_ask_chain(user_input, current_profile)
 
     # 메시지 추가
     witness_message = AIMessage(

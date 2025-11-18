@@ -207,7 +207,7 @@ def handler_tagged_evidence(id: int) -> None:
     """
     from game_controller import GameController
     gc = GameController.get_instance()
-    for evidence in gc._evidences:
+    for evidence in gc._case_data.evidences:
         if evidence.id == id:
             gc._state.tagged_evidence = evidence
             gc._send_signal("evidence_tagged", evidence)
