@@ -14,13 +14,25 @@ class GenerateWindow(QDialog):
         # UI 파일 로드
         ui_path = os.path.join(os.path.dirname(__file__), '..', 'generateWindow.ui')
         uic.loadUi(ui_path, self)
+        self.backButton.setEnabled(False)
         
         self._setup_ui()
         self._setup_connections()
     
     def _setup_ui(self):
         """UI 초기 설정"""
-        self.overviewText.setPlainText(self.case_outline)
+        # self.overviewText.setPlainText(self.case_outline)
+        from data_models import Case
+        from ui.type_writer import Typewriter
+        
+        # QTextEdit에 QSS 적용 (strong, b 태그에 나눔고딕 ExtraBold 적용)
+        self.overviewText.document().setDefaultStyleSheet("""
+            strong { font-family: "나눔고딕 ExtraBold"; }
+            b { font-family: "나눔고딕 ExtraBold"; }
+        """)
+        
+        self.typewriter = Typewriter(update_fn=self.overviewText.setHtml, html_mode=True)
+        self.typewriter.enqueue(self.case_outline)
     
     def _setup_connections(self):
         """버튼 연결 설정"""
@@ -30,10 +42,12 @@ class GenerateWindow(QDialog):
         """앞으로 버튼 클릭
         다음 단계로 넘어가야함 !!!
         """
-        print("앞으로 버튼 클릭됨")
         self.uc.open_prosecutor_window()
         self.close()
     
+    def update_overview_text(self, text):
+        """사건 개요 텍스트 업데이트 (typewriter용)"""
+        self.overviewText.setHtml(text)
     
 
 
@@ -49,7 +63,7 @@ if __name__ == "__main__":
         
         # GameController 초기화 (비동기)
         await gc.initialize()
-        await gc.start_game()
+        await gc.prepare_case_data()
 
         case_outline = gc._case_data.case.outline
 

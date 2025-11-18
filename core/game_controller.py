@@ -40,7 +40,6 @@ class GameController(QObject):
         GameController._instance = self
         self.signal = pyqtSignal()
 
-
         self._signal_emitter = SignalEmitter()
         self._signal = self._signal_emitter.signal  # SignalEmitter의 signal을 GameController의 _signal로 설정
         # GameState에 초기 데이터 반영
@@ -51,42 +50,96 @@ class GameController(QObject):
 
     @classmethod
     async def initialize(cls) -> None:
-        """게임 초기화 및 데이터 로드"""
+        """게임 초기화 및 데이터 로드 (백그라운드 실행)"""
         cls._state = GameState()
-        cls._case_data = await CaseDataManager.initialize()
-        cls._is_initialized = True
 
-        cls._state.messages.append({"role":"system", "content": cls._case_data.case.outline})
-        cls._state.messages.append({"role":"system", "content": cls._case_data.profiles.__str__()})
-        cls._state.messages.append({"role":"system", "content": cls._case_data.evidences.__str__()})
+        print("[GameController] 케이스 데이터 생성 시작 (전체 초기화)...")
+        task = asyncio.create_task(CaseDataManager.generate_case_stream())  # 전체 CaseData 생성
+        task.add_done_callback(cls._on_initialization_complete)
 
         # LangGraph 워크플로우 초기화
         cls._workflow = create_game_workflow()
         print(f"[GameController] LangGraph workflow initialized")
 
-        from tools.service import handler_send_initial_evidence
-        handler_send_initial_evidence(cls._case_data.evidences)
-        print(f"[GameController] initialize() ended")
-
-
-        return cls._case_data
+        return None
 
     @classmethod
-    async def start_game(cls) -> bool :
-        """게임을 INIT → DEBATE 상태로 시작하고, system 메시지 초기화."""
-        if cls._is_initialized is False:
-            return False
+    def initialize_with_stub(cls) -> None:
+        """테스트모드: stub 데이터로 빠르게 초기화"""
+        cls._state = GameState()
 
-        if cls._is_initialized is True:
-            cls._state.phase = Phase.DEBATE
+        print("[GameController] 테스트 모드: stub 데이터로 초기화...")
+        cls._case_data = CaseDataManager.stub_case_data()
+        cls._is_initialized = True
 
-        from tools.service import handler_tts_service
-        asyncio.create_task(handler_tts_service(cls._case_data.case.outline))
-        it.set_case_data()
+        cls._workflow = create_game_workflow()
+        print(f"[GameController] 테스트 모드 초기화 완료")
+
+        cls._send_signal("initialized", None)
         cls._send_signal("initialized", cls._case_data)
 
-        return True
+        return None
     
+    @classmethod
+    def _on_initialization_complete(cls, task):
+        """초기화 완료 시 자동 호출되는 콜백"""
+        try:
+            result = task.result()
+            cls._is_initialized = True
+            cls._case_data = CaseData(case=result, profiles=[], evidences=[])
+            cls._send_signal("initialized", None)
+        except Exception as e:
+            print(f"[GameController] 초기화 실패: {e}")
+            import traceback
+            traceback.print_exc()
+            cls._send_signal("initialized", str(e))
+        
+
+    @classmethod
+    async def prepare_case_data(cls) -> bool :
+
+        timeout = 60
+        elapsed = 0
+        while not cls._is_initialized:
+            if elapsed >= timeout:
+                raise TimeoutError("초기화 시간 초과 (60초)")
+            await asyncio.sleep(0.5)
+            elapsed += 0.5
+        
+        task_profiles = asyncio.create_task(CaseDataManager.generate_profiles_stream())
+        task_profiles.add_done_callback(cls._on_profiles_created)
+        
+        return True
+
+    @classmethod
+    def start_game(cls) -> bool :
+        cls._state.phase = Phase.DEBATE
+        cls._case_data = CaseDataManager.get_case_data()
+        
+        if not it.set_case_data(cls._case_data):
+            print("[GameController] interrogator case_data 설정 실패")
+            return False
+            
+        cls._state.messages.append({"role":"system", "content": cls._case_data.case.outline})
+        cls._state.messages.append({"role":"system", "content": cls._case_data.profiles.__str__()})
+        cls._state.messages.append({"role":"system", "content": cls._case_data.evidences.__str__()})
+
+        return True
+
+    
+    @classmethod
+    def _on_profiles_created(cls, task):
+        cls._case_data.profiles = task.result()
+        task_evidences = asyncio.create_task(CaseDataManager.generate_evidences())
+        task_evidences.add_done_callback(cls._on_evidences_created)
+
+    @classmethod
+    def _on_evidences_created(cls, task):
+        cls._case_data.evidences = task.result()
+        cls._send_signal("initialized", cls._case_data)
+        from tools.service import handler_send_initial_evidence
+        handler_send_initial_evidence(cls._case_data.evidences)
+        asyncio.create_task(CaseDataManager.generate_case_behind())
 
     @classmethod
     async def record_start(cls) -> None:

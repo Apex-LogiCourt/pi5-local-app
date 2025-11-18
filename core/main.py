@@ -59,25 +59,18 @@ async def main_async():
     print("FastAPI 서버 스레드 시작...")
     fastapi_thread = threading.Thread(target=run_fastapi_server, daemon=True)
     fastapi_thread.start()
-    
     # 서버가 준비될 때까지 대기
     server_ready = await asyncio.get_event_loop().run_in_executor(
         None, wait_for_server_ready, 30
     )
-    
+
     if not server_ready:
         print("❌ FastAPI 서버 시작에 실패했습니다!")
         return
-    
-    # GameController 초기화
-    print("GameController 초기화 중...")
-    gc = GameController.get_instance()
-    await gc.initialize()
-    await gc.start_game()
 
+    gc = GameController.get_instance()
     uiController = UiController.get_instance()
-    uiController.startWindow()
-    
+
     # PyQt 이벤트 루프 실행 (qasync로 asyncio와 통합)
     await qasync.asyncio.sleep(0)  # 이벤트 루프가 시작되도록 함
 
