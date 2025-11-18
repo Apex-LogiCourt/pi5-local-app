@@ -67,14 +67,16 @@ class GameController(QObject):
     def _on_initialization_complete(cls, task):
         """초기화 완료 시 자동 호출되는 콜백"""
         try:
-            cls._case_data = task.result()
+            result = task.result()
             cls._is_initialized = True
+            cls._case_data = CaseData(case=result, profiles=[], evidences=[])
             cls._send_signal("initialized", None)
         except Exception as e:
             print(f"[GameController] 초기화 실패: {e}")
             import traceback
             traceback.print_exc()
             cls._send_signal("initialized", str(e))
+        
 
     @classmethod
     async def start_game(cls) -> bool :
@@ -84,14 +86,30 @@ class GameController(QObject):
         print("[GameController] 초기화 완료 대기 중...")
         timeout = 60
         elapsed = 0
-        while not cls._is_initialized or cls._case_data is None:
+        while not cls._is_initialized:
             if elapsed >= timeout:
                 raise TimeoutError("초기화 시간 초과 (60초)")
             await asyncio.sleep(0.5)
             elapsed += 0.5
         
+        task_profiles = asyncio.create_task(CaseDataManager.generate_profiles_stream())
+        task_profiles.add_done_callback(cls._on_profiles_created)
+        
         return True
     
+    @classmethod
+    def _on_profiles_created(cls, task):
+        cls._case_data.profiles = task.result()
+        task_evidences = asyncio.create_task(CaseDataManager.generate_evidences())
+        task_evidences.add_done_callback(cls._on_evidences_created)
+
+    @classmethod
+    def _on_evidences_created(cls, task):
+        cls._case_data.evidences = task.result()
+        from tools.service import handler_send_initial_evidence
+        handler_send_initial_evidence(cls._case_data.evidences)
+        cls._send_signal("initialized", cls._case_data)
+        asyncio.create_task(CaseDataManager.generate_case_behind())
 
     @classmethod
     async def record_start(cls) -> None:

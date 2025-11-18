@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import pyqtSlot
-from data_models import CaseData, Evidence, Profile
+from data_models import CaseData, Evidence, Profile, Case
 from game_controller import GameController
 
 from ui.qt_designer.windows.gameDescriptionWindow import GameDescriptionWindow
@@ -47,14 +47,13 @@ class UiController(QObject):
 
         self.startWindowInstance = StartWindow(self._instance, self.game_controller)
         self.startWindowInstance.set_button_state(True, "게임 시작")  # 시작 버튼 활성화
-        self.generateWindowInstance = GenerateWindow(self._instance, "")
 
-        # # Typewriter 먼저 생성 (신호 연결 전에!)
-        # self.typewriter = Typewriter(
-        #     update_fn=self.overviewWindowInstance.update_overview_text,  # overview에 출력
-        #     char_interval=30,     # 글자 속도 (ms)
-        #     sentence_pause=1000    # 한 문장 당 다 찍고 나서 쉬는 시간 (ms)
-        # )
+        # Typewriter 먼저 생성 (신호 연결 전에!)
+        self.typewriter = Typewriter(
+            update_fn=None, # overview에 출력
+            char_interval=30,     # 글자 속도 (ms)
+            sentence_pause=1000    # 한 문장 당 다 찍고 나서 쉬는 시간 (ms)
+        )
 
         self.game_controller._signal.connect(self.receive_game_signal)
         self.startWindowInstance.show()
@@ -141,7 +140,10 @@ class UiController(QObject):
             if arg is not None:
                 self.case_data = arg
                 self.createWindowInstance()
-            
+            else: 
+                self.case_data = self.game_controller._case_data
+                self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
+
 
         elif code == "no_context":
             if isinstance(arg, dict):
@@ -235,6 +237,8 @@ class UiController(QObject):
         else:
             print(f"[{self.__class__.__name__}] Unknown signal code: {code}")
     
+
+
     def open_generate_window(self):
         self.generateWindowInstance.show()
 

@@ -73,44 +73,52 @@ class CaseDataManager:
         from case_generation.case_builder import build_case_chain, select_random_characters
         cls._selected_characters = select_random_characters(4)
         chain = build_case_chain(cls._selected_characters)
-        result = cls._handle_stream(chain, callback)
-        from tools.service import run_chain_streaming
-        result = run_chain_streaming(chain, callback)
+
+        from tools.service import run_chain_invoke
+        result = run_chain_invoke(chain, as_markdown=True)  # chain 객체를 제대로 처리
         cls._case = Case(outline=result, behind="")
-        print("[CaseDataManager] generate_case_stream 완료")
-        return result
+        print(f"[CaseDataManager] generate_case_stream 완료: {len(result) if result else 0}자")
+        return cls._case
     
     @classmethod
     async def generate_profiles_stream(cls, callback=None):
         chain = build_character_chain(cls._case.outline, cls._selected_characters)
-        result = cls._handle_stream(chain, callback)
-        
+        # 스트리밍 작업을 별도 스레드에서 실행하여 UI 블로킹 방지
+        result = await asyncio.to_thread(cls._handle_stream, chain, callback)
+
         await cls._parse_and_store_profiles(result)
-        return result
+
+        return cls._profiles
     
-    @classmethod 
+    @classmethod
     async def generate_evidences(cls, callbacks=None):
         # 데이터가 준비된 경우 바로 처리
         if cls._case is not None and cls._profiles is not None:
             from evidence import make_evidence
-            evidences = make_evidence(case_data=cls._case, profiles=cls._profiles)
-            cls._evidences = evidences 
+            # 무거운 동기 작업을 별도 스레드에서 실행하여 UI 블로킹 방지
+            evidences = await asyncio.to_thread(
+                make_evidence,
+                case_data=cls._case,
+                profiles=cls._profiles
+            )
+            cls._evidences = evidences
             cls._case_data = CaseData(cls._case, cls._profiles, cls._evidences)
-            
+
             if callbacks:
                 for callback in callbacks:
                     callback(evidences)
-                    
+
             return evidences
-            
+
         return await cls._wait_for_data(callbacks) #데이터가 제대로 안 담긴 경우 대기하거나 재시도 
     
     # 호출 시점 : 최종 판결과 함께 또는 최종 판결을 읽고 있을 때 
     # 매개변수로 변경된 증거 리스트도 포함 
     @classmethod
     async def generate_case_behind(cls, callback=None):
-        chain = build_case_behind_chain(cls._case.outline, cls._profiles, cls._selected_characters) 
-        result = cls._handle_stream(chain, callback)
+        chain = build_case_behind_chain(cls._case.outline, cls._profiles, cls._selected_characters)
+        # 스트리밍 작업을 별도 스레드에서 실행하여 UI 블로킹 방지
+        result = await asyncio.to_thread(cls._handle_stream, chain, callback)
         return result
     
     @classmethod

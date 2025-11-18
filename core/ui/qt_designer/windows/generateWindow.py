@@ -20,7 +20,11 @@ class GenerateWindow(QDialog):
     
     def _setup_ui(self):
         """UI 초기 설정"""
-        self.overviewText.setPlainText(self.case_outline)
+        # self.overviewText.setPlainText(self.case_outline)
+        from data_models import Case
+        from ui.type_writer import Typewriter
+        self.typewriter = Typewriter(update_fn=self.overviewText.setHtml, html_mode=True)
+        self.typewriter.enqueue(self.case_outline)
     
     def _setup_connections(self):
         """버튼 연결 설정"""
@@ -34,6 +38,9 @@ class GenerateWindow(QDialog):
         self.uc.open_prosecutor_window()
         self.close()
     
+    def update_overview_text(self, text):
+        """사건 개요 텍스트 업데이트 (typewriter용)"""
+        self.overviewText.setHtml(text)
     
 
 
