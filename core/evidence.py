@@ -111,24 +111,6 @@ def format_profiles(raw_profiles):
 
 def convert_data_class(data: List[dict]) -> List[Evidence]:
     # 데이터 형식 검증 
-    """
-    evidences = convert_data_class(response)
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    File "D:\WS\pi5-local-app\core\evidence.py", line 111, in convert_data_class
-    return [Evidence.from_dict(item) for item in data]
-            ^^^^^^^^^^^^^^^^^^^^^^^^
-    File "D:\WS\pi5-local-app\core\data_models.py", line 28, in from_dict       
-    desc = data.get("description", [])
-           ^^^^^^^^
-    AttributeError: 'str' object has no attribute 'get'
-    이 부분에서 가끔씩 뻑남 에러처리 해줘야 할듯 data가 리스트 타입이 아니고 str로 잡히네 
-    data 찍어보니까 data["증거품"] 이렇게 내려올 때가 있음 계속 테스팅 하면서 예외처리 잡아줘야 될듯 
-    
-    >> 2025-05-04::youngho
-    메인 템플릿 수정 후 혼자 테스트 보았을 때 문제없이 동작.
-    그러나 LLM 특성상 100% 보장은 없으므로, data 타입 확인하고 케이스별 수동 예외처리 필요
-    혹은 이 부분에서 에러 발생시 컨트롤러 측에서 다시 generate_evidences 하는 식으로 처리도 가능해 보임(높은 확률로 정상 동작하므로).
-    """
     print("[Debug/Evidence] type(data): "+ str(type(data)))
     print("[Debug/Evidence] convert_data_class의 data:", data)
     if isinstance(data, dict):
