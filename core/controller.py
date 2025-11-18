@@ -42,29 +42,16 @@ class CaseDataManager:
             cls._instance = cls()
         return cls._instance
 
-    # @classmethod
-    # async def initialize(cls) -> CaseData:
-    #     """데이터 초기화 함수 (stub 데이터 사용)"""
-    #     from tools.stub import stub_case_data
-    #     cls._case_data = stub_case_data()
-    #     cls._case = cls._case_data.case
-    #     cls._profiles = cls._case_data.profiles
-    #     cls._evidences = cls._case_data.evidences
-    #     return cls._case_data
-
     @classmethod
-    async def initialize(cls) -> CaseData:
-        """실제 데이터 초기화 함수"""
-        await cls.generate_case_stream()  
-        await cls.generate_profiles_stream()  
-        await cls.generate_evidences()
-        # await cls.generate_case_behind()
-        # print(cls._case_data)
-
+    async def stub_case_data(cls) -> CaseData:
+        """데이터 초기화 함수 (stub 데이터 사용)"""
+        from tools.stub import stub_case_data
+        cls._case_data = stub_case_data()
+        cls._case = cls._case_data.case
+        cls._profiles = cls._case_data.profiles
+        cls._evidences = cls._case_data.evidences
         return cls._case_data
-    
-    #==============================================
-    # case_builder에서 chain을 받아오고 실행 
+
 
     @classmethod
     async def generate_case_stream(cls, callback=None):
@@ -269,8 +256,6 @@ class CaseDataManager:
     
     @classmethod
     def get_case_data(cls) -> CaseData:
-        if cls._case_data is None:
-            return cls.initialize()
         return cls._case_data
     
 

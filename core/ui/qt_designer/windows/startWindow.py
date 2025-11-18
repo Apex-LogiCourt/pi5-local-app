@@ -27,7 +27,7 @@ class StartWindow(QDialog):
         
         try:
             await self.gc.initialize()
-            await self.gc.start_game()
+            await self.gc.prepare_case_data()
             self.uc.open_generate_window()
             self.close()
             
@@ -47,8 +47,24 @@ class StartWindow(QDialog):
         self.uc.open_description_window()
         self.close()
 
-    def on_text_mode(self):
-        QMessageBox.information(None, "info", "미구현")
+    @asyncSlot()
+    async def on_text_mode(self):
+        """테스트모드: stub 데이터로 빠르게 게임 시작"""
+        self.set_button_state(False, "테스트 모드 시작 중...")
+
+        try:
+            # stub 데이터로 초기화
+            await self.gc.initialize_with_stub()
+            # 바로 게임 시작 (prepare_case_data 스킵)
+            self.uc.open_generate_window()
+            self.close()
+
+        except Exception as e:
+            print(f"테스트모드 시작 오류: {e}")
+            import traceback
+            traceback.print_exc()
+            self.set_button_state(True, "게임 시작 (재시도)")
+            QMessageBox.critical(self, "오류", f"테스트모드 시작 중 오류가 발생했습니다:\n{str(e)}")
 
     def set_button_state(self, state:bool, msg:str):
         self.gameStartButton.setEnabled(state)

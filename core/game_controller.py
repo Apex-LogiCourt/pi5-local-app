@@ -52,15 +52,32 @@ class GameController(QObject):
     async def initialize(cls) -> None:
         """게임 초기화 및 데이터 로드 (백그라운드 실행)"""
         cls._state = GameState()
-        
+
         print("[GameController] 케이스 데이터 생성 시작 (전체 초기화)...")
         task = asyncio.create_task(CaseDataManager.generate_case_stream())  # 전체 CaseData 생성
         task.add_done_callback(cls._on_initialization_complete)
-        
+
         # LangGraph 워크플로우 초기화
         cls._workflow = create_game_workflow()
         print(f"[GameController] LangGraph workflow initialized")
-        
+
+        return None
+
+    @classmethod
+    async def initialize_with_stub(cls) -> None:
+        """테스트모드: stub 데이터로 빠르게 초기화"""
+        cls._state = GameState()
+
+        print("[GameController] 테스트 모드: stub 데이터로 초기화...")
+        cls._case_data = await CaseDataManager.stub_case_data()
+        cls._is_initialized = True
+
+        cls._workflow = create_game_workflow()
+        print(f"[GameController] 테스트 모드 초기화 완료")
+
+        cls._send_signal("initialized", None)
+        cls._send_signal("initialized", cls._case_data)
+
         return None
     
     @classmethod
@@ -95,13 +112,13 @@ class GameController(QObject):
         return True
 
     @classmethod
-    async def start_game(cls) -> bool :
+    def start_game(cls) -> bool :
         if cls._is_initialized is True:
             cls._state.phase = Phase.DEBATE
         else:
             return False
 
-        it.set_case_data(_case_data=cls._case_data)
+        it.set_case_data()
         cls._state.messages.append({"role":"system", "content": cls._case_data.case.outline})
         cls._state.messages.append({"role":"system", "content": cls._case_data.profiles.__str__()})
         cls._state.messages.append({"role":"system", "content": cls._case_data.evidences.__str__()})

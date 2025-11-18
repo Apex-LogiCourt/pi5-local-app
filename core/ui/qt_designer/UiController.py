@@ -144,8 +144,7 @@ class UiController(QObject):
             else: 
                 self.case_data = self.game_controller._case_data
                 self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
-
-
+                self.game_controller.start_game()
         elif code == "no_context":
             if isinstance(arg, dict):
                 self.warningWindowInstance.set_label_text(arg.get("message"))
