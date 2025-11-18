@@ -106,9 +106,9 @@ class GameController(QObject):
     @classmethod
     def _on_evidences_created(cls, task):
         cls._case_data.evidences = task.result()
+        cls._send_signal("initialized", cls._case_data)
         from tools.service import handler_send_initial_evidence
         handler_send_initial_evidence(cls._case_data.evidences)
-        cls._send_signal("initialized", cls._case_data)
         asyncio.create_task(CaseDataManager.generate_case_behind())
 
     @classmethod
