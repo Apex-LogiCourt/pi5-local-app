@@ -120,7 +120,7 @@ class Interrogator:
                 },
                 "messages": []  # 질문-답변 히스토리
             }
-            print(f"[대화 메모리] {profile.name}({profile.type})와의 새로운 심문 시작")
+            # print(f"[대화 메모리] {profile.name}({profile.type})와의 새로운 심문 시작")
             print(f"{profile.personality}")
         # 이전 대화 히스토리 가져오기
         history_data = cls._chat_histories[profile_key]
