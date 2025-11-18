@@ -49,7 +49,7 @@ if __name__ == "__main__":
         gc = GameController.get_instance()  # 게임 컨트롤러 인스턴스
         
         await gc.initialize()  # 게임 컨트롤러 초기화 (비동기)
-        await gc.start_game()  # 게임 시작 (비동기)
+        await gc.prepare_case_data()  # 게임 시작 (비동기)
         
         evidences = gc._case_data.evidences  # 게임 컨트롤러에서 증거 리스트 가져오기
         

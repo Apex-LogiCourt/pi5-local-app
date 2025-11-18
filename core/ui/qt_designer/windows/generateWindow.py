@@ -14,6 +14,7 @@ class GenerateWindow(QDialog):
         # UI 파일 로드
         ui_path = os.path.join(os.path.dirname(__file__), '..', 'generateWindow.ui')
         uic.loadUi(ui_path, self)
+        self.backButton.setEnabled(False)
         
         self._setup_ui()
         self._setup_connections()
@@ -41,7 +42,6 @@ class GenerateWindow(QDialog):
         """앞으로 버튼 클릭
         다음 단계로 넘어가야함 !!!
         """
-        print("앞으로 버튼 클릭됨")
         self.uc.open_prosecutor_window()
         self.close()
     
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         
         # GameController 초기화 (비동기)
         await gc.initialize()
-        await gc.start_game()
+        await gc.prepare_case_data()
 
         case_outline = gc._case_data.case.outline
 

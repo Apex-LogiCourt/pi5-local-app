@@ -79,11 +79,8 @@ class GameController(QObject):
         
 
     @classmethod
-    async def start_game(cls) -> bool :
-        """게임을 INIT → DEBATE 상태로 시작하고, system 메시지 초기화."""
-        
-        # 초기화 완료될 때까지 대기
-        print("[GameController] 초기화 완료 대기 중...")
+    async def prepare_case_data(cls) -> bool :
+
         timeout = 60
         elapsed = 0
         while not cls._is_initialized:
@@ -96,6 +93,21 @@ class GameController(QObject):
         task_profiles.add_done_callback(cls._on_profiles_created)
         
         return True
+
+    @classmethod
+    async def start_game(cls) -> bool :
+        if cls._is_initialized is True:
+            cls._state.phase = Phase.DEBATE
+        else:
+            return False
+
+        it.set_case_data(_case_data=cls._case_data)
+        cls._state.messages.append({"role":"system", "content": cls._case_data.case.outline})
+        cls._state.messages.append({"role":"system", "content": cls._case_data.profiles.__str__()})
+        cls._state.messages.append({"role":"system", "content": cls._case_data.evidences.__str__()})
+
+        return True
+
     
     @classmethod
     def _on_profiles_created(cls, task):

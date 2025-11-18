@@ -140,6 +140,7 @@ class UiController(QObject):
             if arg is not None:
                 self.case_data = arg
                 self.createWindowInstance()
+                self.generateWindowInstance.backButton.setEnabled(True)
             else: 
                 self.case_data = self.game_controller._case_data
                 self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
