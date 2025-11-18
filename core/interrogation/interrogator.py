@@ -1,6 +1,7 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from data_models import CaseData, Case, Profile, Evidence
 from typing import List, Dict, Optional
 
@@ -74,17 +75,10 @@ class Interrogator:
     _profiles : List[Profile] = None
     _role = None
     _current_profile : Profile = None
-    llm = get_llm("gpt-4o-mini", temperature=0.5)  # 기본 LLM 설정
-    chat_prompt = ChatPromptTemplate.from_template("""
-                당신은 재판에 참석한 {role}입니다.
-                당신의 역할은 사건에 대한 질문에 인간적으로 답변하는 것입니다.
-                사건 개요: {case}
-                당신의 정보 : {profile}
-                증거 : {evidence}
-                질문: {question}
-                                                             
-                답변:
-            """)
+    llm = get_llm("gpt-4o-mini", temperature=1)  # 기본 LLM 설정
+    
+    # 각 인물별 대화 히스토리를 관리 (인물명을 키로 사용)
+    _chat_histories: Dict[str, List] = {}
 
     def __new__(cls):
         if cls._instance is None:
@@ -109,25 +103,102 @@ class Interrogator:
         return True
 
     @classmethod
-    def build_ask_chain(cls, question: str, profile : Profile):
-        # 모든 변수를 미리 포맷팅된 텍스트로 준비
-        formatted_prompt = f"""
-                당신은 재판에 참석한 {profile.type}입니다.
-                당신의 역할은 사건에 대한 질문에 인간적으로 답변하는 것입니다.
-                사건 개요: {cls._case.outline}
-                당신의 정보 : {profile.__str__()}
-                증거 : {cls._evidence.__str__()}
-                질문: {question}
-                                                             
-                답변:
-            """
+    def build_ask_chain(cls, question: str, profile: Profile):
+        profile_key = f"{profile.name}_{profile.type}"
         
-        # 단순한 프롬프트 템플릿 생성
-        prompt = ChatPromptTemplate.from_template(formatted_prompt)
+        # 해당 인물과의 대화 히스토리가 없으면 초기화 (최초 1회만)
+        if profile_key not in cls._chat_histories:
+            cls._chat_histories[profile_key] = {
+                "context": {
+                    "role": profile.type,
+                    "case": cls._case.outline,
+                    "profile": profile.__str__(),
+                    "evidence": cls._evidence.__str__()
+                },
+                "messages": []  # 질문-답변 히스토리
+            }
+            print(f"[대화 메모리] {profile.name}({profile.type})와의 새로운 심문 시작")
+            print(f"{profile.personality}")
+        # 이전 대화 히스토리 가져오기
+        history_data = cls._chat_histories[profile_key]
+        context = history_data["context"]
+        messages = history_data["messages"]
+        
+        # 이전 대화를 텍스트로 포맷팅
+        conversation_history = ""
+        if messages:
+            conversation_history = "\n\n이전 대화 내역:\n"
+            for i, msg in enumerate(messages, 1):
+                conversation_history += f"Q{i}: {msg['question']}\nA{i}: {msg['answer']}\n"
+        
+        # ChatPromptTemplate으로 명확하게 system role 지정
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", f"""당신은 재판에 참석한 {context['role']}입니다.
+당신의 역할은 사건에 대한 질문에 인간적으로 답변하는 것입니다.
+
+사건 개요:
+{context['case']}
+
+당신의 정보:
+{context['profile']}
+
+증거:
+{context['evidence']}
+
+지침:
+- 질문에 최대한 인간적인 말투로 답변하세요.
+- 답변은 4줄을 넘지 않게 간결하게 하고 "제 진술이 사건 해결에 도움이 되기를 바랍니다." 같이 쓸데없는 소리는 하지 마세요.
+- 계속 대화를 이어가는 말투로 답변하세요.
+- 당신의 프로필 속 personality 특성을 반영하여 답변하세요.
+- 이전 대화 내용을 참고하여 일관성 있게 답변하세요.{conversation_history}"""),
+            ("human", "{question}")
+        ])
+        
+        # LLM 체인 실행
         cls.llm = get_llm()
         chain = prompt | cls.llm | StrOutputParser()
+        answer = chain.invoke({"question": question})
         
-        return chain
+        # 대화 히스토리에 추가
+        messages.append({
+            "question": question,
+            "answer": answer
+        })
+        
+        print(f"[대화 메모리] 현재 {profile.name}와의 대화 턴: {len(messages)}턴")
+        
+        return answer
+    
+    @classmethod
+    def reset_conversation(cls, profile: Profile = None):
+        """
+        대화 히스토리를 초기화
+        - profile이 주어지면 해당 인물과의 대화만 초기화
+        - profile이 None이면 모든 대화 초기화
+        """
+        if profile:
+            profile_key = f"{profile.name}_{profile.type}"
+            if profile_key in cls._chat_histories:
+                del cls._chat_histories[profile_key]
+                print(f"[대화 메모리] {profile.name}({profile.type})와의 대화 히스토리 초기화됨")
+        else:
+            cls._chat_histories = {}
+            print(f"[대화 메모리] 모든 대화 히스토리 초기화됨")
+    
+    @classmethod
+    def get_conversation_history(cls, profile: Profile) -> List[Dict]:
+        """특정 인물과의 대화 히스토리를 반환합니다."""
+        profile_key = f"{profile.name}_{profile.type}"
+        history_data = cls._chat_histories.get(profile_key, None)
+        if history_data:
+            return history_data.get("messages", [])
+        return []
+    
+    @classmethod
+    def get_conversation_turn_count(cls, profile: Profile) -> int:
+        """특정 인물과의 대화 턴 수를 반환합니다."""
+        messages = cls.get_conversation_history(profile)
+        return len(messages)
     
     @classmethod
     def check_request(cls, user_input: str) -> Optional[Dict]:
