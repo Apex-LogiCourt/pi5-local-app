@@ -23,7 +23,7 @@ from .prompt_templates.ex_witness_templates import (
 
 # ... existing code ...
 
-def get_llm(model="gpt-4o-mini", temperature=0.3):
+def get_llm(model="gpt-4o-mini"):
     llm = ChatOpenAI(model=model)  
     return llm
 
@@ -75,7 +75,7 @@ class Interrogator:
     _profiles : List[Profile] = None
     _role = None
     _current_profile : Profile = None
-    llm = get_llm("gpt-4o-mini", temperature=1)  # 기본 LLM 설정
+    llm = get_llm("gpt-5-mini")  # 기본 LLM 설정
     
     # 각 인물별 대화 히스토리를 관리 (인물명을 키로 사용)
     _chat_histories: Dict[str, List] = {}
@@ -113,7 +113,10 @@ class Interrogator:
                     "role": profile.type,
                     "case": cls._case.outline,
                     "profile": profile.__str__(),
-                    "evidence": cls._evidence.__str__()
+                    "personality": profile.personality,
+                    "gender": profile.gender,
+                    "age": profile.age
+
                 },
                 "messages": []  # 질문-답변 히스토리
             }
@@ -142,14 +145,16 @@ class Interrogator:
 당신의 정보:
 {context['profile']}
 
-증거:
-{context['evidence']}
+당신의 성격:
+{context['personality']}
+{context['gender']}
+{context['age']}
 
 지침:
-- 질문에 최대한 인간적인 말투로 답변하세요.
+- 질문에 최대한 감정을 담아 인간적인 말투로 답변하세요.
 - 답변은 4줄을 넘지 않게 간결하게 하고 "제 진술이 사건 해결에 도움이 되기를 바랍니다." 같이 쓸데없는 소리는 하지 마세요.
 - 계속 대화를 이어가는 말투로 답변하세요.
-- 당신의 프로필 속 personality 특성을 반영하여 답변하세요.
+- 당신의 프로필 속 성격과 성별, 나이를 반영한 말투로 답변하세요.
 - 이전 대화 내용을 참고하여 일관성 있게 답변하세요.{conversation_history}"""),
             ("human", "{question}")
         ])
