@@ -203,8 +203,9 @@ def create_image_by_ai(name: str):
         with open(save_path, "wb") as file:
             file.write(output.read())
             print(f"[{name}] 이미지 저장 성공: {save_path}")
-    except:
+    except Exception as e:
         print(f"[{name}] 이미지 저장 실패: {output}")
+        print(f"[{name}] 에러: {e}")
 
     # if output and isinstance(output, list):
     #     image_url = output[0]
