@@ -65,8 +65,9 @@ def make_evidence(case_data: Case, profiles: List[Profile]) -> List[Evidence]:
     })
     evidences = convert_data_class(response)
 
+    # 이미지는 나중에 병렬로 생성 (일단 None으로 설정)
     for e in evidences:
-        e.picture = make_evidence_image(e.name)
+        e.picture = None
 
     return evidences
 
@@ -124,10 +125,43 @@ def convert_data_class(data: List[dict]) -> List[Evidence]:
 def make_evidence_image(name):
     try:
         path = create_image_by_ai(name)
-        resize_img(path, path, 200)
-    except:
-        return -1
-    return path
+        if path == -1 or path is None:
+            print(f"[{name}] 이미지 생성 실패")
+            return None
+
+        # resize 실패해도 원본 경로 반환
+        result = resize_img(path, path, 200)
+        if result == -1:
+            print(f"[{name}] 이미지 리사이즈 실패, 원본 사용")
+
+        return path
+    except Exception as e:
+        print(f"[{name}] 이미지 생성 중 예외 발생: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def generate_evidence_images_parallel(evidences: List[Evidence]) -> List[Evidence]:
+    """증거품 이미지를 병렬로 생성"""
+    import concurrent.futures
+
+    def generate_single_image(evidence):
+        """단일 증거품의 이미지 생성"""
+        try:
+            evidence.picture = make_evidence_image(evidence.name)
+            print(f"[Evidence] {evidence.name} 이미지 생성 완료: {evidence.picture}")
+        except Exception as e:
+            print(f"[Evidence] {evidence.name} 이미지 생성 실패: {e}")
+            evidence.picture = None
+        return evidence
+
+    # ThreadPoolExecutor로 병렬 처리
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        futures = [executor.submit(generate_single_image, e) for e in evidences]
+        # 모든 작업이 완료될 때까지 대기
+        concurrent.futures.wait(futures)
+
+    return evidences
 
 def resize_img(input_path, output_path, target_size):
     from PIL import Image
@@ -180,22 +214,33 @@ def create_image_by_ai(name: str):
     import datetime
     from dotenv import dotenv_values
     import os
-    
+    import re
+
     env = dotenv_values()
     # key = "Token " + env.get("REPLICATE_API_KEY") # 직접 요청시 사용하는 키
     key = env.get("REPLICATE_API_KEY")
     today = datetime.datetime.now()
     formatted_date = today.strftime("%y-%m-%d")
     timestamp = today.strftime("%Y-%m-%d %H:%M:%S")
-    
+
     # 사람 이름이 포함된 경우 일반화된 이름으로 변환
     generic_name = get_generic_evidence_name(name)
-    new_name = generic_name.replace(" ", "-")
+    # 모든 공백을 하이픈으로 변환 (여러 공백도 처리)
+    new_name = re.sub(r'\s+', '-', generic_name.strip())
 
     prompt_name = get_evidence_name_for_prompt(generic_name)
     save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + ".png"
 
+    # 기존 파일이 있으면 재사용
+    if os.path.exists(save_path):
+        print(f"[{name}] 기존 이미지 파일 재사용: {save_path}")
+        return save_path
+
+    # 디렉토리가 없으면 생성
+    os.makedirs("data/evidence_resource", exist_ok=True)
+
     import replicate
+    import time
     client = replicate.Client(api_token=key)
     model = "stability-ai/stable-diffusion-3.5-large"
     inputs = {
@@ -207,16 +252,30 @@ def create_image_by_ai(name: str):
         # "output_quality": 95,     #TEST
         # "prompt_strength": 0.85   #TEST
     }
-    output = client.run(model, input=inputs)
 
-    print(output)
-    try:
-        with open(save_path, "wb") as file:
-            file.write(output.read())
-            print(f"[{name}] 이미지 저장 성공: {save_path}")
-    except Exception as e:
-        print(f"[{name}] 이미지 저장 실패: {output}")
-        print(f"[{name}] 에러: {e}")
+    # 재시도 로직 (최대 3번)
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            output = client.run(model, input=inputs)
+            print(output)
+
+            with open(save_path, "wb") as file:
+                file.write(output.read())
+                print(f"[{name}] 이미지 저장 성공: {save_path}")
+            break  # 성공하면 루프 종료
+        except Exception as e:
+            print(f"[{name}] 이미지 생성 시도 {attempt + 1}/{max_retries} 실패: {e}")
+            if attempt < max_retries - 1:
+                wait_time = (attempt + 1) * 2  # 2초, 4초, 6초 대기
+                print(f"[{name}] {wait_time}초 후 재시도...")
+                time.sleep(wait_time)
+            else:
+                print(f"[{name}] 모든 재시도 실패, 기본 이미지 사용")
+                import traceback
+                traceback.print_exc()
+                # 기본 placeholder 이미지 경로 반환
+                return "core/assets/evidence_icon.png"
     
     # JSON 로그 파일에 메타데이터 저장
     log_json_path = "data/evidence_resource/evidence_log.json"
