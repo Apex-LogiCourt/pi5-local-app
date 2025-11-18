@@ -54,7 +54,7 @@ class StartWindow(QDialog):
 
         try:
             # stub 데이터로 초기화
-            await self.gc.initialize_with_stub()
+            self.gc.initialize_with_stub()
             # 바로 게임 시작 (prepare_case_data 스킵)
             self.uc.open_generate_window()
             self.close()

@@ -64,12 +64,12 @@ class GameController(QObject):
         return None
 
     @classmethod
-    async def initialize_with_stub(cls) -> None:
+    def initialize_with_stub(cls) -> None:
         """테스트모드: stub 데이터로 빠르게 초기화"""
         cls._state = GameState()
 
         print("[GameController] 테스트 모드: stub 데이터로 초기화...")
-        cls._case_data = await CaseDataManager.stub_case_data()
+        cls._case_data = CaseDataManager.stub_case_data()
         cls._is_initialized = True
 
         cls._workflow = create_game_workflow()
@@ -113,12 +113,13 @@ class GameController(QObject):
 
     @classmethod
     def start_game(cls) -> bool :
-        if cls._is_initialized is True:
-            cls._state.phase = Phase.DEBATE
-        else:
+        cls._state.phase = Phase.DEBATE
+        cls._case_data = CaseDataManager.get_case_data()
+        
+        if not it.set_case_data(cls._case_data):
+            print("[GameController] interrogator case_data 설정 실패")
             return False
-
-        it.set_case_data()
+            
         cls._state.messages.append({"role":"system", "content": cls._case_data.case.outline})
         cls._state.messages.append({"role":"system", "content": cls._case_data.profiles.__str__()})
         cls._state.messages.append({"role":"system", "content": cls._case_data.evidences.__str__()})

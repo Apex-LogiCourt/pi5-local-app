@@ -102,12 +102,11 @@ class Interrogator:
         return cls._instance
     
     @classmethod
-    def set_case_data(cls) -> bool:
-        from controller import CaseDataManager
-        case_data = CaseDataManager.get_case_data()
+    def set_case_data(cls, case_data: CaseData) -> bool:
         cls._case = case_data.case
         cls._profiles = case_data.profiles
         cls._evidence = case_data.evidences
+        return True
 
     @classmethod
     def build_ask_chain(cls, question: str, profile : Profile):

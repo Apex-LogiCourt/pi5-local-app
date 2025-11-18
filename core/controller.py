@@ -43,7 +43,7 @@ class CaseDataManager:
         return cls._instance
 
     @classmethod
-    async def stub_case_data(cls) -> CaseData:
+    def stub_case_data(cls) -> CaseData:
         """데이터 초기화 함수 (stub 데이터 사용)"""
         from tools.stub import stub_case_data
         cls._case_data = stub_case_data()
@@ -106,6 +106,7 @@ class CaseDataManager:
         chain = build_case_behind_chain(cls._case.outline, cls._profiles, cls._selected_characters)
         # 스트리밍 작업을 별도 스레드에서 실행하여 UI 블로킹 방지
         result = await asyncio.to_thread(cls._handle_stream, chain, callback)
+        cls._case_data.case.behind = result
         return result
     
     @classmethod

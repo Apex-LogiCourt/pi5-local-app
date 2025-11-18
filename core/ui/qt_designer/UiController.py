@@ -141,10 +141,12 @@ class UiController(QObject):
                 self.case_data = arg
                 self.createWindowInstance()
                 self.generateWindowInstance.backButton.setEnabled(True)
+                # 모든 데이터가 준비된 후에만 start_game 호출
+                self.game_controller.start_game()
             else: 
+                # 케이스만 생성된 상태 - generateWindow만 생성
                 self.case_data = self.game_controller._case_data
                 self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
-                self.game_controller.start_game()
         elif code == "no_context":
             if isinstance(arg, dict):
                 self.warningWindowInstance.set_label_text(arg.get("message"))
