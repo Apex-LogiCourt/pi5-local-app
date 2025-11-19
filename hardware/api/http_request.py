@@ -59,7 +59,7 @@ async def sse_data_handler(raw_data: str):
 async def handle_button_press(press_id: str):
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(f'http://localhost:8000/api/press/{press_id}')
+            response = await client.post(f'http://localhost:8000/press/{press_id}')
             response.raise_for_status()  # HTTP 에러 체크
             data = response.json()
             # print(data)
@@ -75,7 +75,7 @@ async def handle_button_press(press_id: str):
 async def handle_nfc(id: str):
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(f'http://localhost:8000/evidence/{id}')
+            response = await client.post(f'http://localhost:8000/press/attorney')
             response.raise_for_status()  # HTTP 에러 체크
             data = response.json()
             print(f"[HW/http] 증거카드 {id}번 등록 성공: {data}")
