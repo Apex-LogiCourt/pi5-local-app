@@ -222,9 +222,17 @@ class UiController(QObject):
 
     def _handle_objection(self, arg):
         """이의 제기 처리"""
-        if isinstance(arg, dict):
-            self.warningWindowInstance.set_label_text(f"{arg.get('role', '')}의 이의 제기" + "\n" + arg.get("message", "이의 있습니다!"))
-            self.warningWindowInstance.show()
+        # 이의 제기 후 턴 전환 (objection 효과 사용)
+        if self.isTurnProsecutor:
+            # 검사 -> 변호사로 전환 (왼쪽으로 스와이프)
+            direction = 'left'
+            self.main_window.switch_to_page("lawyer", direction, objection=True)
+            self.isTurnProsecutor = False
+        else:
+            # 변호사 -> 검사로 전환 (오른쪽으로 스와이프)
+            direction = 'right'
+            self.main_window.switch_to_page("prosecutor", direction, objection=True)
+            self.isTurnProsecutor = True
 
     def _handle_judgement(self, arg):
         """판결 시작 처리"""
