@@ -52,8 +52,8 @@ class UiController(QObject):
         # Typewriter 먼저 생성 (신호 연결 전에!)
         self.typewriter = Typewriter(
             update_fn=None, # overview에 출력
-            char_interval=30,     # 글자 속도 (ms)
-            sentence_pause=1000    # 한 문장 당 다 찍고 나서 쉬는 시간 (ms)
+            char_interval=110,     # 글자 속도 (ms)
+            sentence_pause=1400    # 한 문장 당 다 찍고 나서 쉬는 시간 (ms)
         )
 
         self.game_controller._signal.connect(self.receive_game_signal)
