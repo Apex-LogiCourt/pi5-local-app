@@ -189,9 +189,15 @@ class UiController(QObject):
                     print("ERROR: GameController does not have 'done' method to trigger final verdict.")
 
         elif code == "evidences_ready":
-            # 증거품 생성 완료 시 evidenceWindow 업데이트
+            # 증거품 생성 완료 시 evidenceWindow 업데이트 (이미지는 아직 없음)
             if arg and hasattr(self, 'evidenceWindowInstance'):
                 print(f"[UiController] 증거품 생성 완료, evidenceWindow 업데이트")
+                self.evidenceWindowInstance.update_evidences(arg)
+
+        elif code == "evidence_images_ready":
+            # 증거품 이미지 생성 완료 시 evidenceWindow 업데이트
+            if arg and hasattr(self, 'evidenceWindowInstance'):
+                print(f"[UiController] 증거품 이미지 생성 완료, evidenceWindow 업데이트")
                 self.evidenceWindowInstance.update_evidences(arg)
 
         elif code == "evidence_changed":
