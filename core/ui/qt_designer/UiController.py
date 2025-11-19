@@ -27,6 +27,7 @@ from ui.qt_designer.windows.textInputWindow import TextInputWindow
 from ui.qt_designer.windows.startWindow import StartWindow
 
 # PyQt5.QtWidgets에 QSizePolicy 상수가 있으므로 import 추가
+# 이 부분 필수
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget, QMessageBox, QSizePolicy
 from PyQt5.QtCore import pyqtSlot, QObject, QSize # QSize 추가 (선택 사항)
 

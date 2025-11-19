@@ -84,6 +84,7 @@ async def main_async():
     await gc.start_game()
 
     uiController = UiController.get_instance()
+    #이 부분 수정
     uiController.open_start_window()
     
     # PyQt 이벤트 루프 실행 (qasync로 asyncio와 통합)

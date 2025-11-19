@@ -5,6 +5,7 @@ from PyQt5 import uic
 
 # [수정 1] 이미지 리소스를 위한 임포트 추가 (경로는 프로젝트 구조에 맞춰주세요)
 # 이 임포트가 있어야 .ui 파일의 이미지가 보입니다.
+# 모든 수정 완료
 try:
     import ui.qt_designer.resource_rc
 except ImportError:
