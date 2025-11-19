@@ -118,7 +118,7 @@ class BaseCourtPage(QWidget):
                 int(558 * ratio_w), int(110 * ratio_h),
                 int(740 * ratio_w), int(521 * ratio_h)
             )
-            
+
             # 프로필 캐릭터 이미지
             self.profile.setGeometry(
                 int(800 * ratio_w), int(120 * ratio_h),

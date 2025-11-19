@@ -15,7 +15,7 @@
   </property>
   <property name="styleSheet">
    <string notr="true">QDialog{
-	background-color: rgb(15, 39, 72);
+	background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 rgb(15, 39, 72), stop:1 rgb(25, 52, 89));
 }</string>
   </property>
   <widget class="QLabel" name="overviewTitleLabel">

@@ -118,6 +118,9 @@ class MainWindow(QMainWindow):
         next_widget.show()
         next_widget.raise_()
 
+        # nameLabel 애니메이션 (늘어나면서 이동하는 효과)
+        self._animate_name_label_stretch(current_widget, next_widget, direction)
+
         # 현재 위젯 애니메이션
         self.current_anim_out = QPropertyAnimation(current_widget, b"pos")
         self.current_anim_out.setDuration(300)
@@ -144,6 +147,86 @@ class MainWindow(QMainWindow):
         self.current_animation = self.current_anim_in
         self.current_anim_out.start()
         self.current_anim_in.start()
+
+    def _animate_name_label_stretch(self, current_widget, next_widget, direction):
+        """nameLabel이 늘어나면서 이동하는 애니메이션
+
+        Args:
+            current_widget: 현재 위젯 (검사 또는 변호사 페이지)
+            next_widget: 다음 위젯 (검사 또는 변호사 페이지)
+            direction: 'left' 또는 'right'
+        """
+        # nameLabel이 있는지 확인
+        if not hasattr(current_widget, 'nameLabel') or not hasattr(next_widget, 'nameLabel'):
+            return
+
+        current_label = current_widget.nameLabel
+        next_label = next_widget.nameLabel
+
+        # 현재 라벨의 위치와 크기 가져오기
+        current_geom = current_label.geometry()
+        next_geom = next_label.geometry()
+
+        width = self.stacked_widget.width()
+
+        # 중간 라벨 생성 (늘어나는 효과용)
+        from PyQt5.QtWidgets import QPushButton
+        stretch_label = QPushButton(self.stacked_widget)
+        stretch_label.setStyleSheet(current_label.styleSheet())
+        stretch_label.setText(current_label.text())
+
+        # 초기 위치 설정
+        stretch_label.setGeometry(current_geom)
+        stretch_label.raise_()
+        stretch_label.show()
+
+        # 원래 라벨들 숨기기
+        current_label.hide()
+        next_label.hide()
+
+        # 늘어나는 애니메이션
+        if direction == 'right':
+            # 검사 -> 변호사: 왼쪽에서 오른쪽으로 늘어남
+            # 시작: 검사 라벨 위치, 종료: 전체 너비로 늘어남
+            end_geom = current_geom
+            end_geom.setWidth(width - current_geom.x() - 10)
+        else:
+            # 변호사 -> 검사: 오른쪽에서 왼쪽으로 늘어남
+            end_geom = current_geom
+            end_geom.setX(10)
+            end_geom.setWidth(current_geom.x() + current_geom.width() - 10)
+
+        # geometry 애니메이션
+        self.label_stretch_anim = QPropertyAnimation(stretch_label, b"geometry")
+        self.label_stretch_anim.setDuration(150)  # 전반부
+        self.label_stretch_anim.setStartValue(current_geom)
+        self.label_stretch_anim.setEndValue(end_geom)
+        self.label_stretch_anim.setEasingCurve(QEasingCurve.InOutQuad)
+
+        # 다시 줄어드는 애니메이션
+        self.label_shrink_anim = QPropertyAnimation(stretch_label, b"geometry")
+        self.label_shrink_anim.setDuration(150)  # 후반부
+        self.label_shrink_anim.setStartValue(end_geom)
+        self.label_shrink_anim.setEndValue(next_geom)
+        self.label_shrink_anim.setEasingCurve(QEasingCurve.InOutQuad)
+
+        # 텍스트 변경 (중간 지점에서)
+        def change_text():
+            stretch_label.setText(next_label.text())
+
+        # 정리 함수
+        def cleanup():
+            stretch_label.deleteLater()
+            current_label.show()
+            next_label.show()
+
+        # 시퀀스 연결
+        self.label_stretch_anim.finished.connect(change_text)
+        self.label_stretch_anim.finished.connect(self.label_shrink_anim.start)
+        self.label_shrink_anim.finished.connect(cleanup)
+
+        # 애니메이션 시작
+        self.label_stretch_anim.start()
 
     def _animate_objection_switch(self, page_name, direction):
         """이의 있음! 효과와 함께 페이지 전환 (흔들림 + 스와이프)

@@ -30,6 +30,7 @@
    <property name="styleSheet">
     <string notr="true">QPushButton{
 	background-color: rgb(0, 0, 0);
+	border: 2px solid rgba(100, 150, 200, 100);
 	color: rgb(255, 254, 254);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
@@ -58,6 +59,7 @@
     <string notr="true">QPushButton#micButton[mic_state=&quot;off&quot;]{
 	image: url(:/images/mic_off.png);
 	background-color: rgb(47, 90, 104);
+	border: 2px solid rgba(100, 150, 200, 100);
 	color: rgb(255, 254, 254);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
@@ -65,17 +67,20 @@
 QPushButton#micButton[mic_state=&quot;on&quot;]{
 	image: url(:/images/mic_on.png);
 	background-color: rgb(47, 90, 104);
+	border: 2px solid rgba(100, 150, 200, 100);
 	color: rgb(255, 254, 254);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }
 QPushButton#micButton:hover{
 	background-color: rgb(67, 129, 148);
+	border: 2px solid rgba(100, 150, 200, 100);
 	border-radius: 20px;
 	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
 }
 QPushButton#micButton:pressed{
 	background-color: rgb(0, 123, 255);
+	border: 2px solid rgba(100, 150, 200, 100);
 	border-radius: 20px;
 	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
 }</string>
@@ -102,6 +107,7 @@ QPushButton#micButton:pressed{
    <property name="styleSheet">
     <string notr="true">QPushButton{
 	background-color: rgb(47, 90, 104);
+	border: 2px solid rgba(100, 150, 200, 100);
 	color: rgb(255, 254, 254);
 	border-radius: 20px;
 	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
@@ -109,11 +115,13 @@ QPushButton#micButton:pressed{
 
 QPushButton:hover{
 	background-color: rgb(67, 129, 148);
+	border: 2px solid rgba(100, 150, 200, 100);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }
 QPushButton:pressed{
 	background-color: rgb(0, 123, 255);
+	border: 2px solid rgba(100, 150, 200, 100);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }</string>
@@ -367,6 +375,7 @@ QPushButton:pressed{
    <property name="styleSheet">
     <string notr="true">QPushButton{
 	background-color: rgb(47, 90, 104);
+	border: 2px solid rgba(100, 150, 200, 100);
 	color: rgb(255, 254, 254);
 	border-radius: 20px;
 	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
@@ -374,11 +383,13 @@ QPushButton:pressed{
 
 QPushButton:hover{
 	background-color: rgb(67, 129, 148);
+	border: 2px solid rgba(100, 150, 200, 100);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }
 QPushButton:pressed{
 	background-color: rgb(0, 123, 255);
+	border: 2px solid rgba(100, 150, 200, 100);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }</string>
