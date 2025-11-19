@@ -1,6 +1,7 @@
 import sys
 import os
 from PyQt5.QtWidgets import QDialog, QApplication
+from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 from typing import List
 from data_models import Evidence 
@@ -14,6 +15,7 @@ class EvidenceWindow(QDialog):
         ui_path = os.path.join(os.path.dirname(__file__), '..', 'evidenceWindow.ui')
         uic.loadUi(ui_path, self)
 
+        
         self.setWindowTitle("증거품 창")
         self.evidences = evidences if evidences is not None else []
         self._display_evidences(self.evidences)
@@ -34,11 +36,26 @@ class EvidenceWindow(QDialog):
             self.evidenceDescription4
         ]
 
+        evidence_images = [
+            self.evidenceImage1,
+            self.evidenceImage2,
+            self.evidenceImage3,
+            self.evidenceImage4
+        ]
+
+        default_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..')
+
         # 증거품이 없으면 "생성 중" 표시
         if not evidences or len(evidences) == 0:
             for i in range(4):
                 evidence_labels[i].setText("증거품 생성 중...")
                 evidence_descriptions[i].setText("증거품을 생성하고 있습니다.\n잠시만 기다려주세요.")
+                # 이미지는 빈 상태로 두거나 기본 이미지 표시
+                default_image_path = os.path.join(default_path, "data", "evidence_resource", "deafult_image.png")
+                if os.path.exists(default_image_path):
+                    evidence_images[i].setPixmap(QPixmap(default_image_path).scaled(90, 90))
+                else:
+                    evidence_images[i].clear()
             return
 
         # 증거품이 있으면 표시
@@ -46,6 +63,26 @@ class EvidenceWindow(QDialog):
             if i < len(evidence_labels):
                 evidence_labels[i].setText(evidence.name)
                 evidence_descriptions[i].setText("\n".join(evidence.description))
+
+                # 이미지 표시 (이미지가 없거나 None이면 기본 이미지 사용)
+                if evidence.picture:
+                    image_path = os.path.join(default_path, str(evidence.picture))
+                    if os.path.exists(image_path):
+                        evidence_images[i].setPixmap(QPixmap(image_path).scaled(90, 90))
+                    else:
+                        # 이미지 파일이 없으면 기본 이미지 사용
+                        default_image_path = os.path.join(default_path, "data", "evidence_resource", "deafult_image.png")
+                        if os.path.exists(default_image_path):
+                            evidence_images[i].setPixmap(QPixmap(default_image_path).scaled(90, 90))
+                        else:
+                            evidence_images[i].clear()
+                else:
+                    # picture가 None이면 기본 이미지 사용
+                    default_image_path = os.path.join(default_path, "data", "evidence_resource", "deafult_image.png")
+                    if os.path.exists(default_image_path):
+                        evidence_images[i].setPixmap(QPixmap(default_image_path).scaled(90, 90))
+                    else:
+                        evidence_images[i].clear()
 
     def update_evidences(self, evidences: List):
         """증거품 리스트 업데이트 (증거품 생성 완료 후 호출)"""

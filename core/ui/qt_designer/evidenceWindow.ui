@@ -146,9 +146,9 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>110</x>
      <y>90</y>
-     <width>391</width>
+     <width>291</width>
      <height>101</height>
     </rect>
    </property>
@@ -194,9 +194,9 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>110</x>
      <y>230</y>
-     <width>391</width>
+     <width>291</width>
      <height>101</height>
     </rect>
    </property>
@@ -242,9 +242,9 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>110</x>
      <y>370</y>
-     <width>391</width>
+     <width>291</width>
      <height>101</height>
     </rect>
    </property>
@@ -290,9 +290,9 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>110</x>
      <y>510</y>
-     <width>391</width>
+     <width>291</width>
      <height>101</height>
     </rect>
    </property>
@@ -330,6 +330,70 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="placeholderText">
     <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="evidenceImage1">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>100</y>
+     <width>91</width>
+     <height>91</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(255, 255, 255);</string>
+   </property>
+   <property name="text">
+    <string>evidenceImage1</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="evidenceImage2">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>240</y>
+     <width>91</width>
+     <height>91</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(255, 255, 255);</string>
+   </property>
+   <property name="text">
+    <string>evidenceImage2</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="evidenceImage3">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>380</y>
+     <width>91</width>
+     <height>91</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(255, 255, 255);</string>
+   </property>
+   <property name="text">
+    <string>evidenceImage3</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="evidenceImage4">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>520</y>
+     <width>91</width>
+     <height>91</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(255, 255, 255);</string>
+   </property>
+   <property name="text">
+    <string>evidenceImage4</string>
    </property>
   </widget>
  </widget>

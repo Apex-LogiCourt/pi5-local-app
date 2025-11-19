@@ -45,6 +45,7 @@ class UiController(QObject):
         self.game_controller = GameController.get_instance()
         self.isTurnProsecutor = True # 처음에는 검사 턴으로 시작
 
+        self.descriptionWindowInstance = GameDescriptionWindow(self._instance)
         self.startWindowInstance = StartWindow(self._instance, self.game_controller)
         self.startWindowInstance.set_button_state(True, "게임 시작")  # 시작 버튼 활성화
 
@@ -69,7 +70,7 @@ class UiController(QObject):
         pass
     
     def createWindowInstance(self):
-        self.descriptionWindowInstance = GameDescriptionWindow(self._instance)
+        # self.descriptionWindowInstance = GameDescriptionWindow(self._instance)
         # self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
         self.interrogationWindowInstance = None
         # self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, self.case_data.profiles)
