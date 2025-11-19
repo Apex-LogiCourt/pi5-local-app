@@ -21,7 +21,7 @@ from ui.qt_designer.windows.interrogationWindow import InterrogationWindow
 from ui.qt_designer.windows.textInputWindow import TextInputWindow
 from ui.qt_designer.windows.startWindow import StartWindow
 from PyQt5.QtCore import pyqtSignal, QObject, pyqtSlot
-from ui.type_writer import Typewriter
+from ui.tools.type_writer import Typewriter
 
 import ui.qt_designer.resource_rc 
 

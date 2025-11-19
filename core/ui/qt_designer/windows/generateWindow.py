@@ -23,7 +23,7 @@ class GenerateWindow(QDialog):
         """UI 초기 설정"""
         # self.overviewText.setPlainText(self.case_outline)
         from data_models import Case
-        from ui.type_writer import Typewriter
+        from ui.tools.type_writer import Typewriter
         
         # QTextEdit에 QSS 적용 (strong, b 태그에 나눔고딕 ExtraBold 적용)
         self.overviewText.document().setDefaultStyleSheet("""

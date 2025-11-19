@@ -128,7 +128,7 @@ if __name__ == "__main__":
         app = QApplication(sys.argv)
         # from ui.qt_designer.UiController import uiController  # UI 컨트롤러 임포트
         from game_controller import GameController  # 게임 컨트롤러 임포트
-        from ui.qt_designer.UiController import UiController
+        from ui.UiController import UiController
 
         uc= UiController().get_instance()  # UI 컨트롤러 인스턴스
         gc = GameController().get_instance()  # 게임 컨트롤러 인스턴스
