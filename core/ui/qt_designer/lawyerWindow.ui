@@ -45,41 +45,6 @@
     <bool>false</bool>
    </property>
   </widget>
-  <widget class="QLabel" name="profileImage">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>140</y>
-     <width>551</width>
-     <height>551</height>
-    </rect>
-   </property>
-   <property name="autoFillBackground">
-    <bool>false</bool>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QLabel{
-	/* 스타일시트는 스케일 설정 불가능. pixMap으로 설정해야 함 */
-	/* image:url(:/images/imageNotFound.png); */
-	background-color: transparent;
-	color: rgb(255, 255, 255);
-	font: 20pt &quot;나눔고딕&quot;;
-}
-</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-   <property name="pixmap">
-    <pixmap resource="assets/resource.qrc">:/assets/profile/lawyer.png</pixmap>
-   </property>
-   <property name="scaledContents">
-    <bool>true</bool>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
   <widget class="QPushButton" name="micButton">
    <property name="geometry">
     <rect>
@@ -160,7 +125,7 @@ QPushButton:pressed{
   <widget class="QPushButton" name="overviewButton">
    <property name="geometry">
     <rect>
-     <x>650</x>
+     <x>740</x>
      <y>180</y>
      <width>141</width>
      <height>51</height>
@@ -189,7 +154,7 @@ QPushButton:pressed{
   <widget class="QPushButton" name="evidenceButton">
    <property name="geometry">
     <rect>
-     <x>650</x>
+     <x>740</x>
      <y>310</y>
      <width>161</width>
      <height>51</height>
@@ -218,7 +183,7 @@ QPushButton:pressed{
   <widget class="QPushButton" name="textButton">
    <property name="geometry">
     <rect>
-     <x>650</x>
+     <x>740</x>
      <y>440</y>
      <width>161</width>
      <height>51</height>
@@ -247,9 +212,9 @@ QPushButton:pressed{
   <widget class="QLabel" name="profileTitleLabel">
    <property name="geometry">
     <rect>
-     <x>890</x>
+     <x>930</x>
      <y>190</y>
-     <width>261</width>
+     <width>221</width>
      <height>31</height>
     </rect>
    </property>
@@ -271,7 +236,7 @@ QPushButton:pressed{
     <rect>
      <x>960</x>
      <y>240</y>
-     <width>291</width>
+     <width>170</width>
      <height>51</height>
     </rect>
    </property>
@@ -302,7 +267,7 @@ QPushButton:pressed{
     <rect>
      <x>960</x>
      <y>320</y>
-     <width>291</width>
+     <width>170</width>
      <height>51</height>
     </rect>
    </property>
@@ -333,7 +298,7 @@ QPushButton:pressed{
     <rect>
      <x>960</x>
      <y>400</y>
-     <width>291</width>
+     <width>170</width>
      <height>51</height>
     </rect>
    </property>
@@ -364,7 +329,7 @@ QPushButton:pressed{
     <rect>
      <x>960</x>
      <y>480</y>
-     <width>291</width>
+     <width>170</width>
      <height>51</height>
     </rect>
    </property>
@@ -420,6 +385,65 @@ QPushButton:pressed{
    </property>
    <property name="text">
     <string>턴 종료</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="profileImage">
+   <property name="geometry">
+    <rect>
+     <x>-20</x>
+     <y>120</y>
+     <width>740</width>
+     <height>520</height>
+    </rect>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	/* 스타일시트는 스케일 설정 불가능. pixMap으로 설정해야 함 */
+	/* image:url(:/images/imageNotFound.png); */
+	background-color: transparent;
+	color: rgb(255, 255, 255);
+	font: 20pt &quot;나눔고딕&quot;;
+}
+</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="assets/resource.qrc">:/images/background1.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="profile">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>130</y>
+     <width>250</width>
+     <height>380</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	background-color: transparent;
+}</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="assets/resource.qrc">:/assets/attorney.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
    </property>
   </widget>
  </widget>

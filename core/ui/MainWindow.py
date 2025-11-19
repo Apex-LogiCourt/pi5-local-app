@@ -16,9 +16,10 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("로직코트")
         # 배경색 설정
         self.setStyleSheet("QMainWindow { background-color: rgb(15, 39, 72); }")
-        # 전체화면 또는 고정 크기 설정 가능
+        # 최소 크기 설정 (UI가 너무 작아지지 않도록)
+        self.setMinimumSize(1280, 720)
+        # 전체화면으로 시작
         # self.showFullScreen()
-        self.resize(1280, 720)
 
     def _setup_stacked_widget(self):
         """StackedWidget 초기화"""

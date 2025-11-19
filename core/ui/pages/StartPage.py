@@ -72,3 +72,41 @@ class StartPage(QWidget):
         """버튼 상태 설정"""
         self.gameStartButton.setEnabled(state)
         self.gameStartButton.setText(msg)
+
+    def resizeEvent(self, event):
+        """화면 크기 변경 시 위젯들을 반응형으로 재배치"""
+        super().resizeEvent(event)
+        w = self.width()
+        h = self.height()
+
+        # 기준 크기 (원본 디자인)
+        base_w = 1280
+        base_h = 720
+
+        # 비율 계산
+        ratio_w = w / base_w
+        ratio_h = h / base_h
+
+        # 왼쪽 이미지 (비율 유지하면서 크기 조정)
+        img_w = int(781 * ratio_w)
+        img_h = int(701 * ratio_h)
+        self.startImage.setGeometry(10, 10, img_w, img_h)
+
+        # 오른쪽 영역 시작 위치
+        right_x = img_w + 20
+        right_w = w - right_x - 20
+
+        # 로고 (상단)
+        self.startLogo.setGeometry(right_x, 10, right_w, int(161 * ratio_h))
+
+        # 설명 텍스트 (중간)
+        self.label.setGeometry(right_x, int(180 * ratio_h), right_w, int(291 * ratio_h))
+
+        # 버튼들 (하단) - 세로 간격 유지
+        btn_h = int(71 * ratio_h)
+        btn_spacing = int(10 * ratio_h)
+
+        start_y = h - (btn_h * 3 + btn_spacing * 3 + 10)
+        self.gameStartButton.setGeometry(right_x, start_y, right_w, btn_h)
+        self.gameDescriptionButton.setGeometry(right_x, start_y + btn_h + btn_spacing, right_w, btn_h)
+        self.gameTextModeButton.setGeometry(right_x, start_y + (btn_h + btn_spacing) * 2, right_w, btn_h)

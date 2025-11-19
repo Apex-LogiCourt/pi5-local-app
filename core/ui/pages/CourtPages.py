@@ -88,6 +88,157 @@ class BaseCourtPage(QWidget):
         print(f"등장인물 {profile_num} 버튼 클릭됨")
         # TODO: 등장인물 프로필 창 열기
 
+    def resizeEvent(self, event):
+        """화면 크기 변경 시 위젯들을 반응형으로 재배치"""
+        super().resizeEvent(event)
+        w = self.width()
+        h = self.height()
+
+        # 기준 크기 (원본 디자인)
+        base_w = 1280
+        base_h = 720
+
+        # 비율 계산
+        ratio_w = w / base_w
+        ratio_h = h / base_h
+
+        # 검사 페이지인지 변호사 페이지인지 확인
+        is_prosecutor = self.__class__.__name__ == 'ProsecutorPage'
+
+        # 상단 라벨 (중앙)
+        self.nameLabel.setGeometry(
+            int(390 * ratio_w), int(30 * ratio_h),
+            int(421 * ratio_w), int(71 * ratio_h)
+        )
+
+        if is_prosecutor:
+            # ========== 검사 화면 ==========
+            # 프로필 이미지 (오른쪽 배경)
+            self.profileImage.setGeometry(
+                int(558 * ratio_w), int(110 * ratio_h),
+                int(740 * ratio_w), int(521 * ratio_h)
+            )
+            
+            # 프로필 캐릭터 이미지
+            self.profile.setGeometry(
+                int(800 * ratio_w), int(120 * ratio_h),
+                int(250 * ratio_w), int(380 * ratio_h)
+            )
+
+            # 하단 버튼들 (왼쪽)
+            self.micButton.setGeometry(
+                int(30 * ratio_w), int(620 * ratio_h),
+                int(161 * ratio_w), int(71 * ratio_h)
+            )
+            self.endButton.setGeometry(
+                int(210 * ratio_w), int(620 * ratio_h),
+                int(161 * ratio_w), int(71 * ratio_h)
+            )
+            self.turnButton.setGeometry(
+                int(390 * ratio_w), int(620 * ratio_h),
+                int(161 * ratio_w), int(71 * ratio_h)
+            )
+
+            # 왼쪽 기능 버튼들
+            self.overviewButton.setGeometry(
+                int(60 * ratio_w), int(180 * ratio_h),
+                int(141 * ratio_w), int(51 * ratio_h)
+            )
+            self.evidenceButton.setGeometry(
+                int(60 * ratio_w), int(310 * ratio_h),
+                int(161 * ratio_w), int(51 * ratio_h)
+            )
+            self.textButton.setGeometry(
+                int(60 * ratio_w), int(440 * ratio_h),
+                int(161 * ratio_w), int(51 * ratio_h)
+            )
+
+            # 등장인물 영역 (중앙)
+            self.profileTitleLabel.setGeometry(
+                int(290 * ratio_w), int(180 * ratio_h),
+                int(201 * ratio_w), int(31 * ratio_h)
+            )
+            self.profileButton1.setGeometry(
+                int(310 * ratio_w), int(230 * ratio_h),
+                int(170 * ratio_w), int(51 * ratio_h)
+            )
+            self.profileButton2.setGeometry(
+                int(310 * ratio_w), int(310 * ratio_h),
+                int(170 * ratio_w), int(51 * ratio_h)
+            )
+            self.profileButton3.setGeometry(
+                int(310 * ratio_w), int(390 * ratio_h),
+                int(170 * ratio_w), int(51 * ratio_h)
+            )
+            self.profileButton4.setGeometry(
+                int(310 * ratio_w), int(470 * ratio_h),
+                int(170 * ratio_w), int(51 * ratio_h)
+            )
+
+        else:
+            # ========== 변호사 화면 ==========
+            # 프로필 이미지 (왼쪽 배경)
+            self.profileImage.setGeometry(
+                int(-20 * ratio_w), int(120 * ratio_h),
+                int(740 * ratio_w), int(520 * ratio_h)
+            )
+            
+            # 프로필 캐릭터 이미지
+            self.profile.setGeometry(
+                int(200 * ratio_w), int(130 * ratio_h),
+                int(250 * ratio_w), int(380 * ratio_h)
+            )
+
+            # 하단 버튼들 (오른쪽)
+            self.turnButton.setGeometry(
+                int(730 * ratio_w), int(620 * ratio_h),
+                int(161 * ratio_w), int(71 * ratio_h)
+            )
+            self.endButton.setGeometry(
+                int(910 * ratio_w), int(620 * ratio_h),
+                int(161 * ratio_w), int(71 * ratio_h)
+            )
+            self.micButton.setGeometry(
+                int(1090 * ratio_w), int(620 * ratio_h),
+                int(161 * ratio_w), int(71 * ratio_h)
+            )
+
+            # 오른쪽 기능 버튼들
+            self.overviewButton.setGeometry(
+                int(740 * ratio_w), int(180 * ratio_h),
+                int(141 * ratio_w), int(51 * ratio_h)
+            )
+            self.evidenceButton.setGeometry(
+                int(740 * ratio_w), int(310 * ratio_h),
+                int(161 * ratio_w), int(51 * ratio_h)
+            )
+            self.textButton.setGeometry(
+                int(740 * ratio_w), int(440 * ratio_h),
+                int(161 * ratio_w), int(51 * ratio_h)
+            )
+
+            # 등장인물 영역 (오른쪽)
+            self.profileTitleLabel.setGeometry(
+                int(930 * ratio_w), int(190 * ratio_h),
+                int(221 * ratio_w), int(31 * ratio_h)
+            )
+            self.profileButton1.setGeometry(
+                int(960 * ratio_w), int(240 * ratio_h),
+                int(170 * ratio_w), int(51 * ratio_h)
+            )
+            self.profileButton2.setGeometry(
+                int(960 * ratio_w), int(320 * ratio_h),
+                int(170 * ratio_w), int(51 * ratio_h)
+            )
+            self.profileButton3.setGeometry(
+                int(960 * ratio_w), int(400 * ratio_h),
+                int(170 * ratio_w), int(51 * ratio_h)
+            )
+            self.profileButton4.setGeometry(
+                int(960 * ratio_w), int(480 * ratio_h),
+                int(170 * ratio_w), int(51 * ratio_h)
+            )
+
 
 class ProsecutorPage(BaseCourtPage):
     """검사 페이지 - BaseCourtPage 상속"""

@@ -123,3 +123,70 @@ class InterrogationPage(QWidget):
         self.micButton.setProperty("mic_state", "on" if is_on else "off")
         self.micButton.style().unpolish(self.micButton)
         self.micButton.style().polish(self.micButton)
+
+    def resizeEvent(self, event):
+        """화면 크기 변경 시 위젯들을 반응형으로 재배치"""
+        super().resizeEvent(event)
+        w = self.width()
+        h = self.height()
+
+        # 기준 크기 (원본 디자인)
+        base_w = 1280
+        base_h = 720
+
+        # 비율 계산
+        ratio_w = w / base_w
+        ratio_h = h / base_h
+
+        # 여백
+        margin = int(30 * ratio_w)
+
+        # 뒤로가기 버튼 (오른쪽 상단)
+        back_btn_w = int(121 * ratio_w)
+        back_btn_h = int(81 * ratio_h)
+        self.backButton.setGeometry(w - back_btn_w - margin, margin, back_btn_w, back_btn_h)
+
+        # 배경 이미지 (상단 영역)
+        bg_h = int(491 * ratio_h)
+        self.backgroundImage.setGeometry(margin, margin, w - margin * 2, bg_h)
+
+        # 프로필 이미지 (중앙)
+        profile_w = int(501 * ratio_w)
+        profile_h = int(501 * ratio_h)
+        profile_x = (w - profile_w) // 2
+        profile_y = margin + int(2 * ratio_h)
+        self.profileImage.setGeometry(profile_x, profile_y, profile_w, profile_h)
+
+        # 증거 아이콘 (왼쪽 상단)
+        small_evidence_size = int(71 * min(ratio_w, ratio_h))
+        self.smallEvidenceLabel.setGeometry(margin, margin, small_evidence_size, small_evidence_size)
+
+        large_evidence_size = int(141 * min(ratio_w, ratio_h))
+        self.largeEvidenceLabel.setGeometry(margin, margin, large_evidence_size, large_evidence_size)
+
+        # doNotChange 라벨들 (증거 아이콘 코너 처리용)
+        corner_size = int(41 * min(ratio_w, ratio_h))
+        self.doNotChange_2.setGeometry(margin, margin, corner_size, corner_size)
+        self.doNotChange.setGeometry(w - margin - corner_size, margin, corner_size, corner_size)
+
+        # 프로필 텍스트 라벨 (배경 하단)
+        profile_text_h = int(91 * ratio_h)
+        profile_text_y = margin + bg_h - profile_text_h
+        self.profileTextLabel.setGeometry(margin, profile_text_y, w - margin * 2, profile_text_h)
+
+        # 하단 영역 (텍스트 + 버튼들)
+        bottom_y = margin + bg_h + int(20 * ratio_h)
+        bottom_h = h - bottom_y - margin
+
+        # 텍스트 입력 버튼 (왼쪽 하단)
+        text_btn_w = int(161 * ratio_w)
+        self.textButton.setGeometry(margin, bottom_y, text_btn_w, bottom_h)
+
+        # 마이크 버튼 (오른쪽 하단)
+        mic_btn_w = int(161 * ratio_w)
+        self.micButton.setGeometry(w - margin - mic_btn_w, bottom_y, mic_btn_w, bottom_h)
+
+        # 텍스트 라벨 (중앙 하단)
+        text_label_x = margin + text_btn_w + int(10 * ratio_w)
+        text_label_w = w - text_label_x - mic_btn_w - margin - int(10 * ratio_w)
+        self.textLabel.setGeometry(text_label_x, bottom_y, text_label_w, bottom_h)

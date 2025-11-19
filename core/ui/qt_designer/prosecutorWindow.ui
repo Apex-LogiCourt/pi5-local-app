@@ -48,10 +48,10 @@
   <widget class="QLabel" name="profileImage">
    <property name="geometry">
     <rect>
-     <x>700</x>
-     <y>140</y>
-     <width>551</width>
-     <height>551</height>
+     <x>558</x>
+     <y>110</y>
+     <width>740</width>
+     <height>521</height>
     </rect>
    </property>
    <property name="autoFillBackground">
@@ -71,7 +71,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap resource="assets/resource.qrc">:/assets/profile/Prosecutor.png</pixmap>
+    <pixmap resource="assets/resource.qrc">:/images/background1.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
@@ -247,9 +247,9 @@ QPushButton:pressed{
   <widget class="QLabel" name="profileTitleLabel">
    <property name="geometry">
     <rect>
-     <x>300</x>
-     <y>190</y>
-     <width>261</width>
+     <x>290</x>
+     <y>180</y>
+     <width>201</width>
      <height>31</height>
     </rect>
    </property>
@@ -269,9 +269,9 @@ QPushButton:pressed{
   <widget class="QPushButton" name="profileButton2">
    <property name="geometry">
     <rect>
-     <x>370</x>
-     <y>320</y>
-     <width>291</width>
+     <x>310</x>
+     <y>310</y>
+     <width>170</width>
      <height>51</height>
     </rect>
    </property>
@@ -300,9 +300,9 @@ QPushButton:pressed{
   <widget class="QPushButton" name="profileButton3">
    <property name="geometry">
     <rect>
-     <x>370</x>
-     <y>400</y>
-     <width>291</width>
+     <x>310</x>
+     <y>390</y>
+     <width>170</width>
      <height>51</height>
     </rect>
    </property>
@@ -331,9 +331,9 @@ QPushButton:pressed{
   <widget class="QPushButton" name="profileButton1">
    <property name="geometry">
     <rect>
-     <x>370</x>
-     <y>240</y>
-     <width>291</width>
+     <x>310</x>
+     <y>230</y>
+     <width>170</width>
      <height>51</height>
     </rect>
    </property>
@@ -362,9 +362,9 @@ QPushButton:pressed{
   <widget class="QPushButton" name="profileButton4">
    <property name="geometry">
     <rect>
-     <x>370</x>
-     <y>480</y>
-     <width>291</width>
+     <x>310</x>
+     <y>470</y>
+     <width>170</width>
      <height>51</height>
     </rect>
    </property>
@@ -420,6 +420,30 @@ QPushButton:pressed{
    </property>
    <property name="text">
     <string>턴 종료</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="profile">
+   <property name="geometry">
+    <rect>
+     <x>800</x>
+     <y>120</y>
+     <width>250</width>
+     <height>380</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	background-color: transparent;
+}</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="assets/resource.qrc">:/assets/prosecutor.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
    </property>
   </widget>
  </widget>
