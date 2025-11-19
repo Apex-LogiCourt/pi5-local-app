@@ -51,7 +51,7 @@ class EvidenceWindow(QDialog):
             image_path = default_path + "/" + str(evidence.picture)
             if not(os.path.exists(image_path)):
                 image_path = default_path + "/data/evidence_resource/deafult_image.png"
-            evidence_images[i].setPixmap(QPixmap(f"{image_path}").scaled(100, 100))
+            evidence_images[i].setPixmap(QPixmap(f"{image_path}").scaled(90, 90))
             
         
 # 테스트용 메인 함수
