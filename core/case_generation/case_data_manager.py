@@ -81,7 +81,7 @@ class CaseDataManager:
     async def generate_evidences(cls, callbacks=None):
         # 데이터가 준비된 경우 바로 처리
         if cls._case is not None and cls._profiles is not None:
-            from evidence import make_evidence
+            from case_generation.evidence import make_evidence
             # 무거운 동기 작업을 별도 스레드에서 실행하여 UI 블로킹 방지
             evidences = await asyncio.to_thread(
                 make_evidence,
@@ -101,7 +101,22 @@ class CaseDataManager:
 
             return evidences
 
-        return await cls._wait_for_data(callbacks) #데이터가 제대로 안 담긴 경우 대기하거나 재시도 
+        return await cls._wait_for_data(callbacks) #데이터가 제대로 안 담긴 경우 대기하거나 재시도
+    
+    @classmethod
+    async def generate_evidence_images(cls):
+        """증거품 이미지를 병렬로 생성"""
+        from case_generation.evidence import generate_evidence_images_parallel
+        # 별도 스레드에서 병렬 이미지 생성
+        evidences = await asyncio.to_thread(
+            generate_evidence_images_parallel,
+            cls._evidences
+        )
+        cls._evidences = evidences
+        # case_data도 업데이트
+        if cls._case_data is not None:
+            cls._case_data.evidences = evidences
+        return evidences 
     
     # 호출 시점 : 최종 판결과 함께 또는 최종 판결을 읽고 있을 때 
     # 매개변수로 변경된 증거 리스트도 포함 
@@ -167,7 +182,7 @@ class CaseDataManager:
     @staticmethod
     def _parse_character_template(template: str) -> List[Profile]:
         profiles = []
-        profile_path = Path(__file__).parent / "assets" / "profile" / "profil.json"
+        profile_path = Path(__file__).parent.parent / "assets" / "profile" / "profil.json"
         with open(profile_path, 'r', encoding='utf-8') as f:
             profile_data = json.load(f)
             characters = profile_data['characters']
