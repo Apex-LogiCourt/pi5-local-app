@@ -150,7 +150,7 @@ class StateManager:
             from game_controller import GameController
             if GameController.get_instance()._is_initialized is False:
                 return False
-            GameController.get_instance()._handle_bnt_event(role)
+            GameController.get_instance()._handle_btn_event(role)
             return True
     def evidence_tagged(self, id:str):
         with self.evidence_lock:

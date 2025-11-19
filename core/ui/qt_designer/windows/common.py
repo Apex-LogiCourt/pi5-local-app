@@ -40,6 +40,9 @@ class BaseCourtWindow(QDialog):
         self.profileButton2.setText(profiles[1].name if len(profiles) > 1 else "등장인물 2")
         self.profileButton3.setText(profiles[2].name if len(profiles) > 2 else "등장인물 3")    
         self.profileButton4.setText(profiles[3].name if len(profiles) > 3 else "등장인물 4")
+        
+        # 마이크 초기 상태 설정
+        self.micButton.setProperty("mic_state", "off")
     
     def _setup_connections(self):
         """버튼 연결 설정"""
@@ -57,51 +60,12 @@ class BaseCourtWindow(QDialog):
         # self.profileButton4.clicked.connect(lambda: self.show_profile(4))
 
     def toggle_mic_state(self):
-        """마이크 상태 토글
-        여기서 마이크 버튼 이미지 변경해야 되고 이건 나중에 pysignal 에서 
-        하드웨어 입력이 들어왔을 때 호출해야합니당 @@@@
-        """
+        """마이크 상태 토글 (property 기반 스타일 변경)"""
         self.mic_on = not self.mic_on
-        if self.mic_on:
-            self.micButton.setStyleSheet("""
-                QPushButton{
-                    image: url(:/images/mic_off.png);
-                    background-color: rgb(47, 90, 104);
-                    color: rgb(255, 254, 254);
-                    border-radius: 20px;
-                    font: 24pt "나눔고딕 ExtraBold";
-                }
-                QPushButton:hover{
-                    background-color: rgb(67, 129, 148);
-                    border-radius: 20px;
-                    font: 28pt "나눔고딕 ExtraBold";
-                }
-                QPushButton:pressed{
-                    background-color: rgb(0, 123, 255);
-                    border-radius: 20px;
-                    font: 28pt "나눔고딕 ExtraBold";
-                }
-            """)
-        else:
-            self.micButton.setStyleSheet("""
-                QPushButton{
-                    image: url(:/images/mic_on.png);
-                    background-color: rgb(47, 90, 104);
-                    color: rgb(255, 254, 254);
-                    border-radius: 20px;
-                    font: 24pt "나눔고딕 ExtraBold";
-                }
-                QPushButton:hover{
-                    background-color: rgb(67, 129, 148);
-                    border-radius: 20px;
-                    font: 28pt "나눔고딕 ExtraBold";
-                }
-                QPushButton:pressed{
-                    background-color: rgb(0, 123, 255);
-                    border-radius: 20px;
-                    font: 28pt "나눔고딕 ExtraBold";
-                }
-            """)
+        self.micButton.setProperty("mic_state", "on" if self.mic_on else "off")
+        # 스타일 재적용
+        self.micButton.style().unpolish(self.micButton)
+        self.micButton.style().polish(self.micButton)
     
     def _end_argument(self):
         """주장 종료"""
