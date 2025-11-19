@@ -108,12 +108,16 @@ class UiController(QObject):
 
     def switch_to_prosecutor_page(self):
         """검사 페이지로 전환"""
-        self.main_window.switch_to_page("prosecutor")
+        # 변호사에서 검사로 넘어가므로 왼쪽으로 스와이프
+        direction = 'right' if self.isTurnProsecutor == False else None
+        self.main_window.switch_to_page("prosecutor", direction)
         self.isTurnProsecutor = True
 
     def switch_to_lawyer_page(self):
         """변호사 페이지로 전환"""
-        self.main_window.switch_to_page("lawyer")
+        # 검사에서 변호사로 넘어가므로 오른쪽으로 스와이프
+        direction = 'left' if self.isTurnProsecutor == True else None
+        self.main_window.switch_to_page("lawyer", direction)
         self.isTurnProsecutor = False
 
     def switch_to_interrogation_page(self, profile):
