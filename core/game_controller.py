@@ -217,7 +217,7 @@ class GameController(QObject):
         if not text.strip():
             return False
 
-        if text.contains("이상입니다"):
+        if "이상입니다" in text:
             cls._state.done_flags[cls._state.turn] = True
             return True
 
