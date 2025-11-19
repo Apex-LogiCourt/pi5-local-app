@@ -48,7 +48,9 @@ class EvidenceWindow(QDialog):
             evidence_labels[i].setText(evidence.name)
             evidence_descriptions[i].setText("\n".join(evidence.description))
 
-            image_path = default_path + "/" + str(evidence.picture)
+            #image_path = default_path + "/" + str(evidence.picture)
+            image_path = str(evidence.picture)
+            print(f"[{os.path.exists(image_path)}] >>{image_path}")
             if not(os.path.exists(image_path)):
                 image_path = default_path + "/data/evidence_resource/deafult_image.png"
             evidence_images[i].setPixmap(QPixmap(f"{image_path}").scaled(90, 90))
