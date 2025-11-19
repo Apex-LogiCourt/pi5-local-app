@@ -6,7 +6,7 @@ import asyncio
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QtGui import QFont
-from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject, QTimer
 from data_models import CaseData, Evidence, Profile, Case
 from game_controller import GameController
 
@@ -222,17 +222,16 @@ class UiController(QObject):
 
     def _handle_objection(self, arg):
         """이의 제기 처리"""
-        # 이의 제기 후 턴 전환 (objection 효과 사용)
         if self.isTurnProsecutor:
-            # 검사 -> 변호사로 전환 (왼쪽으로 스와이프)
             direction = 'left'
             self.main_window.switch_to_page("lawyer", direction, objection=True)
             self.isTurnProsecutor = False
         else:
-            # 변호사 -> 검사로 전환 (오른쪽으로 스와이프)
             direction = 'right'
             self.main_window.switch_to_page("prosecutor", direction, objection=True)
             self.isTurnProsecutor = True
+
+        QTimer.singleShot(350, lambda: self.main_window.show_red_border_flash(3000))
 
     def _handle_judgement(self, arg):
         """판결 시작 처리"""
