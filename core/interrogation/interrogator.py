@@ -109,18 +109,8 @@ class Interrogator:
 
     @classmethod
     def build_ask_chain(cls, question: str, profile : Profile):
-        # 모든 변수를 미리 포맷팅된 텍스트로 준비
-        evidence_str = cls._evidence.__str__() if cls._evidence else "증거품이 아직 생성되지 않았습니다."
-        formatted_prompt = f"""
-                당신은 재판에 참석한 {profile.type}입니다.
-                당신의 역할은 사건에 대한 질문에 인간적으로 답변하는 것입니다.
-                사건 개요: {cls._case.outline}
-                당신의 정보 : {profile.__str__()}
-                증거 : {evidence_str}
-                질문: {question}
-
-                답변:
-            """
+        # 프로필 키 생성
+        profile_key = f"{profile.name}_{profile.type}"
         
         # 해당 인물과의 대화 히스토리가 없으면 초기화 (최초 1회만)
         if profile_key not in cls._chat_histories:
