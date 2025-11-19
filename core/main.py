@@ -14,6 +14,14 @@ import threading
 import time
 import requests
 
+# StartWindow.py (또는 해당 클래스가 있는 파일)
+from PyQt5.QtWidgets import *
+# ...
+# 아래 임포트 구문이 필수입니다! 
+# (경로는 resource_rc.py가 실제로 위치한 곳에 맞춰 수정하세요)
+import ui.qt_designer.resource_rc 
+# 또는 만약 resource_rc.py가 루트에 있다면: import resource_rc
+
 
 # ---------------- FastAPI 앱 구성 ----------------
 app = FastAPI()
@@ -76,7 +84,7 @@ async def main_async():
     await gc.start_game()
 
     uiController = UiController.get_instance()
-    uiController.startWindow()
+    uiController.open_start_window()
     
     # PyQt 이벤트 루프 실행 (qasync로 asyncio와 통합)
     await qasync.asyncio.sleep(0)  # 이벤트 루프가 시작되도록 함

@@ -1,5 +1,5 @@
 import sys
-import resource_rc # 리소스 불러오기
+import core.ui.qt_designer.resource_rc as resource_rc # 리소스 불러오기
 
 from PyQt5.QtWidgets import *
 from PyQt5 import uic

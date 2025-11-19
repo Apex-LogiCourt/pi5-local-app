@@ -1,15 +1,20 @@
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
+# qasync 설치 필요: pip install qasync
+# 비동기(asyncio)와 PyQt를 함께 쓰기 위해 필수입니다.
 import asyncio
-from PyQt5.QtWidgets import *
-from PyQt5 import uic
-from PyQt5.QtGui import QFont
-from PyQt5.QtCore import pyqtSlot
-from data_models import CaseData, Evidence, Profile
-from game_controller import GameController
+from qasync import QEventLoop 
 
+from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget, QMessageBox
+from PyQt5.QtCore import pyqtSlot, QObject
+
+# 데이터 모델 및 컨트롤러 임포트 (기존 유지)
+from data_models import CaseData
+from game_controller import GameController
+from ui.type_writer import Typewriter
+
+# 각 윈도우 클래스 임포트 (기존 유지)
+# 주의: 스택에 들어갈 윈도우들은 가능한 QMainWindow가 아닌 QWidget을 상속받는 것이 깔끔합니다.
 from ui.qt_designer.windows.gameDescriptionWindow import GameDescriptionWindow
 from ui.qt_designer.windows.evidenceWindow import EvidenceWindow
 from ui.qt_designer.windows.common import LawyerWindow, ProsecutorWindow
@@ -20,13 +25,40 @@ from ui.qt_designer.windows.generateWindow import GenerateWindow
 from ui.qt_designer.windows.interrogationWindow import InterrogationWindow
 from ui.qt_designer.windows.textInputWindow import TextInputWindow
 from ui.qt_designer.windows.startWindow import StartWindow
-from PyQt5.QtCore import pyqtSignal, QObject, pyqtSlot
-from ui.type_writer import Typewriter
 
-import ui.qt_designer.resource_rc 
+# PyQt5.QtWidgets에 QSizePolicy 상수가 있으므로 import 추가
+from PyQt5.QtWidgets import QApplication, QMainWindow, QStackedWidget, QWidget, QMessageBox, QSizePolicy
+from PyQt5.QtCore import pyqtSlot, QObject, QSize # QSize 추가 (선택 사항)
 
+# 1. 메인 애플리케이션 윈도우 (껍데기) 정의
+class MainAppWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("AI 재판 게임")
+        
+        # [수정 필요] 초기 크기를 최소 크기로 설정 (필수 아님, 디자인에 따라 다름)
+        self.resize(1280, 720) 
+        
+        # 중앙에 QStackedWidget 배치
+        self.stack = QStackedWidget()
+        
+        # [핵심 수정 부분] QStackedWidget의 크기 정책을 Expanding으로 설정
+        # 이렇게 해야 StackedWidget이 MainAppWindow의 크기에 맞춰 늘어납니다.
+        size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.stack.setSizePolicy(size_policy)
+        
+        self.setCentralWidget(self.stack)
+        
+# 1. 메인 애플리케이션 윈도우 (껍데기) 정의
+class MainAppWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("AI 재판 게임")
+        self.resize(1280, 720) # 기본 해상도 설정
 
-
+        # 중앙에 QStackedWidget 배치
+        self.stack = QStackedWidget()
+        self.setCentralWidget(self.stack)
 
 class UiController(QObject):
     _instance = None
@@ -38,239 +70,182 @@ class UiController(QObject):
         return cls._instance
     
     def __init__(self):
-        super().__init__()  # QObject 초기화 추가
+        super().__init__()
         if UiController._instance is not None:
-            raise Exception("싱글톤 클래스는 직접 생성할 수 없습니다. get_instance() 메서드를 사용하세요.")
+            raise Exception("Singleton Error")
         UiController._instance = self
+        
+        # 메인 윈도우 생성 및 표시
+        self.main_window = MainAppWindow()
+        
         self.game_controller = GameController.get_instance()
-        self.init_game_controller()
-        self.isTurnProsecutor = True # 처음에는 검사 턴으로 시작
-        print("슬롯 연결 직전:", self.receive_game_signal)
-
         self.game_controller._signal.connect(self.receive_game_signal)
-        self.typewriter = Typewriter(
-            update_fn=None,
-            char_interval=30,     # 글자 속도 (ms)
-            sentence_pause=1000    # 한 문장 당 다 찍고 나서 쉬는 시간 (ms)
-        )
+        
+        self.isTurnProsecutor = True
+        self.case_data = None
+        self.is_gc_initialized = False
 
-    def startWindow(self):
-        # app = QApplication(sys.argv)
-        # window = StartWindow()
-        # window.show()
-        # app.exec_()
-        pass
+        # 타자기 효과 초기화
+        self.typewriter = Typewriter(update_fn=None, char_interval=30, sentence_pause=1000)
+
+        # 2. 페이지 관리 딕셔너리 (Lazy Loading 준비)
+        # 인스턴스를 미리 만들지 않고, 필요할 때 생성하여 저장합니다.
+        self.pages = {} 
+        
+        # 3. 팝업 창 (스택에 넣지 않고 따로 띄울 창들)
+        self.evidenceWindowInstance = None
+        self.warningWindowInstance = WarningWindow("경고")
+
+        # 게임 컨트롤러 초기화 시도
+        self.init_game_controller()
+
+    # --- [핵심] 페이지 전환 및 관리 메서드 ---
+    
+    def switch_to_page(self, page_name, window_class, *args):
+        """
+        page_name: 식별자 (예: 'start', 'judge')
+        window_class: 클래스 이름 (예: StartWindow)
+        args: 클래스 생성자에 들어갈 인자들
+        """
+        # 1. 이미 생성된 페이지인지 확인
+        if page_name not in self.pages:
+            # 없으면 생성 (Lazy Initialization)
+            print(f"[{page_name}] 페이지 최초 생성 중...")
+            instance = window_class(*args)
+            self.pages[page_name] = instance
+            self.main_window.stack.addWidget(instance)
+        
+        # 2. 스택의 현재 페이지를 이걸로 변경
+        widget = self.pages[page_name]
+        self.main_window.stack.setCurrentWidget(widget)
+        
+        # 3. 메인 윈도우가 꺼져있다면 킴
+        if not self.main_window.isVisible():
+            self.main_window.show()
+
+    # --- 개별 화면 열기 함수들 (수정됨) ---
+
+    def open_start_window(self):
+        # StartWindow 생성 시 필요한 인자 전달
+        self.switch_to_page('start', StartWindow, self._instance, self.game_controller)
+        
+        # 시작 화면 열릴 때 버튼 상태 업데이트 로직 필요시 호출
+        if hasattr(self.pages.get('start'), 'setStartButtonState'):
+            if self.is_gc_initialized:
+                self.pages['start'].setStartButtonState(True, "게임 시작")
+            else:
+                self.pages['start'].setStartButtonState(False, "로딩 중...")
+
+    def open_description_window(self):
+        self.switch_to_page('description', GameDescriptionWindow, self._instance)
+
+    def open_generate_window(self):
+        # case_data가 있을 때만 열도록 안전장치
+        outline = self.case_data.case.outline if self.case_data else None
+        self.switch_to_page('generate', GenerateWindow, self._instance, outline)
+
+    def open_judge_window(self):
+        self.switch_to_page('judge', JudgeWindow, self._instance, self.game_controller, self.case_data)
+
+    def open_prosecutor_window(self):
+        self.isTurnProsecutor = True
+        self.switch_to_page('prosecutor', ProsecutorWindow, self._instance, self.game_controller, self.case_data)
+
+    def open_lawyer_window(self):
+        self.isTurnProsecutor = False
+        self.switch_to_page('lawyer', LawyerWindow, self._instance, self.game_controller, self.case_data)
+        
+    def open_overview_window(self):
+        outline = self.case_data.case.outline if self.case_data else None
+        self.switch_to_page('overview', OverviewWindow, outline)
+
+    def open_interrogation_window(self, profile):
+        # 심문 창은 매번 대상이 바뀌므로 새로 생성하거나, 기존 인스턴스의 데이터를 업데이트해야 함
+        # 여기서는 간단히 매번 새로 생성하여 스택에 추가하는 방식을 예시로 듦 (메모리 관리는 추후 고려)
+        self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, profile)
+        self.main_window.stack.addWidget(self.interrogationWindowInstance)
+        self.main_window.stack.setCurrentWidget(self.interrogationWindowInstance)
+        
+        # 타자기 타겟 업데이트
+        self.typewriter.update_fn = self.interrogationWindowInstance.update_profile_text_label
+
+    # --- 팝업 창 (스택 아님, 별도 윈도우) ---
+    
+    def open_evidence_window(self):
+        # 증거 창은 게임 도중 언제든 봐야 하므로 별도 창으로 띄움
+        if self.evidenceWindowInstance is None and self.case_data:
+            self.evidenceWindowInstance = EvidenceWindow(self.case_data.evidences)
+        
+        if self.evidenceWindowInstance:
+            self.evidenceWindowInstance.show()
+            self.evidenceWindowInstance.raise_() # 맨 앞으로 가져오기
+
+    def show_warning(self, title, message):
+        self.warningWindowInstance.setWindowTitle(title)
+        self.warningWindowInstance.set_label_text(message)
+        self.warningWindowInstance.show()
+
+    # --- 로직 메서드 ---
 
     def init_game_controller(self):
         print("Requesting GameController initialization...")
-        self.setStartButtonState(False, "컨트롤러 초기화 중...")
+        # 시작 화면이 이미 떠있다면 버튼 비활성화
+        if 'start' in self.pages:
+             self.pages['start'].setStartButtonState(False, "컨트롤러 초기화 중...")
+             
         if hasattr(GameController, '_is_initialized'):
             if GameController._is_initialized:
-                print("GameController is already initialized. Loading case data...")
+                print("GameController initialized.")
                 self.is_gc_initialized = True
                 self.case_data = GameController._case_data
-                self.setStartButtonState(True, "게임 시작")
-                self.createWindowInstance()
-                self.startWindowInstance.show()
+                self.open_start_window() # 초기화 완료되면 시작 화면으로
             else:
-                print("GameController is not initialized. Attempting to initialize...")
                 asyncio.ensure_future(GameController.initialize())
         else:
-            print("ERROR: GameController does not have a class method 'initialize'.")
-            self.setStartButtonState(False, "컨트롤러 오류 (재시도)")
-    
-    def createWindowInstance(self):
-        self.startWindowInstance = StartWindow(self._instance, self.game_controller)
-        self.descriptionWindowInstance = GameDescriptionWindow(self._instance)
-        self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
-        self.interrogationWindowInstance = None
-        # self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, self.case_data.profiles)
-        self.judgeWindowInstance = JudgeWindow(self._instance, self.game_controller, self.case_data)
-        self.overviewWindowInstance = OverviewWindow(self.case_data.case.outline)
-        self.lawyerWindowInstance = LawyerWindow(self._instance, self.game_controller, self.case_data)
-        self.prosecutorWindowInstance = ProsecutorWindow(self._instance, self.game_controller, self.case_data)
-        self.textInputWindowInstance = TextInputWindow(self._instance, self.game_controller)
-        self.evidenceWindowInstance = EvidenceWindow(self.case_data.evidences) #evidence: List
-        self.warningWindowInstance = WarningWindow("재판과 관련 없는 내용입니다.")
-
-    def hideAllWindow(self):
-        self.startWindowInstance.hide()
-        self.descriptionWindowInstance.hide()
-        self.generateWindowInstance.hide()
-        # self.interrogationWindowInstance.hide()
-        self.judgeWindowInstance.hide()
-        self.overviewWindowInstance.hide()
-        self.lawyerWindowInstance.hide()
-        self.prosecutorWindowInstance.hide()
-        self.textInputWindowInstance.hide()
-        self.evidenceWindowInstance.hide()
-        self.warningWindowInstance.hide()
-    
-    def hideCommon(self):
-        self.lawyerWindowInstance.hide()
-        self.prosecutorWindowInstance.hide()
-
-    async def restart_game_flow(self): #최종 판결문에서 뒤로가기 버튼 누를 시 호출
-        print("Restarting game flow...")
-        QApplication.processEvents()
-
-        self.is_gc_initialized = False
-        self.case_data = None
-        self.setStartButtonState(False)
-        #시작화면 불러오기 넣으셈
-        
-        # GameController 재초기화 (initialize 클래스 메소드 호출)
-        if hasattr(GameController, 'initialize'):
-             await GameController.initialize() # initialize가 CaseData를 반환하지만, 시그널로도 받을 것이므로 여기서는 호출만.
-        else:
-            print("ERROR: GameController has no 'initialize' method for re-initialization.")
-            QMessageBox.critical(None, "초기화 오류", "게임 데이터 초기화에 실패했습니다.")
-        # "initialized" 시그널이 GameController로부터 오면 is_gc_initialized, case_data가 설정되고 로딩 다이얼로그가 닫힘.
-
-    def setStartButtonState(self, state: bool, msg: str):
-        if msg == None:
-            msg = "게임 시작"
-        # 시작 버튼 상태 설정
-        # startWindowInstance.setStartButtonState(state, msg)
-        pass
-
+            print("ERROR: GameController initialize method missing.")
 
     @pyqtSlot(str, object)
     def receive_game_signal(self, code: str, arg=None):
-        print(f"[{self.__class__.__name__}] Signal Received: Code='{code}', ArgType='{type(arg)}', ArgValue='{str(arg)[:100]}...'") # Log arg value safely
+        print(f"[UiController] Signal: {code}")
 
-        if code == "no_context":
-            if isinstance(arg, dict):
-                self.warningWindowInstance.set_label_text(arg.get("message"))
-            else:
-                self.warningWindowInstance.set_label_text("재판과 관련 없는 내용입니다.")
+        if code == "interrogation_accepted":
+            # 심문 시작: 스택 화면을 심문 창으로 전환
+            target_type = arg.get('type')
+            target_profile = next((p for p in self.case_data.profiles if p.type == target_type), None)
+            
+            if target_profile:
+                self.open_interrogation_window(target_profile)
+                self.interrogationWindowInstance.update_dialogue(
+                    arg.get("role", "판사") + " : " + arg.get("message", "심문 시작")
+                )
 
-            self.warningWindowInstance.show()
-
-        elif code == "interrogation_accepted":
-            if isinstance(arg, dict):
-                print(f"Interrogation accepted for {arg.get('type')}. Judge: {arg.get('message')}")
-                ip = None
-                for i in self.case_data.profiles:
-                    if i.type == arg.get('type'):
-                        ip = i
-                        break
-                self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, ip)
-                self.interrogationWindowInstance.update_dialogue(arg.get("role", "판사") + " : " + arg.get("message","심문을 시작합니다."))
-                self.interrogationWindowInstance.evidence_tag_reset()
-                self.hideAllWindow()
-                self.interrogationWindowInstance.show()
+        elif code == "judgement":
+            # 판결 시작: 스택 화면을 판사 창으로 전환
+            self.open_judge_window()
 
         elif code == "objection":
-            if isinstance(arg, dict):
-                self.warningWindowInstance.set_label_text(f"{arg.get('role', '')}의 이의 제기" + "\n" + arg.get("message", "이의 있습니다!"))
-                self.warningWindowInstance.show()
+            self.show_warning("이의 제기", arg.get("message", "이의 있습니다!"))
 
-        elif code == "judgement": # GameController에서 'judgement'로 판결 시작을 알림
-            # if self.nowJudgement: return
-            # self.nowJudgement = True
-            if isinstance(arg, dict) and arg.get('role') == '판사':
-                print(f"Judgement phase initiated by {arg.get('role')}: {arg.get('message')}")
-                if hasattr(GameController, 'done'):
-                    self.hideAllWindow()
-                    self.judgeWindowInstance.show()
-                    self.hideCommon()
-                else:
-                    print("ERROR: GameController does not have 'done' method to trigger final verdict.")
+        elif code == "no_context":
+            self.show_warning("경고", arg.get("message", "관련 없는 내용입니다."))
 
-        elif code == "evidence_changed":
-            pass
-
-
-        elif code == "evidence_tagged": # 또는 "evidence_taged" (이슈의 오타일 수 있음)
-            print(f"Evidence tagged: {arg}")
-            self.interrogationWindowInstance.evidence_tagged()
-
-
-        elif code == "interrogation": # GameController의 user_input에서 이 시그널을 사용 ("interrogation_dialogue" 대신)
-            self.isInterrogation = True
-            if self.typewriter.update_fn is not self.interrogationWindowInstance.update_profile_text_label:
-                self.typewriter.update_fn = self.interrogationWindowInstance.update_profile_text_label
-            
-            if isinstance(arg, dict):
+        # ... 나머지 시그널 처리 로직 (interrogation, verdict 등) ...
+        elif code == "interrogation":
+             if self.interrogationWindowInstance:
                 msg = f"{arg.get('role', '??')} : {arg.get('message', '...')}"
-            self.typewriter.enqueue(msg)
+                self.typewriter.enqueue(msg)
 
-        elif code == "verdict": 
-            self.judgeWindowInstance.set_judge_text(str(arg))
-
-
-        elif code == "record_start":
-            if self.isInterrogation:
-                self.interrogationWindowInstance.set_mic_button_state(True)
-                return
-
-            if self.isTurnProsecutor:
-                self.prosecutorWindowInstance.toggle_mic_state()
-            else:
-                self.lawyerWindowInstance.toggle_mic_state()
-
-        elif code == "record_stop":
-            if self.isInterrogation:
-                self.interrogationWindowInstance.set_mic_button_state(False)
-                return
-
-            if self.isTurnProsecutor:
-                self.prosecutorWindowInstance.toggle_mic_state()
-            else:
-                self.lawyerWindowInstance.toggle_mic_state()
-        
-        elif code == "error_occurred":
-            error_message = str(arg) if arg else "알 수 없는 오류가 발생했습니다."
-            QMessageBox.critical(None, "오류 발생", error_message)
-            if self.loading_dialog: self.loading_dialog.accept()
-            # 오류 상황에 따라 UI 상태 복구 또는 재시도 버튼 활성화
-            if not self.is_gc_initialized :
-                 self._update_start_button("오류 발생 (재시도)", True)
-
-        else:
-            print(f"[{self.__class__.__name__}] Unknown signal code: {code}")
+# --- 실행 부 (qasync 적용) ---
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
     
-    def open_generate_window(self):
-        self.generateWindowInstance.show()
+    # asyncio 이벤트 루프를 PyQt와 통합
+    loop = QEventLoop(app)
+    asyncio.set_event_loop(loop)
 
-    def open_prosecutor_window(self):
-        self.prosecutorWindowInstance.show()
-        self.isTurnProsecutor = True
-        
-    def open_lawyer_window(self):
-        self.lawyerWindowInstance.show()    
-        self.isTurnProsecutor = False
+    controller = UiController.get_instance()
+    # 앱 시작 시 시작 화면 띄우기
+    controller.open_start_window()
 
-    def open_judge_window(self):
-        self.judgeWindowInstance.show()
-
-    def open_evidence_window(self):
-        self.evidenceWindowInstance.show()
-    
-    def open_overview_window(self):
-        self.overviewWindowInstance.show()
-    
-    def open_description_window(self):
-        self.descriptionWindowInstance.show()
-    
-    def open_text_input_window(self):
-        self.textInputWindowInstance.show()
-
-    def open_start_window(self):
-        self.startWindowInstance.show()
-        
-
-
-if __name__ == "__main__" :
-    #QApplication : 프로그램을 실행시켜주는 클래스
-    app = QApplication(sys.argv) 
-
-    #startWindowClass의 인스턴스 생성
-    # startWindow = startWindowClass()
-
-    #프로그램 화면을 보여주는 코드
-    # startWindow.show()
-
-    #프로그램을 이벤트루프로 진입시키는(프로그램을 작동시키는) 코드
-    app.exec_()
+    with loop:
+        loop.run_forever()
