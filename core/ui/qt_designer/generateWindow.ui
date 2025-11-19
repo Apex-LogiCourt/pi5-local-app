@@ -67,6 +67,7 @@
     <string notr="true">QLabel{
 	/* 스타일시트는 스케일 설정 불가능. pixMap으로 설정해야 함 */
 	/* image:url(:/images/imageNotFound.png); */
+	background-color: transparent;
 	color: rgb(255, 255, 255);
 	font: 20pt &quot;나눔고딕&quot;;
 }
@@ -167,6 +168,12 @@ QPushButton:pressed{
 	background-color: rgb(0, 123, 255);
 	border-radius: 20px;
 	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:disabled{
+	background-color: rgb(100, 100, 100);
+	color: rgb(150, 150, 150);
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }</string>
    </property>
    <property name="text">
