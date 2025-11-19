@@ -128,130 +128,147 @@ class UiController(QObject):
 
     @pyqtSlot(str, object)
     def receive_game_signal(self, code: str, arg=None):
-        print(f"[{self.__class__.__name__}] Signal Received: Code='{code}', ArgType='{type(arg)}', ArgValue='{str(arg)[:100]}...'") # Log arg value safely
-
-
-            
-        if code == "initialization_failed":
-            # 초기화 실패 시 에러 메시지
-            print(f"[UiController] ❌ 초기화 실패: {arg}")
-            QMessageBox.critical(None, "초기화 실패", f"케이스 데이터 생성에 실패했습니다:\n{arg}")
-            self.startWindowInstance.set_button_state(True, "게임 시작 (재시도)")
-
-        elif code == "initialized":
-            if arg is not None:
-                self.case_data = arg
-                self.createWindowInstance()
-                self.generateWindowInstance.backButton.setEnabled(True)
-                # 모든 데이터가 준비된 후에만 start_game 호출
-                self.game_controller.start_game()
-            else: 
-                # 케이스만 생성된 상태 - generateWindow만 생성
-                self.case_data = self.game_controller._case_data
-                self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
-        elif code == "no_context":
-            if isinstance(arg, dict):
-                self.warningWindowInstance.set_label_text(arg.get("message"))
-            else:
-                self.warningWindowInstance.set_label_text("재판과 관련 없는 내용입니다.")
-
-            self.warningWindowInstance.show()
-
-        elif code == "interrogation_accepted":
-            if isinstance(arg, dict):
-                print(f"Interrogation accepted for {arg.get('type')}. Judge: {arg.get('message')}")
-                ip = None
-                for i in self.case_data.profiles:
-                    if i.type == arg.get('type'):
-                        ip = i
-                        break
-                self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, ip)
-                self.interrogationWindowInstance.update_dialogue(arg.get("role", "판사") + " : " + arg.get("message","심문을 시작합니다."))
-                self.interrogationWindowInstance.evidence_tag_reset()
-                self.hideAllWindow()
-                self.interrogationWindowInstance.show()
-
-        elif code == "objection":
-            if isinstance(arg, dict):
-                self.warningWindowInstance.set_label_text(f"{arg.get('role', '')}의 이의 제기" + "\n" + arg.get("message", "이의 있습니다!"))
-                self.warningWindowInstance.show()
-
-        elif code == "judgement": # GameController에서 'judgement'로 판결 시작을 알림
-            # if self.nowJudgement: return
-            # self.nowJudgement = True
-            if isinstance(arg, dict) and arg.get('role') == '판사':
-                print(f"Judgement phase initiated by {arg.get('role')}: {arg.get('message')}")
-                if hasattr(GameController, 'done'):
-                    self.hideAllWindow()
-                    self.judgeWindowInstance.show()
-                    self.hideCommon()
-                else:
-                    print("ERROR: GameController does not have 'done' method to trigger final verdict.")
-
-        elif code == "evidences_ready":
-            # 증거품 생성 완료 시 evidenceWindow 업데이트 (이미지는 아직 없음)
-            if arg and hasattr(self, 'evidenceWindowInstance'):
-                print(f"[UiController] 증거품 생성 완료, evidenceWindow 업데이트")
-                self.evidenceWindowInstance.update_evidences(arg)
-
-        elif code == "evidence_images_ready":
-            # 증거품 이미지 생성 완료 시 evidenceWindow 업데이트
-            if arg and hasattr(self, 'evidenceWindowInstance'):
-                print(f"[UiController] 증거품 이미지 생성 완료, evidenceWindow 업데이트")
-                self.evidenceWindowInstance.update_evidences(arg)
-
-        elif code == "evidence_changed":
-            pass
-
-
-        elif code == "evidence_tagged": # 또는 "evidence_taged" (이슈의 오타일 수 있음)
-            print(f"Evidence tagged: {arg}")
-            self.interrogationWindowInstance.evidence_tagged()
-
-
-        elif code == "interrogation": # GameController의 user_input에서 이 시그널을 사용 ("interrogation_dialogue" 대신)
-            self.isInterrogation = True
-            if self.typewriter.update_fn is not self.interrogationWindowInstance.update_profile_text_label:
-                self.typewriter.update_fn = self.interrogationWindowInstance.update_profile_text_label
-            
-            if isinstance(arg, dict):
-                msg = f"{arg.get('role', '??')} : {arg.get('message', '...')}"
-            self.typewriter.enqueue(msg)
-
-        elif code == "verdict": 
-            self.judgeWindowInstance.set_judge_text(str(arg))
-
-
-        elif code == "record_start":
-            if self.isInterrogation:
-                self.interrogationWindowInstance.set_mic_button_state(True)
-                return
-
-            if self.isTurnProsecutor:
-                self.prosecutorWindowInstance.toggle_mic_state()
-            else:
-                self.lawyerWindowInstance.toggle_mic_state()
-
-        elif code == "record_stop":
-            if self.isInterrogation:
-                self.interrogationWindowInstance.set_mic_button_state(False)
-                return
-
-            if self.isTurnProsecutor:
-                self.prosecutorWindowInstance.toggle_mic_state()
-            else:
-                self.lawyerWindowInstance.toggle_mic_state()
+        print(f"[{self.__class__.__name__}] Signal Received: Code='{code}', ArgType='{type(arg)}', ArgValue='{str(arg)[:100]}...'")
         
-        elif code == "error_occurred":
-            error_message = str(arg) if arg else "알 수 없는 오류가 발생했습니다."
-            QMessageBox.critical(None, "오류 발생", error_message)
-            if self.loading_dialog: self.loading_dialog.accept()
-            # 오류 상황에 따라 UI 상태 복구 또는 재시도 버튼 활성화
-            if not self.is_gc_initialized :
-                 self._update_start_button("오류 발생 (재시도)", True)
-
+        # 딕셔너리 디스패치 패턴
+        handler = self._signal_handlers.get(code)
+        if handler:
+            handler(self, arg)
         else:
             print(f"[{self.__class__.__name__}] Unknown signal code: {code}")
+    
+    def _handle_initialization_failed(self, arg):
+        """초기화 실패 처리"""
+        print(f"[UiController] ❌ 초기화 실패: {arg}")
+        QMessageBox.critical(None, "초기화 실패", f"케이스 데이터 생성에 실패했습니다:\n{arg}")
+        self.startWindowInstance.set_button_state(True, "게임 시작 (재시도)")
+    
+    def _handle_initialized(self, arg):
+        """초기화 완료 처리"""
+        if arg is not None:
+            self.case_data = arg
+            self.createWindowInstance()
+            self.generateWindowInstance.backButton.setEnabled(True)
+            # 모든 데이터가 준비된 후에만 start_game 호출
+            self.game_controller.start_game()
+        else: 
+            # 케이스만 생성된 상태 - generateWindow만 생성
+            self.case_data = self.game_controller._case_data
+            self.generateWindowInstance = GenerateWindow(self._instance, self.case_data.case.outline)
+    
+    def _handle_no_context(self, arg):
+        """맥락 없는 내용 경고 처리"""
+        if isinstance(arg, dict):
+            self.warningWindowInstance.set_label_text(arg.get("message"))
+        else:
+            self.warningWindowInstance.set_label_text("재판과 관련 없는 내용입니다.")
+        self.warningWindowInstance.show()
+    
+    def _handle_interrogation_accepted(self, arg):
+        """심문 수락 처리"""
+        if isinstance(arg, dict):
+            print(f"Interrogation accepted for {arg.get('type')}. Judge: {arg.get('message')}")
+            ip = None
+            for i in self.case_data.profiles:
+                if i.type == arg.get('type'):
+                    ip = i
+                    break
+            self.interrogationWindowInstance = InterrogationWindow(self._instance, self.game_controller, ip)
+            self.interrogationWindowInstance.update_dialogue(arg.get("role", "판사") + " : " + arg.get("message","심문을 시작합니다."))
+            self.interrogationWindowInstance.evidence_tag_reset()
+            self.hideAllWindow()
+            self.interrogationWindowInstance.show()
+    
+    def _handle_objection(self, arg):
+        """이의 제기 처리"""
+        if isinstance(arg, dict):
+            self.warningWindowInstance.set_label_text(f"{arg.get('role', '')}의 이의 제기" + "\n" + arg.get("message", "이의 있습니다!"))
+            self.warningWindowInstance.show()
+    
+    def _handle_judgement(self, arg):
+        """판결 시작 처리"""
+        if isinstance(arg, dict) and arg.get('role') == '판사':
+            print(f"Judgement phase initiated by {arg.get('role')}: {arg.get('message')}")
+            if hasattr(GameController, 'done'):
+                self.hideAllWindow()
+                self.judgeWindowInstance.show()
+                self.hideCommon()
+            else:
+                print("ERROR: GameController does not have 'done' method to trigger final verdict.")
+    
+    def _handle_evidences_ready(self, arg):
+        """증거품 생성 완료 처리"""
+        if arg and hasattr(self, 'evidenceWindowInstance'):
+            print(f"[UiController] 증거품 생성 완료, evidenceWindow 업데이트")
+            self.evidenceWindowInstance.update_evidences(arg)
+    
+    def _handle_evidence_images_ready(self, arg):
+        """증거품 이미지 생성 완료 처리"""
+        if arg and hasattr(self, 'evidenceWindowInstance'):
+            print(f"[UiController] 증거품 이미지 생성 완료, evidenceWindow 업데이트")
+            self.evidenceWindowInstance.update_evidences(arg)
+    
+    def _handle_evidence_changed(self, arg):
+        """증거 변경 처리"""
+        pass
+    
+    def _handle_evidence_tagged(self, arg):
+        """증거 태그 처리"""
+        print(f"Evidence tagged: {arg}")
+        self.interrogationWindowInstance.evidence_tagged()
+    
+    def _handle_interrogation(self, arg):
+        """심문 대화 처리"""
+        self.isInterrogation = True
+        if self.typewriter.update_fn is not self.interrogationWindowInstance.update_profile_text_label:
+            self.typewriter.update_fn = self.interrogationWindowInstance.update_profile_text_label
+        
+        if isinstance(arg, dict):
+            msg = f"{arg.get('role', '??')} : {arg.get('message', '...')}"
+        self.typewriter.enqueue(msg)
+    
+    def _handle_verdict(self, arg):
+        """판결 결과 처리"""
+        self.judgeWindowInstance.set_judge_text(str(arg))
+    
+    def _handle_record_toggled(self, arg):
+        """녹음 토글 처리"""
+        # arg: True(녹음 시작) / False(녹음 종료)
+        if self.isInterrogation:
+            self.interrogationWindowInstance.set_mic_button_state(arg)
+        else:
+            if self.isTurnProsecutor:
+                self.prosecutorWindowInstance.toggle_mic_state()
+            else:
+                self.lawyerWindowInstance.toggle_mic_state()
+    
+    def _handle_error_occurred(self, arg):
+        """에러 발생 처리"""
+        error_message = str(arg) if arg else "알 수 없는 오류가 발생했습니다."
+        QMessageBox.critical(None, "오류 발생", error_message)
+        if self.loading_dialog: 
+            self.loading_dialog.accept()
+        # 오류 상황에 따라 UI 상태 복구 또는 재시도 버튼 활성화
+        if not self.is_gc_initialized:
+            self._update_start_button("오류 발생 (재시도)", True)
+    
+    # 시그널 핸들러 매핑
+    _signal_handlers = {
+        "initialization_failed": _handle_initialization_failed,
+        "initialized": _handle_initialized,
+        "no_context": _handle_no_context,
+        "interrogation_accepted": _handle_interrogation_accepted,
+        "objection": _handle_objection,
+        "judgement": _handle_judgement,
+        "evidences_ready": _handle_evidences_ready,
+        "evidence_images_ready": _handle_evidence_images_ready,
+        "evidence_changed": _handle_evidence_changed,
+        "evidence_tagged": _handle_evidence_tagged,
+        "interrogation": _handle_interrogation,
+        "verdict": _handle_verdict,
+        "record_toggled": _handle_record_toggled,
+        "error_occurred": _handle_error_occurred,
+    }
     
 
 
