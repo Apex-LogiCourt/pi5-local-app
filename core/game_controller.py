@@ -419,7 +419,7 @@ class GameController(QObject):
         print(f"[GameController] _switch_turn() called: {cls._state.turn.value}")
 
     @classmethod
-    def _handle_bnt_event(cls, role : str) -> None:
+    def _handle_btn_event(cls, role : str) -> None:
         """버튼 이벤트 처리 메서드"""
         # print(f"input_role : {role}, 현재 턴: {cls._state.turn.value}, 여부 : {role != cls._state.turn.value}")
 
