@@ -25,7 +25,7 @@ CREATE_EVIDENCE_TEMPLATE = """
 
 다음 형식의 JSON 배열로 4개의 증거를 출력하세요:
 [
-  {{ "name": "증거명", "type": "attorney", "description": ["한 문장 설명"] }},
+  {{ "name": "증거명", "type": "attorney", "description": ["20자 이상 35자 이하, 완성된 문장으로 설명"] }},
   ...
 ]
 
@@ -203,8 +203,9 @@ def create_image_by_ai(name: str):
         with open(save_path, "wb") as file:
             file.write(output.read())
             print(f"[{name}] 이미지 저장 성공: {save_path}")
-    except:
+    except Exception as e:
         print(f"[{name}] 이미지 저장 실패: {output}")
+        print(f"[{name}] 에러: {e}")
 
     # if output and isinstance(output, list):
     #     image_url = output[0]

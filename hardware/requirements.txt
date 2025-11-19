@@ -12,3 +12,4 @@ pillow>=11,<12
 pyaudio==0.2.14
 sounddevice==0.5.2
 soundfile==0.13.1
+RPi.GPIO>=0.7.1

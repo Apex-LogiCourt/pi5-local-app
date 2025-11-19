@@ -62,7 +62,7 @@ QPushButton:pressed{
 }</string>
    </property>
    <property name="text">
-    <string>텍스트모드</string>
+    <string>테스트모드</string>
    </property>
   </widget>
   <widget class="QLabel" name="startImage">

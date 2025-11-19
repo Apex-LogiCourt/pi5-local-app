@@ -66,6 +66,48 @@ def handler_question(question: str, profile : Profile) :
 #     sentence_streamer(stream, on_sentence_ready)
 
 
+def run_chain_invoke(chain, as_markdown=False):
+    """
+    chain.invoke({})를 호출해서 결과를 문자열로 반환하는 함수.
+    
+    Args:
+        chain: LangChain chain 객체
+        as_markdown: True이면 마크다운을 HTML로 변환해서 반환
+    """
+    result = chain.invoke({})
+    # LangChain 최신 base_chain은 invoke가 반환 값을 직접 리턴함 (대개 str 또는 dict)
+    # 만약 dict처럼 나오면 str로 변환
+    if not isinstance(result, str):
+        result = str(result)
+    
+    # 마크다운을 HTML로 변환
+    if as_markdown:
+        result = markdown_to_html(result)
+    
+    return result
+
+
+def markdown_to_html(markdown_text: str) -> str:
+    """
+    마크다운 텍스트를 HTML로 변환
+    QTextEdit에서 볼드, 이탤릭, 줄바꿈 등 서식이 적용되도록 처리
+    """
+    try:
+        import markdown
+        # nl2br: 줄바꿈을 <br>로 변환
+        # extra: 표, 펜스 코드블록 등 확장 기능
+        # sane_lists: 리스트 처리 개선
+        html = markdown.markdown(
+            markdown_text,
+            extensions=['nl2br', 'extra', 'sane_lists']
+        )
+        return html
+    except ImportError:
+        print("[WARNING] markdown 라이브러리가 없습니다. pip install markdown")
+        return markdown_text
+
+
+
 async def run_chain_streaming(chain, callback=None):
     full_text = ""
     # chain이 문자열인 경우 run_str_streaming 사용
@@ -99,10 +141,9 @@ async def run_chain_streaming(chain, callback=None):
 
 def run_str_streaming(text: str, callback=None):
     def text_generator():
-        yield text  # 전체 문자열 한 번에 줌
+        yield str(text)  # ensure always yields string
 
     def on_sentence_ready(sentence):
-        # print(f"[문장 수신] {sentence}")
         if callback:
             callback(sentence)
     
@@ -166,7 +207,7 @@ def handler_tagged_evidence(id: int) -> None:
     """
     from game_controller import GameController
     gc = GameController.get_instance()
-    for evidence in gc._evidences:
+    for evidence in gc._case_data.evidences:
         if evidence.id == id:
             gc._state.tagged_evidence = evidence
             gc._send_signal("evidence_tagged", evidence)
