@@ -78,7 +78,7 @@ def make_epd_image(evidence: Evidence, font_size=20, line_spacing=6):
     image_path = evidence.picture
     text = evidence.description[0]
     #save_path = evidence.name + ".bmp"
-    save_path = "/home/user/Desktop/swfesta/pi5-local-app/data/evidence_resource" + evidence.name + ".bmp"
+    save_path = "/home/user/Desktop/swfesta/pi5-local-app/data/evidence_resource/" + evidence.name + ".bmp"
     
     # 400*300의 캔버스 생성
     canvas = Image.new("1", (400, 300), 1)
