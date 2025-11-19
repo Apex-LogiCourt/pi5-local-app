@@ -10,6 +10,9 @@ def handler_send_initial_evidence(evidences : List[Evidence]) -> None:
     
     for e in evidences:
         evidence_dict = asdict(e)
+        # picture가 None이면 loading.png 경로로 설정
+        if evidence_dict.get("picture") is None:
+            evidence_dict["picture"] = "data/evidence_resource/loading.png"
         asyncio.create_task(sse_manager.add_evidence(evidence_dict))
 
 def handler_send_updated_evidence(evidence: Evidence) -> None:
