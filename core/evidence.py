@@ -67,6 +67,7 @@ def make_evidence(case_data: Case, profiles: List[Profile]) -> List[Evidence]:
     for e in evidences:
         e.picture = make_evidence_image(e.name)
 
+    print(evidences)
     return evidences
 
 def update_evidence_description(evidence: Evidence, casedata: CaseData) -> Evidence:
@@ -129,8 +130,8 @@ def convert_data_class(data: List[dict]) -> List[Evidence]:
     그러나 LLM 특성상 100% 보장은 없으므로, data 타입 확인하고 케이스별 수동 예외처리 필요
     혹은 이 부분에서 에러 발생시 컨트롤러 측에서 다시 generate_evidences 하는 식으로 처리도 가능해 보임(높은 확률로 정상 동작하므로).
     """
-    print("[Debug/Evidence] type(data): "+ str(type(data)))
-    print("[Debug/Evidence] convert_data_class의 data:", data)
+    # print("[Debug/Evidence] type(data): "+ str(type(data)))
+    # print("[Debug/Evidence] convert_data_class의 data:", data)
     if isinstance(data, dict):
         if "증거품" in data:
             data = data["증거품"]
@@ -182,7 +183,7 @@ def create_image_by_ai(name: str):
     new_name = name.replace(" ", "-")
 
     prompt_name = get_evidence_name_for_prompt(name)
-    save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + ".png"
+    save_path = "/home/user/Desktop/swfesta/pi5-local-app/data/evidence_resource/" + formatted_date + "-" + new_name + ".png"
 
     import replicate
     client = replicate.Client(api_token=key)
