@@ -146,6 +146,11 @@ class GameController(QObject):
         cls._state.messages.append({"role":"system", "content": cls._case_data.evidences.__str__()})
         # 증거품 생성 완료 시 별도 시그널 전송 (이미지는 아직 없음)
         cls._send_signal("evidences_ready", cls._case_data.evidences)
+        
+        # 1차 전송: loading.png 이미지로 하드웨어에 전송
+        from tools.service import handler_send_initial_evidence
+        print("[GameController] 증거품 텍스트 생성 완료, loading 이미지로 1차 전송")
+        handler_send_initial_evidence(cls._case_data.evidences)
 
         # 이미지를 병렬로 생성 (백그라운드에서)
         task_images = asyncio.create_task(cls._generate_evidence_images())
@@ -170,7 +175,7 @@ class GameController(QObject):
         try:
             evidences = task.result()
             print("[GameController] 증거품 이미지 생성 완료")
-            # 하드웨어로 전송
+            # 2차 전송: 실제 이미지로 하드웨어에 전송
             from tools.service import handler_send_initial_evidence
             handler_send_initial_evidence(evidences)
             # UI 업데이트 시그널 전송
