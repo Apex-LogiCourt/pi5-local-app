@@ -42,7 +42,7 @@ class GameDescriptionWindow(QDialog):
 
     def back_button_click(self):
         self.uc.open_start_window()
-        self.close
+        self.close()
     
     def set_description_text(self, text):
         """descriptionText에 텍스트 설정"""

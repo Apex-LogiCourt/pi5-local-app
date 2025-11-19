@@ -25,7 +25,7 @@ CREATE_EVIDENCE_TEMPLATE = """
 
 다음 형식의 JSON 배열로 4개의 증거를 출력하세요:
 [
-  {{ "name": "증거명", "type": "attorney", "description": ["한 문장 설명"] }},
+  {{ "name": "증거명", "type": "attorney", "description": ["20자 이상 35자 이하, 완성된 문장으로 설명"] }},
   ...
 ]
 
