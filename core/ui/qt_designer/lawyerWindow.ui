@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>lawyerWindow</class>
- <widget class="QDialog" name="lawyerWindow">
+ <widget class="QWidget" name="lawyerWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -14,7 +14,7 @@
    <string>LogiCourt_AI</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QDialog{
+   <string notr="true">QWidget{
 	background-color: rgb(15, 39, 72);
 }</string>
   </property>

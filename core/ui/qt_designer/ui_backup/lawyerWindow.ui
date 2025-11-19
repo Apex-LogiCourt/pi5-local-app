@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>prosecutorWindow</class>
- <widget class="QWidget" name="prosecutorWindow">
+ <class>lawyerWindow</class>
+ <widget class="QDialog" name="lawyerWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -14,7 +14,7 @@
    <string>LogiCourt_AI</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QWidget{
+   <string notr="true">QDialog{
 	background-color: rgb(15, 39, 72);
 }</string>
   </property>
@@ -36,7 +36,7 @@
 }</string>
    </property>
    <property name="text">
-    <string>검사 주장</string>
+    <string>변호사 변론</string>
    </property>
    <property name="checkable">
     <bool>false</bool>
@@ -48,7 +48,7 @@
   <widget class="QLabel" name="profileImage">
    <property name="geometry">
     <rect>
-     <x>700</x>
+     <x>30</x>
      <y>140</y>
      <width>551</width>
      <height>551</height>
@@ -70,7 +70,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap resource="assets/resource.qrc">:/assets/profile/Prosecutor.png</pixmap>
+    <pixmap resource="assets/resource.qrc">:/assets/profile/lawyer.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
@@ -82,7 +82,7 @@
   <widget class="QPushButton" name="micButton">
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>1090</x>
      <y>620</y>
      <width>161</width>
      <height>71</height>
@@ -127,7 +127,7 @@ QPushButton#micButton:pressed{
   <widget class="QPushButton" name="endButton">
    <property name="geometry">
     <rect>
-     <x>210</x>
+     <x>910</x>
      <y>620</y>
      <width>161</width>
      <height>71</height>
@@ -153,13 +153,13 @@ QPushButton:pressed{
 }</string>
    </property>
    <property name="text">
-    <string>주장종료</string>
+    <string>변론종료</string>
    </property>
   </widget>
   <widget class="QPushButton" name="overviewButton">
    <property name="geometry">
     <rect>
-     <x>60</x>
+     <x>650</x>
      <y>180</y>
      <width>141</width>
      <height>51</height>
@@ -188,7 +188,7 @@ QPushButton:pressed{
   <widget class="QPushButton" name="evidenceButton">
    <property name="geometry">
     <rect>
-     <x>60</x>
+     <x>650</x>
      <y>310</y>
      <width>161</width>
      <height>51</height>
@@ -217,7 +217,7 @@ QPushButton:pressed{
   <widget class="QPushButton" name="textButton">
    <property name="geometry">
     <rect>
-     <x>60</x>
+     <x>650</x>
      <y>440</y>
      <width>161</width>
      <height>51</height>
@@ -246,7 +246,7 @@ QPushButton:pressed{
   <widget class="QLabel" name="profileTitleLabel">
    <property name="geometry">
     <rect>
-     <x>300</x>
+     <x>890</x>
      <y>190</y>
      <width>261</width>
      <height>31</height>
@@ -265,10 +265,41 @@ QPushButton:pressed{
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
+  <widget class="QPushButton" name="profileButton1">
+   <property name="geometry">
+    <rect>
+     <x>960</x>
+     <y>240</y>
+     <width>291</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+    text-align: left;
+    padding-left: 10px;
+	color: rgb(255, 255, 255);
+	border-radius: 20px;
+	font: 20pt &quot;나눔고딕&quot;;
+}
+
+QPushButton:hover{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕&quot;;
+}
+QPushButton:pressed{
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>profileButton1</string>
+   </property>
+  </widget>
   <widget class="QPushButton" name="profileButton2">
    <property name="geometry">
     <rect>
-     <x>370</x>
+     <x>960</x>
      <y>320</y>
      <width>291</width>
      <height>51</height>
@@ -299,7 +330,7 @@ QPushButton:pressed{
   <widget class="QPushButton" name="profileButton3">
    <property name="geometry">
     <rect>
-     <x>370</x>
+     <x>960</x>
      <y>400</y>
      <width>291</width>
      <height>51</height>
@@ -327,41 +358,10 @@ QPushButton:pressed{
     <string>profileButton3</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="profileButton1">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>240</y>
-     <width>291</width>
-     <height>51</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QPushButton{
-    text-align: left;
-    padding-left: 10px;
-	color: rgb(255, 255, 255);
-	border-radius: 20px;
-	font: 20pt &quot;나눔고딕&quot;;
-}
-
-QPushButton:hover{
-	border-radius: 20px;
-	font: 24pt &quot;나눔고딕&quot;;
-}
-QPushButton:pressed{
-	border-radius: 20px;
-	font: 24pt &quot;나눔고딕&quot;;
-}</string>
-   </property>
-   <property name="text">
-    <string>profileButton1</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="profileButton4">
    <property name="geometry">
     <rect>
-     <x>370</x>
+     <x>960</x>
      <y>480</y>
      <width>291</width>
      <height>51</height>
@@ -392,7 +392,7 @@ QPushButton:pressed{
   <widget class="QPushButton" name="turnButton">
    <property name="geometry">
     <rect>
-     <x>390</x>
+     <x>730</x>
      <y>620</y>
      <width>161</width>
      <height>71</height>
