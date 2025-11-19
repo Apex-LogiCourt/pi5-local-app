@@ -205,6 +205,7 @@ class GameController(QObject):
     async def user_input(cls, text: str) -> bool:
         """
         사용자의 수동 입력, 텍스트를 전송 (LangGraph 워크플로우 사용)
+        근데 STT도 이걸로 처리 함
         Args:
             text: 사용자가 입력한 텍스트
         Returns:
@@ -214,7 +215,10 @@ class GameController(QObject):
             return False
 
         if "이상입니다" in text:
-            cls._state.done_flags[cls._state.turn] = True
+            cls._add_message(cls._state.turn, text)
+            cls._switch_turn()
+            cls._send_signal("switch", cls._state.turn)
+
             return True
 
         # LangGraph 워크플로우 실행

@@ -286,6 +286,13 @@ class UiController(QObject):
         error_message = str(arg) if arg else "알 수 없는 오류가 발생했습니다."
         QMessageBox.critical(None, "오류 발생", error_message)
 
+    def _handle_switch(self, arg):
+        """턴 전환 처리"""
+        if self.isTurnProsecutor:
+            self.switch_to_lawyer_page()
+        else:
+            self.switch_to_prosecutor_page()
+
     # 시그널 핸들러 매핑
     _signal_handlers = {
         "initialization_failed": _handle_initialization_failed,
@@ -302,6 +309,7 @@ class UiController(QObject):
         "verdict": _handle_verdict,
         "record_toggled": _handle_record_toggled,
         "error_occurred": _handle_error_occurred,
+        "switch": _handle_switch,
     }
 
     # Dialog 열기 메서드들

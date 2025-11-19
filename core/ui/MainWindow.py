@@ -13,7 +13,7 @@ class MainWindow(QMainWindow):
 
     def _setup_window(self):
         """윈도우 기본 설정"""
-        self.setWindowTitle("법정 게임")
+        self.setWindowTitle("로직코트")
         # 배경색 설정
         self.setStyleSheet("QMainWindow { background-color: rgb(15, 39, 72); }")
         # 전체화면 또는 고정 크기 설정 가능
