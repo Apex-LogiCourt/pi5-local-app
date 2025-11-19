@@ -89,7 +89,11 @@ class CaseDataManager:
                 profiles=cls._profiles
             )
             cls._evidences = evidences
-            cls._case_data = CaseData(cls._case, cls._profiles, cls._evidences)
+            # case_data 업데이트 (이미 존재하면 evidences만 업데이트)
+            if cls._case_data is not None:
+                cls._case_data.evidences = cls._evidences
+            else:
+                cls._case_data = CaseData(cls._case, cls._profiles, cls._evidences)
 
             if callbacks:
                 for callback in callbacks:
