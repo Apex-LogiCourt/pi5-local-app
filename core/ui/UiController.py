@@ -57,8 +57,9 @@ class UiController(QObject):
         self.main_window.add_page("start", self.startPage)
         self.startPage.set_button_state(True, "게임 시작")
 
-        # Dialog 윈도우들 (팝업용)
+        # Dialog 윈도우들 (팝업용) - 경고창은 게임 시작 전에도 필요하므로 미리 생성
         self.descriptionWindowInstance = GameDescriptionWindow(self._instance)
+        self.warningWindowInstance = WarningWindow("재판과 관련 없는 내용입니다.")
 
         # Typewriter 초기화
         self.typewriter = Typewriter(
@@ -89,14 +90,13 @@ class UiController(QObject):
         self.lawyerPage = LawyerPage(self, self.game_controller, self.case_data)
         self.main_window.add_page("lawyer", self.lawyerPage)
 
-        # Dialog 윈도우들 생성
+        # Dialog 윈도우들 생성 (warningWindowInstance는 이미 __init__에서 생성됨)
         self.judgeWindowInstance = JudgeWindow(self._instance, self.game_controller, self.case_data)
         self.overviewWindowInstance = OverviewWindow(self.case_data.case.outline)
         self.textInputWindowInstance = TextInputWindow(self._instance, self.game_controller)
         self.evidenceWindowInstance = EvidenceWindow(
             self.case_data.evidences if hasattr(self.case_data, 'evidences') else []
         )
-        self.warningWindowInstance = WarningWindow("재판과 관련 없는 내용입니다.")
 
     def switch_to_start_page(self):
         """시작 페이지로 전환"""

@@ -321,11 +321,9 @@ class Interrogator:
         chain = prompt | cls.llm | StrOutputParser()
 
         print(f"[증거 반응 스트리밍] {profile.name}이(가) 증거 '{evidence.name}'에 반응합니다")
-        print(f"[증거 반응 스트리밍] Callback 존재 여부: {callback is not None}")
 
         # 스트리밍으로 반응 생성
         full_response = await run_chain_streaming(chain, callback)
-        print(f"[증거 반응 스트리밍] 완료 - 전체 응답: {full_response}")
         return full_response
 
     @classmethod

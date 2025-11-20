@@ -318,13 +318,25 @@ class GameController(QObject):
 
     @classmethod
     async def evidence_reaction(cls, evidence: Evidence) -> None:
-        """증거가 태그되었을 때 캐릭터의 반응을 생성하고 표시 (스트리밍 방식)"""
+        """증거가 태그되었을 때 Phase에 따라 적절한 반응 생성"""
         from interrogation.interrogator import Interrogator
         from tools.service import handler_tts_service, run_str_streaming
 
-        # 심문 중이고 현재 프로필이 있을 때만 반응 생성
+        # DEBATE 모드: 판사가 증거 채택 반응
+        if cls._state.phase == Phase.DEBATE:
+            print(f"[GameController] 판사가 증거 '{evidence.name}'을 채택합니다...")
+            
+            # 판사의 증거 채택 멘트 생성
+            judge_response = f"{evidence.name}이(가) 제출되었군요. 증거로 채택합니다."
+            
+            # 판사 발언 (no_context 시그널 재사용)
+            await cls._send_judge_message(judge_response, "no_context")
+            
+            return
+
+        # INTERROGATE 모드: 증인이 증거에 반응
         if cls._state.phase == Phase.INTERROGATE and cls._state.current_profile:
-            print(f"[GameController] 증거 '{evidence.name}'에 대한 반응 생성 중...")
+            print(f"[GameController] 증거 '{evidence.name}'에 대한 증인 반응 생성 중...")
 
             # Interrogator에서 반응 생성 (동기 방식)
             it = Interrogator.get_instance()
