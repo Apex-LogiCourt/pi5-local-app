@@ -10,7 +10,7 @@ class ReportPage(QWidget):
         super().__init__(parent)
         
         # UI 파일 로드
-        ui_path = os.path.join(os.path.dirname(__file__), '..', 'reportPage.ui')
+        ui_path = os.path.join(os.path.dirname(__file__), '..', 'qt_designer',  'reportPage.ui')
         uic.loadUi(ui_path, self)
         
         # 이미지 투명도 설정
@@ -306,7 +306,7 @@ class ReportPage(QWidget):
     def load_test_images(self):
         """테스트용 이미지 로드"""
         # 이미지 경로 (상대 경로)
-        base_path = os.path.join(os.path.dirname(__file__), '..', 'assets')
+        base_path = os.path.join(os.path.dirname(__file__), '..', 'qt_designer', 'assets')
         
         prosecutor_img = os.path.join(base_path, 'win_prosecutor.png')
         attorney_img = os.path.join(base_path, 'lose_attorney.png')
