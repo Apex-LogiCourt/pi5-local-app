@@ -64,8 +64,8 @@ class UiController(QObject):
         # Typewriter 초기화
         self.typewriter = Typewriter(
             update_fn=None,
-            char_interval=30,
-            sentence_pause=1000
+            char_interval=110,
+            sentence_pause=1400
         )
 
         # GameController 시그널 연결
