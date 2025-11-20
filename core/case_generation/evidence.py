@@ -69,6 +69,7 @@ def make_evidence(case_data: Case, profiles: List[Profile]) -> List[Evidence]:
     for e in evidences:
         e.picture = None
 
+    print(evidences)
     return evidences
 
 def update_evidence_description(evidence: Evidence, casedata: CaseData) -> Evidence:
@@ -229,7 +230,7 @@ def create_image_by_ai(name: str):
     new_name = re.sub(r'\s+', '-', generic_name.strip())
 
     prompt_name = get_evidence_name_for_prompt(generic_name)
-    save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + ".png"
+    save_path = "/home/user/Desktop/swfesta/pi5-local-app/data/evidence_resource/" + formatted_date + "-" + new_name + ".png"
 
     # 기존 파일이 있으면 재사용
     if os.path.exists(save_path):

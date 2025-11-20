@@ -43,7 +43,6 @@ class EvidenceWindow(QDialog):
             self.evidenceImage4
         ]
 
-        default_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..')
         loading_image_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'loading.png')
 
         # 증거품이 없으면 "생성 중" 표시
@@ -66,7 +65,7 @@ class EvidenceWindow(QDialog):
 
                 # 이미지 표시 (이미지가 없거나 None이면 loading.png 사용)
                 if evidence.picture:
-                    image_path = os.path.join(default_path, str(evidence.picture))
+                    image_path = str(evidence.picture)
                     if os.path.exists(image_path):
                         evidence_images[i].setPixmap(QPixmap(image_path).scaled(90, 90))
                     else:
