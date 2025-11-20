@@ -207,11 +207,20 @@ def sentence_streamer(
 def handler_tagged_evidence(id: int) -> None:
     """
     게임 컨트롤러의 `tagged_evidence`를 업데이트하고 signal을 보냄
+    심문 중이라면 캐릭터의 증거 반응도 생성
     """
     from game_controller import GameController
+    from data_models import Phase
+    import asyncio
+
     gc = GameController.get_instance()
     for evidence in gc._case_data.evidences:
         if evidence.id == id:
             gc._state.tagged_evidence = evidence
             gc._send_signal("evidence_tagged", evidence)
+
+            # INTERROGATE 모드일 때만 증거 반응 생성
+            if gc._state.phase == Phase.INTERROGATE:
+                asyncio.create_task(gc.evidence_reaction(evidence))
+
             return

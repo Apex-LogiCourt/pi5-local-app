@@ -317,6 +317,44 @@ class GameController(QObject):
         return True
 
     @classmethod
+    async def evidence_reaction(cls, evidence: Evidence) -> None:
+        """증거가 태그되었을 때 캐릭터의 반응을 생성하고 표시 (스트리밍 방식)"""
+        from interrogation.interrogator import Interrogator
+        from tools.service import handler_tts_service, run_str_streaming
+
+        # 심문 중이고 현재 프로필이 있을 때만 반응 생성
+        if cls._state.phase == Phase.INTERROGATE and cls._state.current_profile:
+            print(f"[GameController] 증거 '{evidence.name}'에 대한 반응 생성 중...")
+
+            # Interrogator에서 반응 생성 (동기 방식)
+            it = Interrogator.get_instance()
+            reaction_text = it.react_to_evidence(
+                evidence,
+                cls._state.current_profile,
+                callback=None
+            )
+
+            # 반응을 스트리밍으로 전송 (기존 interrogation과 동일한 방식)
+            if reaction_text:
+                def handle_response(sentence):
+                    """생성되는 응답을 심문 화면에 전송하는 콜백"""
+                    cls._send_signal("interrogation", {
+                        "role": cls._state.current_profile.name,
+                        "message": sentence
+                    })
+
+                # 응답 스트리밍 (기존 방식과 동일)
+                run_str_streaming(reaction_text, handle_response)
+
+                # TTS 서비스 호출
+                voice = cls._state.current_profile.voice if cls._state.current_profile else "nraewon"
+                asyncio.create_task(handler_tts_service(reaction_text, voice))
+
+                # 메시지 추가
+                role_name = cls._state.current_profile.name if cls._state.current_profile else "증인"
+                cls._add_message(role_name, reaction_text)
+
+    @classmethod
     def interrogation_end(cls) -> None:
         """심문 화면에서 뒤로 가기 버튼을 눌렀을 때 호출, 심문 종료"""
         cls._state.phase = Phase.DEBATE

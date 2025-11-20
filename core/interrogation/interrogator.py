@@ -177,9 +177,157 @@ class Interrogator:
         })
         
         print(f"[대화 메모리] 현재 {profile.name}와의 대화 턴: {len(messages)}턴")
-        
+
         return answer
-    
+
+    @classmethod
+    def react_to_evidence(cls, evidence: Evidence, profile: Profile, callback=None):
+        """
+        증거품을 제시했을 때 심문 대상의 반응을 생성하고 실행
+        callback이 제공되면 스트리밍으로 전달
+        """
+        from tools.service import run_chain_streaming
+        import asyncio
+
+        # 프로필 키 생성
+        profile_key = f"{profile.name}_{profile.type}"
+
+        # 대화 히스토리 가져오기 (없으면 기본 컨텍스트만 사용)
+        history_data = cls._chat_histories.get(profile_key, {
+            "context": {
+                "role": profile.type,
+                "case": cls._case.outline,
+                "profile": profile.__str__(),
+                "personality": profile.personality,
+                "gender": profile.gender,
+                "age": profile.age
+            },
+            "messages": []
+        })
+
+        context = history_data["context"]
+
+        # 증거품 정보
+        evidence_info = f"""
+증거품 이름: {evidence.name}
+증거품 설명: {', '.join(evidence.description)}
+제출자: {evidence.type}
+"""
+
+        # ChatPromptTemplate으로 증거 반응 프롬프트 생성
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", f"""당신은 재판에 참석한 {context['role']}입니다.
+방금 심문 중에 다음 증거품이 제시되었습니다.
+
+사건 개요:
+{context['case']}
+
+당신의 정보:
+{context['profile']}
+
+당신의 성격:
+{context['personality']}
+{context['gender']}
+{context['age']}
+
+제시된 증거품:
+{evidence_info}
+
+지침:
+- 이 증거품을 보고 당신의 입장에서 짧고 자연스럽게 반응하세요 (1~2줄)
+- 증거품이 당신에게 유리하거나 불리한지에 따라 감정을 담아 반응하세요
+- 당신의 성격, 성별, 나이를 반영한 말투로 답변하세요
+- "이 증거는..." 같은 설명조가 아니라 즉각적인 반응을 하세요
+- 예시: "이건... 제가 본 그 칼이 맞습니다!", "그건 제 것이 아닙니다!", "어떻게 이걸...?" 등"""),
+            ("human", "이 증거품에 대해 어떻게 생각하십니까?")
+        ])
+
+        # LLM 체인 실행
+        cls.llm = get_llm()
+        chain = prompt | cls.llm | StrOutputParser()
+
+        print(f"[증거 반응] {profile.name}이(가) 증거 '{evidence.name}'에 반응합니다")
+
+        # 비동기로 체인 실행
+        if callback:
+            asyncio.create_task(run_chain_streaming(chain, callback))
+        else:
+            # 콜백이 없으면 동기 실행
+            return chain.invoke({})
+
+    @classmethod
+    async def react_to_evidence_streaming(cls, evidence: Evidence, profile: Profile, callback=None):
+        """
+        증거품 반응을 스트리밍 방식으로 생성 (비동기)
+        GameController에서 호출하는 메서드
+        """
+        from tools.service import run_chain_streaming
+
+        # 프로필 키 생성
+        profile_key = f"{profile.name}_{profile.type}"
+
+        # 대화 히스토리 가져오기 (없으면 기본 컨텍스트만 사용)
+        history_data = cls._chat_histories.get(profile_key, {
+            "context": {
+                "role": profile.type,
+                "case": cls._case.outline,
+                "profile": profile.__str__(),
+                "personality": profile.personality,
+                "gender": profile.gender,
+                "age": profile.age
+            },
+            "messages": []
+        })
+
+        context = history_data["context"]
+
+        # 증거품 정보
+        evidence_info = f"""
+증거품 이름: {evidence.name}
+증거품 설명: {', '.join(evidence.description)}
+제출자: {evidence.type}
+"""
+
+        # ChatPromptTemplate으로 증거 반응 프롬프트 생성
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", f"""당신은 재판에 참석한 {context['role']}입니다.
+방금 심문 중에 다음 증거품이 제시되었습니다.
+
+사건 개요:
+{context['case']}
+
+당신의 정보:
+{context['profile']}
+
+당신의 성격:
+{context['personality']}
+{context['gender']}
+{context['age']}
+
+제시된 증거품:
+{evidence_info}
+
+지침:
+- 이 증거품을 보고 당신의 입장에서 짧고 자연스럽게 반응하세요 (1~2줄)
+- 증거품이 당신에게 유리하거나 불리한지에 따라 감정을 담아 반응하세요
+- 당신의 성격, 성별, 나이를 반영한 말투로 답변하세요
+- "이 증거는..." 같은 설명조가 아니라 즉각적인 반응을 하세요
+- 예시: "이건... 제가 본 그 칼이 맞습니다!", "그건 제 것이 아닙니다!", "어떻게 이걸...?" 등"""),
+            ("human", "이 증거품에 대해 어떻게 생각하십니까?")
+        ])
+
+        # LLM 체인 실행
+        cls.llm = get_llm()
+        chain = prompt | cls.llm | StrOutputParser()
+
+        print(f"[증거 반응 스트리밍] {profile.name}이(가) 증거 '{evidence.name}'에 반응합니다")
+        print(f"[증거 반응 스트리밍] Callback 존재 여부: {callback is not None}")
+
+        # 스트리밍으로 반응 생성
+        full_response = await run_chain_streaming(chain, callback)
+        print(f"[증거 반응 스트리밍] 완료 - 전체 응답: {full_response}")
+        return full_response
+
     @classmethod
     def reset_conversation(cls, profile: Profile = None):
         """
