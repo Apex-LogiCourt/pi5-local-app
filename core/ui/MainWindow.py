@@ -20,7 +20,7 @@ class MainWindow(QMainWindow):
         # 최소 크기 설정 (UI가 너무 작아지지 않도록)
         self.setMinimumSize(1280, 720)
         # 전체화면으로 시작
-        self.showFullScreen()
+        # self.showFullScreen()
 
     def _setup_stacked_widget(self):
         """StackedWidget 초기화"""

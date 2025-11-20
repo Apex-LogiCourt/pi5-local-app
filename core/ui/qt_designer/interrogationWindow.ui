@@ -217,27 +217,6 @@ QPushButton#micButton:pressed{
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="QPushButton" name="smallEvidenceLabel">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>30</y>
-     <width>71</width>
-     <height>71</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QPushButton{
-	background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgb(67, 110, 124), stop:1 rgb(47, 90, 104)); border: 2px solid rgba(100, 150, 170, 100);
-	image: url(:/images/evidence_icon.png);
-	color: rgb(255, 254, 254);
-	border-radius: 10px;
-}</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
   <widget class="QLabel" name="doNotChange_2">
    <property name="geometry">
     <rect>
@@ -282,17 +261,17 @@ QPushButton#micButton:pressed{
     <number>0</number>
    </property>
   </widget>
-  <widget class="QPushButton" name="largeEvidenceLabel">
+  <widget class="QLabel" name="evidenceLabel">
    <property name="geometry">
     <rect>
      <x>30</x>
      <y>30</y>
-     <width>141</width>
-     <height>141</height>
+     <width>71</width>
+     <height>71</height>
     </rect>
    </property>
    <property name="styleSheet">
-    <string notr="true">QPushButton{
+    <string notr="true">QLabel{
 	background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgb(67, 110, 124), stop:1 rgb(47, 90, 104)); border: 2px solid rgba(100, 150, 170, 100);
 	image: url(:/images/evidence_icon.png);
 	color: rgb(255, 254, 254);
@@ -301,6 +280,12 @@ QPushButton#micButton:pressed{
    </property>
    <property name="text">
     <string/>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
    </property>
   </widget>
   <widget class="QLabel" name="textLabel">
@@ -338,8 +323,7 @@ QPushButton#micButton:pressed{
   <zorder>profileImage</zorder>
   <zorder>doNotChange_2</zorder>
   <zorder>profileTextLabel</zorder>
-  <zorder>largeEvidenceLabel</zorder>
-  <zorder>smallEvidenceLabel</zorder>
+  <zorder>evidenceLabel</zorder>
  </widget>
  <resources>
   <include location="assets/resource.qrc"/>

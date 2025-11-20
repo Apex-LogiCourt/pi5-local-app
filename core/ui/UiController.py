@@ -263,7 +263,7 @@ class UiController(QObject):
         print(f"Evidence tagged: {arg}")
         current_page = self.main_window.get_current_page()
         if isinstance(current_page, InterrogationPage):
-            current_page.evidence_tagged()
+            current_page.evidence_tagged(arg)
 
     def _handle_interrogation(self, arg):
         """심문 대화 처리"""
