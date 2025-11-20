@@ -113,6 +113,12 @@ class BaseCourtPage(QWidget):
 
         if is_prosecutor:
             # ========== 검사 화면 ==========
+            # 카드 프레임
+            self.leftCardFrame.setGeometry(
+                int(55 * ratio_w), int(140 * ratio_h),
+                int(391 * ratio_w), int(431 * ratio_h)
+            )
+
             # 프로필 이미지 (오른쪽 배경)
             self.profileImage.setGeometry(
                 int(558 * ratio_w), int(110 * ratio_h),
@@ -155,28 +161,34 @@ class BaseCourtPage(QWidget):
 
             # 등장인물 영역 (중앙)
             self.profileTitleLabel.setGeometry(
-                int(290 * ratio_w), int(180 * ratio_h),
+                int(240 * ratio_w), int(180 * ratio_h),
                 int(201 * ratio_w), int(31 * ratio_h)
             )
             self.profileButton1.setGeometry(
-                int(310 * ratio_w), int(230 * ratio_h),
+                int(260 * ratio_w), int(230 * ratio_h),
                 int(170 * ratio_w), int(51 * ratio_h)
             )
             self.profileButton2.setGeometry(
-                int(310 * ratio_w), int(310 * ratio_h),
+                int(260 * ratio_w), int(310 * ratio_h),
                 int(170 * ratio_w), int(51 * ratio_h)
             )
             self.profileButton3.setGeometry(
-                int(310 * ratio_w), int(390 * ratio_h),
+                int(260 * ratio_w), int(390 * ratio_h),
                 int(170 * ratio_w), int(51 * ratio_h)
             )
             self.profileButton4.setGeometry(
-                int(310 * ratio_w), int(470 * ratio_h),
+                int(260 * ratio_w), int(470 * ratio_h),
                 int(170 * ratio_w), int(51 * ratio_h)
             )
 
         else:
             # ========== 변호사 화면 ==========
+            # 카드 프레임
+            self.leftCardFrame.setGeometry(
+                int(800 * ratio_w), int(140 * ratio_h),
+                int(391 * ratio_w), int(431 * ratio_h)
+            )
+
             # 프로필 이미지 (왼쪽 배경)
             self.profileImage.setGeometry(
                 int(-20 * ratio_w), int(120 * ratio_h),
@@ -191,8 +203,8 @@ class BaseCourtPage(QWidget):
 
             # 하단 버튼들 (오른쪽)
             self.turnButton.setGeometry(
-                int(730 * ratio_w), int(620 * ratio_h),
-                int(161 * ratio_w), int(71 * ratio_h)
+                int(740 * ratio_w), int(630 * ratio_h),
+                int(151 * ratio_w), int(61 * ratio_h)
             )
             self.endButton.setGeometry(
                 int(910 * ratio_w), int(620 * ratio_h),
@@ -205,37 +217,37 @@ class BaseCourtPage(QWidget):
 
             # 오른쪽 기능 버튼들
             self.overviewButton.setGeometry(
-                int(740 * ratio_w), int(180 * ratio_h),
+                int(810 * ratio_w), int(180 * ratio_h),
                 int(141 * ratio_w), int(51 * ratio_h)
             )
             self.evidenceButton.setGeometry(
-                int(740 * ratio_w), int(310 * ratio_h),
+                int(810 * ratio_w), int(310 * ratio_h),
                 int(161 * ratio_w), int(51 * ratio_h)
             )
             self.textButton.setGeometry(
-                int(740 * ratio_w), int(440 * ratio_h),
+                int(810 * ratio_w), int(440 * ratio_h),
                 int(161 * ratio_w), int(51 * ratio_h)
             )
 
             # 등장인물 영역 (오른쪽)
             self.profileTitleLabel.setGeometry(
-                int(930 * ratio_w), int(190 * ratio_h),
+                int(970 * ratio_w), int(190 * ratio_h),
                 int(221 * ratio_w), int(31 * ratio_h)
             )
             self.profileButton1.setGeometry(
-                int(960 * ratio_w), int(240 * ratio_h),
+                int(1000 * ratio_w), int(240 * ratio_h),
                 int(170 * ratio_w), int(51 * ratio_h)
             )
             self.profileButton2.setGeometry(
-                int(960 * ratio_w), int(320 * ratio_h),
+                int(1000 * ratio_w), int(320 * ratio_h),
                 int(170 * ratio_w), int(51 * ratio_h)
             )
             self.profileButton3.setGeometry(
-                int(960 * ratio_w), int(400 * ratio_h),
+                int(1000 * ratio_w), int(400 * ratio_h),
                 int(170 * ratio_w), int(51 * ratio_h)
             )
             self.profileButton4.setGeometry(
-                int(960 * ratio_w), int(480 * ratio_h),
+                int(1000 * ratio_w), int(480 * ratio_h),
                 int(170 * ratio_w), int(51 * ratio_h)
             )
 

@@ -130,10 +130,33 @@ QPushButton:pressed{
     <string>변론종료</string>
    </property>
   </widget>
+  <widget class="QFrame" name="leftCardFrame">
+   <property name="geometry">
+    <rect>
+     <x>800</x>
+     <y>140</y>
+     <width>391</width>
+     <height>431</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QFrame{
+	background-color: rgba(0,0,0,100);
+	border: 2px solid rgba(100, 150, 200, 150);
+	border-radius: 20px;
+}</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+  </widget>
   <widget class="QPushButton" name="overviewButton">
    <property name="geometry">
     <rect>
-     <x>740</x>
+     <x>810</x>
      <y>180</y>
      <width>141</width>
      <height>51</height>
@@ -141,16 +164,19 @@ QPushButton:pressed{
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
+	background-color: transparent;
 	color: rgb(255, 255, 255);
 	border-radius: 20px;
 	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
 }
 
 QPushButton:hover{
+	background-color: rgba(255, 255, 255, 30);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }
 QPushButton:pressed{
+	background-color: rgba(255, 255, 255, 50);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }</string>
@@ -162,7 +188,7 @@ QPushButton:pressed{
   <widget class="QPushButton" name="evidenceButton">
    <property name="geometry">
     <rect>
-     <x>740</x>
+     <x>810</x>
      <y>310</y>
      <width>161</width>
      <height>51</height>
@@ -170,16 +196,19 @@ QPushButton:pressed{
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
+	background-color: transparent;
 	color: rgb(255, 255, 255);
 	border-radius: 20px;
 	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
 }
 
 QPushButton:hover{
+	background-color: rgba(255, 255, 255, 30);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }
 QPushButton:pressed{
+	background-color: rgba(255, 255, 255, 50);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }</string>
@@ -191,7 +220,7 @@ QPushButton:pressed{
   <widget class="QPushButton" name="textButton">
    <property name="geometry">
     <rect>
-     <x>740</x>
+     <x>810</x>
      <y>440</y>
      <width>161</width>
      <height>51</height>
@@ -199,16 +228,19 @@ QPushButton:pressed{
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
+	background-color: transparent;
 	color: rgb(255, 255, 255);
 	border-radius: 20px;
 	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
 }
 
 QPushButton:hover{
+	background-color: rgba(255, 255, 255, 30);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }
 QPushButton:pressed{
+	background-color: rgba(255, 255, 255, 50);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }</string>
@@ -220,7 +252,7 @@ QPushButton:pressed{
   <widget class="QLabel" name="profileTitleLabel">
    <property name="geometry">
     <rect>
-     <x>930</x>
+     <x>970</x>
      <y>190</y>
      <width>221</width>
      <height>31</height>
@@ -228,6 +260,7 @@ QPushButton:pressed{
    </property>
    <property name="styleSheet">
     <string notr="true">QLabel{
+	background-color: transparent;
 	color: rgb(255, 255, 255);
 	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
 }</string>
@@ -242,7 +275,7 @@ QPushButton:pressed{
   <widget class="QPushButton" name="profileButton1">
    <property name="geometry">
     <rect>
-     <x>960</x>
+     <x>1000</x>
      <y>240</y>
      <width>170</width>
      <height>51</height>
@@ -250,18 +283,21 @@ QPushButton:pressed{
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
-    text-align: left;
-    padding-left: 10px;
+	background-color: transparent;
+	text-align: left;
+	padding-left: 10px;
 	color: rgb(255, 255, 255);
 	border-radius: 20px;
 	font: 20pt &quot;나눔고딕&quot;;
 }
 
 QPushButton:hover{
+	background-color: rgba(255, 255, 255, 30);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕&quot;;
 }
 QPushButton:pressed{
+	background-color: rgba(255, 255, 255, 50);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕&quot;;
 }</string>
@@ -273,7 +309,7 @@ QPushButton:pressed{
   <widget class="QPushButton" name="profileButton2">
    <property name="geometry">
     <rect>
-     <x>960</x>
+     <x>1000</x>
      <y>320</y>
      <width>170</width>
      <height>51</height>
@@ -281,18 +317,21 @@ QPushButton:pressed{
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
-    text-align: left;
-    padding-left: 10px;
+	background-color: transparent;
+	text-align: left;
+	padding-left: 10px;
 	color: rgb(255, 255, 255);
 	border-radius: 20px;
 	font: 20pt &quot;나눔고딕&quot;;
 }
 
 QPushButton:hover{
+	background-color: rgba(255, 255, 255, 30);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕&quot;;
 }
 QPushButton:pressed{
+	background-color: rgba(255, 255, 255, 50);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕&quot;;
 }</string>
@@ -304,7 +343,7 @@ QPushButton:pressed{
   <widget class="QPushButton" name="profileButton3">
    <property name="geometry">
     <rect>
-     <x>960</x>
+     <x>1000</x>
      <y>400</y>
      <width>170</width>
      <height>51</height>
@@ -312,18 +351,21 @@ QPushButton:pressed{
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
-    text-align: left;
-    padding-left: 10px;
+	background-color: transparent;
+	text-align: left;
+	padding-left: 10px;
 	color: rgb(255, 255, 255);
 	border-radius: 20px;
 	font: 20pt &quot;나눔고딕&quot;;
 }
 
 QPushButton:hover{
+	background-color: rgba(255, 255, 255, 30);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕&quot;;
 }
 QPushButton:pressed{
+	background-color: rgba(255, 255, 255, 50);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕&quot;;
 }</string>
@@ -335,7 +377,7 @@ QPushButton:pressed{
   <widget class="QPushButton" name="profileButton4">
    <property name="geometry">
     <rect>
-     <x>960</x>
+     <x>1000</x>
      <y>480</y>
      <width>170</width>
      <height>51</height>
@@ -343,18 +385,21 @@ QPushButton:pressed{
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
-    text-align: left;
-    padding-left: 10px;
+	background-color: transparent;
+	text-align: left;
+	padding-left: 10px;
 	color: rgb(255, 255, 255);
 	border-radius: 20px;
 	font: 20pt &quot;나눔고딕&quot;;
 }
 
 QPushButton:hover{
+	background-color: rgba(255, 255, 255, 30);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕&quot;;
 }
 QPushButton:pressed{
+	background-color: rgba(255, 255, 255, 50);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕&quot;;
 }</string>
@@ -366,10 +411,10 @@ QPushButton:pressed{
   <widget class="QPushButton" name="turnButton">
    <property name="geometry">
     <rect>
-     <x>730</x>
-     <y>620</y>
-     <width>161</width>
-     <height>71</height>
+     <x>740</x>
+     <y>630</y>
+     <width>151</width>
+     <height>61</height>
     </rect>
    </property>
    <property name="styleSheet">
