@@ -280,6 +280,7 @@ class UiController(QObject):
     def _handle_verdict(self, arg):
         """판결 결과 처리"""
         self.judgeWindowInstance.set_judge_text(str(arg))
+        self.main_window.close()
 
     def _handle_record_toggled(self, arg):
         """녹음 토글 처리"""
