@@ -2,7 +2,7 @@ import sys
 import os
 from PyQt5.QtWidgets import QWidget
 from PyQt5 import uic
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPropertyAnimation, QRect
 from PyQt5.QtGui import QPixmap
 import asyncio
 
@@ -48,15 +48,50 @@ class InterrogationPage(QWidget):
         self.textButton.clicked.connect(self._open_text_input)
         self.micButton.clicked.connect(self._toggle_mic)
 
-    def evidence_tagged(self):
-        """증거 태그 표시"""
-        self.smallEvidenceLabel.setVisible(False)
-        self.largeEvidenceLabel.setVisible(True)
+    def evidence_tagged(self, evidence):
+        """증거 태그 표시 - 크기 애니메이션과 함께"""
+        # 증거 이미지 표시
+        if evidence and hasattr(evidence, 'picture') and evidence.picture:
+            # 절대 경로 또는 상대 경로 처리
+            image_path = evidence.picture
+            if not os.path.isabs(image_path):
+                # 상대 경로인 경우 core 디렉토리 기준으로 절대 경로 생성
+                default_path = os.path.join(os.path.dirname(__file__), '..', '..', '..')
+                image_path = os.path.join(default_path, str(image_path))
+
+            # 이미지 파일이 존재하는지 확인
+            if os.path.exists(image_path):
+                # 먼저 작은 크기로 이미지 설정
+                pixmap_small = QPixmap(image_path).scaled(71, 71, aspectRatioMode=1)
+                self.evidenceLabel.setPixmap(pixmap_small)
+
+                # 크기 애니메이션: 71x71 -> 141x141
+                self.animation = QPropertyAnimation(self.evidenceLabel, b"geometry")
+                self.animation.setDuration(300)  # 300ms
+                self.animation.setStartValue(QRect(30, 30, 71, 71))
+                self.animation.setEndValue(QRect(30, 30, 141, 141))
+
+                # 애니메이션 완료 후 큰 이미지로 교체
+                def update_large_image():
+                    pixmap_large = QPixmap(image_path).scaled(141, 141, aspectRatioMode=1)
+                    self.evidenceLabel.setPixmap(pixmap_large)
+
+                self.animation.finished.connect(update_large_image)
+                self.animation.start()
+
+                print(f"[InterrogationPage] 증거 이미지 표시: {image_path}")
+            else:
+                print(f"[InterrogationPage] 이미지 파일이 존재하지 않음: {image_path}")
 
     def evidence_tag_reset(self):
-        """증거 태그 리셋"""
-        self.smallEvidenceLabel.setVisible(True)
-        self.largeEvidenceLabel.setVisible(False)
+        """증거 태그 리셋 - 크기만 작게 (이미지는 유지)"""
+        # 크기 애니메이션: 141x141 -> 71x71
+        self.animation = QPropertyAnimation(self.evidenceLabel, b"geometry")
+        self.animation.setDuration(300)  # 300ms
+        self.animation.setStartValue(QRect(30, 30, 141, 141))
+        self.animation.setEndValue(QRect(30, 30, 71, 71))
+        self.animation.start()
+        # 증거 이미지는 그대로 유지
 
     def show_profile(self):
         """프로필 표시"""
@@ -158,11 +193,10 @@ class InterrogationPage(QWidget):
         self.profileImage.setGeometry(profile_x, profile_y, profile_w, profile_h)
 
         # 증거 아이콘 (왼쪽 상단)
-        small_evidence_size = int(71 * min(ratio_w, ratio_h))
-        self.smallEvidenceLabel.setGeometry(margin, margin, small_evidence_size, small_evidence_size)
-
-        large_evidence_size = int(141 * min(ratio_w, ratio_h))
-        self.largeEvidenceLabel.setGeometry(margin, margin, large_evidence_size, large_evidence_size)
+        # evidenceLabel의 현재 크기에 비례하여 조정 (71 또는 141)
+        current_evidence_size = self.evidenceLabel.width()
+        scaled_evidence_size = int(current_evidence_size * min(ratio_w, ratio_h))
+        self.evidenceLabel.setGeometry(margin, margin, scaled_evidence_size, scaled_evidence_size)
 
         # doNotChange 라벨들 (증거 아이콘 코너 처리용)
         corner_size = int(41 * min(ratio_w, ratio_h))

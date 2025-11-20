@@ -27,7 +27,9 @@
   </property>
   <property name="styleSheet">
    <string notr="true">QWidget{
-	background-color: rgb(15, 39, 72);
+	background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+		stop:0 rgb(15, 39, 72),
+		stop:1 rgb(25, 52, 89));
 }</string>
   </property>
   <widget class="QPushButton" name="gameTextModeButton">
@@ -41,19 +43,28 @@
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
-	background-color: rgb(47, 90, 104);
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+		stop:0 rgb(67, 110, 124),
+		stop:1 rgb(47, 90, 104));
 	color: rgb(255, 254, 254);
+	border: 2px solid rgba(100, 150, 170, 100);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }
 
 QPushButton:hover{
-	background-color: rgb(67, 129, 148);
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+		stop:0 rgb(87, 149, 168),
+		stop:1 rgb(67, 129, 148));
+	border: 2px solid rgba(120, 180, 200, 150);
 	border-radius: 20px;
 	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
 }
 QPushButton:pressed{
-	background-color: rgb(0, 123, 255);
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+		stop:0 rgb(20, 143, 255),
+		stop:1 rgb(0, 123, 255));
+	border: 2px solid rgba(40, 163, 255, 200);
 	border-radius: 20px;
 	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
 }</string>
@@ -105,19 +116,28 @@ QPushButton:pressed{
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
-	background-color: rgb(47, 90, 104);
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+		stop:0 rgb(67, 110, 124),
+		stop:1 rgb(47, 90, 104));
 	color: rgb(255, 254, 254);
+	border: 2px solid rgba(100, 150, 170, 100);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }
 
 QPushButton:hover{
-	background-color: rgb(67, 129, 148);
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+		stop:0 rgb(87, 149, 168),
+		stop:1 rgb(67, 129, 148));
+	border: 2px solid rgba(120, 180, 200, 150);
 	border-radius: 20px;
 	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
 }
 QPushButton:pressed{
-	background-color: rgb(0, 123, 255);
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+		stop:0 rgb(20, 143, 255),
+		stop:1 rgb(0, 123, 255));
+	border: 2px solid rgba(40, 163, 255, 200);
 	border-radius: 20px;
 	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
 }</string>
@@ -137,19 +157,28 @@ QPushButton:pressed{
    </property>
    <property name="styleSheet">
     <string notr="true">QPushButton{
-	background-color: rgb(47, 90, 104);
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+		stop:0 rgb(67, 110, 124),
+		stop:1 rgb(47, 90, 104));
 	color: rgb(255, 254, 254);
+	border: 2px solid rgba(100, 150, 170, 100);
 	border-radius: 20px;
 	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
 }
 
 QPushButton:hover{
-	background-color: rgb(67, 129, 148);
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+		stop:0 rgb(87, 149, 168),
+		stop:1 rgb(67, 129, 148));
+	border: 2px solid rgba(120, 180, 200, 150);
 	border-radius: 20px;
 	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
 }
 QPushButton:pressed{
-	background-color: rgb(0, 123, 255);
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+		stop:0 rgb(20, 143, 255),
+		stop:1 rgb(0, 123, 255));
+	border: 2px solid rgba(40, 163, 255, 200);
 	border-radius: 20px;
 	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
 }</string>
@@ -200,6 +229,9 @@ QPushButton:pressed{
     <string notr="true">QLabel{
 	color: rgb(255, 255, 255);
 	font: 20pt &quot;나눔고딕&quot;;
+	background: rgba(0, 0, 0, 30);
+	border-radius: 15px;
+	padding: 10px;
 }</string>
    </property>
    <property name="text">

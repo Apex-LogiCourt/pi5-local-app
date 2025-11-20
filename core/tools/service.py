@@ -10,6 +10,9 @@ def handler_send_initial_evidence(evidences : List[Evidence]) -> None:
     
     for e in evidences:
         evidence_dict = asdict(e)
+        # picture가 None이면 loading.png 경로로 설정
+        if evidence_dict.get("picture") is None:
+            evidence_dict["picture"] = "data/evidence_resource/loading.png"
         asyncio.create_task(sse_manager.add_evidence(evidence_dict))
 
 def handler_send_updated_evidence(evidence: Evidence) -> None:
@@ -204,11 +207,18 @@ def sentence_streamer(
 def handler_tagged_evidence(id: int) -> None:
     """
     게임 컨트롤러의 `tagged_evidence`를 업데이트하고 signal을 보냄
+    GameController에서 Phase에 따라 적절한 반응 생성
     """
     from game_controller import GameController
+    import asyncio
+
     gc = GameController.get_instance()
     for evidence in gc._case_data.evidences:
         if evidence.id == id:
             gc._state.tagged_evidence = evidence
             gc._send_signal("evidence_tagged", evidence)
+
+            # GameController에서 Phase별로 처리
+            asyncio.create_task(gc.evidence_reaction(evidence))
+
             return

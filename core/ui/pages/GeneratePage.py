@@ -35,6 +35,9 @@ class GeneratePage(QWidget):
         self.typewriter = Typewriter(update_fn=self.overviewText.setHtml, html_mode=True)
         self.typewriter.enqueue(self.case_outline)
 
+        # 초기 폰트 크기 설정
+        self._update_font_size()
+
     def _setup_connections(self):
         """버튼 연결 설정"""
         self.backButton.clicked.connect(self._on_forward_clicked)
@@ -52,11 +55,44 @@ class GeneratePage(QWidget):
         self.case_outline = new_outline
         self.typewriter.enqueue(new_outline)
 
+    def _update_font_size(self):
+        """화면 크기에 따라 폰트 크기 동적 조정"""
+        w = self.width()
+        h = self.height()
+
+        # 기준 크기 (원본 디자인)
+        base_w = 1280
+        base_h = 720
+        base_font_size = 14  # 기본 폰트 크기
+
+        # 비율 계산 (작은 쪽 기준으로 조정)
+        ratio = min(w / base_w, h / base_h)
+
+        # 폰트 크기 계산 (최소 12pt, 최대 22pt)
+        new_font_size = max(12, min(22, int(base_font_size * ratio)))
+
+        # 스타일 업데이트
+        self.overviewText.setStyleSheet(f"""
+            QTextBrowser {{
+                border: 2px solid rgba(100, 150, 180, 80);
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 rgba(10, 20, 40, 180),
+                    stop:1 rgba(20, 35, 60, 160));
+                color: rgb(255, 255, 255);
+                font: {new_font_size}pt "나눔고딕";
+                border-radius: 15px;
+                padding: 20px;
+            }}
+        """)
+
     def resizeEvent(self, event):
         """화면 크기 변경 시 위젯들을 반응형으로 재배치"""
         super().resizeEvent(event)
         w = self.width()
         h = self.height()
+
+        # 폰트 크기 업데이트
+        self._update_font_size()
 
         # 기준 크기 (원본 디자인)
         base_w = 1280
