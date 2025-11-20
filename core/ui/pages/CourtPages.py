@@ -203,8 +203,8 @@ class BaseCourtPage(QWidget):
 
             # 하단 버튼들 (오른쪽)
             self.turnButton.setGeometry(
-                int(740 * ratio_w), int(630 * ratio_h),
-                int(151 * ratio_w), int(61 * ratio_h)
+                int(740 * ratio_w), int(620 * ratio_h),
+                int(161 * ratio_w), int(71 * ratio_h)
             )
             self.endButton.setGeometry(
                 int(910 * ratio_w), int(620 * ratio_h),
