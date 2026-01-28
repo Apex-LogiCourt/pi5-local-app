@@ -89,6 +89,7 @@
     <string notr="true">QLabel{
 	/* 스타일시트는 스케일 설정 불가능. pixMap으로 설정해야 함 */
 	/* image:url(:/images/imageNotFound.png); */
+	background-color: transparent;
 	color: rgb(255, 255, 255);
 	font: 20pt &quot;나눔고딕&quot;;
 }

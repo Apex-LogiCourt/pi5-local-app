@@ -7,7 +7,7 @@ from api.routers import state_router, websocket_router, evidence_router
 from game_controller import GameController
 
 from PyQt5.QtWidgets import QApplication
-from ui.qt_designer.UiController import UiController
+from ui.UiController import UiController
 import uvicorn
 import qasync
 import threading

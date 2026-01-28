@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional
 from data_models import CaseData, Evidence, Profile, Case, GameState, Phase, Role
-from controller import CaseDataManager
+from case_generation.case_data_manager import CaseDataManager
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 import asyncio
 from interrogation.interrogator import it
@@ -115,14 +115,14 @@ class GameController(QObject):
     def start_game(cls) -> bool :
         cls._state.phase = Phase.DEBATE
         cls._case_data = CaseDataManager.get_case_data()
-        
+
         if not it.set_case_data(cls._case_data):
             print("[GameController] interrogator case_data 설정 실패")
             return False
-            
+
         cls._state.messages.append({"role":"system", "content": cls._case_data.case.outline})
         cls._state.messages.append({"role":"system", "content": cls._case_data.profiles.__str__()})
-        cls._state.messages.append({"role":"system", "content": cls._case_data.evidences.__str__()})
+        # 증거품은 _on_evidences_created()에서 생성 완료 시 추가됨
 
         return True
 
@@ -130,16 +130,51 @@ class GameController(QObject):
     @classmethod
     def _on_profiles_created(cls, task):
         cls._case_data.profiles = task.result()
+        # CaseDataManager에도 case_data 설정 (증거품은 빈 리스트로)
+        from case_generation.case_data_manager import CaseDataManager
+        CaseDataManager._case_data = cls._case_data
+        # 프로필 생성 완료 시 바로 게임 화면으로 전환 (증거품은 빈 리스트로 시작)
+        cls._send_signal("initialized", cls._case_data)
+        # 증거품 생성은 백그라운드에서 계속 진행
         task_evidences = asyncio.create_task(CaseDataManager.generate_evidences())
         task_evidences.add_done_callback(cls._on_evidences_created)
 
     @classmethod
     def _on_evidences_created(cls, task):
         cls._case_data.evidences = task.result()
-        cls._send_signal("initialized", cls._case_data)
+        # 증거품이 생성되면 messages에 추가
+        cls._state.messages.append({"role":"system", "content": cls._case_data.evidences.__str__()})
+        # 증거품 생성 완료 시 별도 시그널 전송 (이미지는 아직 없음)
+        cls._send_signal("evidences_ready", cls._case_data.evidences)
+        
+        # 1차 전송: loading.png 이미지로 하드웨어에 전송
         from tools.service import handler_send_initial_evidence
+        print("[GameController] 증거품 텍스트 생성 완료, loading 이미지로 1차 전송")
         handler_send_initial_evidence(cls._case_data.evidences)
+
+        # 이미지를 병렬로 생성 (백그라운드에서) - CaseDataManager에 위임
+        from case_generation.case_data_manager import CaseDataManager
+        task_images = asyncio.create_task(CaseDataManager.generate_evidence_images())
+        task_images.add_done_callback(cls._on_evidence_images_created)
+
         asyncio.create_task(CaseDataManager.generate_case_behind())
+
+    @classmethod
+    def _on_evidence_images_created(cls, task):
+        """이미지 생성 완료 시 하드웨어로 전송"""
+        try:
+            evidences = task.result()
+            cls._case_data.evidences = evidences  # case_data 업데이트
+            print("[GameController] 증거품 이미지 생성 완료")
+            # 2차 전송: 실제 이미지로 하드웨어에 전송
+            from tools.service import handler_send_initial_evidence
+            handler_send_initial_evidence(evidences)
+            # UI 업데이트 시그널 전송
+            cls._send_signal("evidence_images_ready", evidences)
+        except Exception as e:
+            print(f"[GameController] 이미지 생성 실패: {e}")
+            import traceback
+            traceback.print_exc()
 
     @classmethod
     async def record_start(cls) -> None:
@@ -170,6 +205,7 @@ class GameController(QObject):
     async def user_input(cls, text: str) -> bool:
         """
         사용자의 수동 입력, 텍스트를 전송 (LangGraph 워크플로우 사용)
+        근데 STT도 이걸로 처리 함
         Args:
             text: 사용자가 입력한 텍스트
         Returns:
@@ -177,6 +213,13 @@ class GameController(QObject):
         """
         if not text.strip():
             return False
+
+        if "이상입니다" in text:
+            cls._add_message(cls._state.turn, text)
+            cls._switch_turn()
+            cls._send_signal("switch", cls._state.turn)
+
+            return True
 
         # LangGraph 워크플로우 실행
         try:
@@ -376,7 +419,7 @@ class GameController(QObject):
         print(f"[GameController] _switch_turn() called: {cls._state.turn.value}")
 
     @classmethod
-    def _handle_bnt_event(cls, role : str) -> None:
+    def _handle_btn_event(cls, role : str) -> None:
         """버튼 이벤트 처리 메서드"""
         # print(f"input_role : {role}, 현재 턴: {cls._state.turn.value}, 여부 : {role != cls._state.turn.value}")
 

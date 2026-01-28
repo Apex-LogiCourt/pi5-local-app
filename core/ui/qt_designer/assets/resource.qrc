@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="assets">
+    <file>attorney.png</file>
+    <file>prosecutor.png</file>
     <file>profile/Bomdal.png</file>
     <file>profile/Bomdal_angry.png</file>
     <file>profile/Bomdal_unfair.png</file>

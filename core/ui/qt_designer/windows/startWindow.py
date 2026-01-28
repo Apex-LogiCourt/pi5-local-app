@@ -23,7 +23,7 @@ class StartWindow(QDialog):
     @asyncSlot()
     async def on_game_start(self):
         """게임 시작 버튼 클릭 - 초기화 시작"""
-        self.set_button_state(False, "케이스 생성 중...")
+        self.set_button_state(False, "사건 생성 중...")
         
         try:
             await self.gc.initialize()

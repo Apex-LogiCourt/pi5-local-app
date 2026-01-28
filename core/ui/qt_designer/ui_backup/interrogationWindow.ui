@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>interrogationWindow</class>
+ <widget class="QDialog" name="interrogationWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1280</width>
+    <height>720</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QDialog{
+	background-color: rgb(15, 39, 72);
+}</string>
+  </property>
+  <widget class="QPushButton" name="backButton">
+   <property name="geometry">
+    <rect>
+     <x>1130</x>
+     <y>30</y>
+     <width>121</width>
+     <height>81</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	image: url(:/images/back_arrow.png);
+	background-color: rgb(47, 90, 104);
+	color: rgb(255, 254, 254);
+	border-radius: 20px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}
+
+QPushButton:hover{
+	background-color: rgb(67, 129, 148);
+	border-radius: 20px;
+	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	background-color: rgb(0, 123, 255);
+	border-radius: 20px;
+	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="backgroundImage">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>30</y>
+     <width>1221</width>
+     <height>491</height>
+    </rect>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	/* 스타일시트는 스케일 설정 불가능. pixMap으로 설정해야 함 */
+	image: url(:/images/background2.png);
+	color: rgb(255, 255, 255);
+	font: 20pt &quot;나눔고딕&quot;;
+	background-color: rgb(204, 204, 204);
+}
+</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="assets/resource.qrc">:/images/background2.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="doNotChange">
+   <property name="geometry">
+    <rect>
+     <x>1210</x>
+     <y>30</y>
+     <width>41</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	background-color: rgb(15, 39, 72);
+}</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="textButton">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>550</y>
+     <width>161</width>
+     <height>141</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	background-color: rgb(47, 90, 104);
+	color: rgb(255, 254, 254);
+	border-radius: 10px;
+	font: 20pt &quot;나눔고딕 ExtraBold&quot;;
+}
+
+QPushButton:hover{
+	background-color: rgb(67, 129, 148);
+	border-radius: 10px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	background-color: rgb(0, 123, 255);
+	border-radius: 10px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>텍스트입력</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="micButton">
+   <property name="geometry">
+    <rect>
+     <x>1090</x>
+     <y>550</y>
+     <width>161</width>
+     <height>141</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	image: url(:/images/mic_off.png);
+	background-color: rgb(47, 90, 104);
+	color: rgb(255, 254, 254);
+	border-radius: 10px;
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}
+
+QPushButton:hover{
+	background-color: rgb(67, 129, 148);
+	border-radius: 10px;
+	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
+}
+QPushButton:pressed{
+	background-color: rgb(0, 123, 255);
+	border-radius: 10px;
+	font: 28pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="profileImage">
+   <property name="geometry">
+    <rect>
+     <x>390</x>
+     <y>32</y>
+     <width>501</width>
+     <height>501</height>
+    </rect>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	/* 스타일시트는 스케일 설정 불가능. pixMap으로 설정해야 함 */
+	/* image: url(:/images/imageNotFound.png); */
+	color: rgb(255, 255, 255);
+	font: 20pt &quot;나눔고딕&quot;;
+}
+</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="assets/resource.qrc">:/assets/profile/Bomdal.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="smallEvidenceLabel">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>30</y>
+     <width>71</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	background-color: rgb(47, 90, 104);
+	image: url(:/images/evidence_icon.png);
+	color: rgb(255, 254, 254);
+	border-radius: 10px;
+}</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="doNotChange_2">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>30</y>
+     <width>41</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	background-color: rgb(15, 39, 72);
+}</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="profileTextLabel">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>430</y>
+     <width>1221</width>
+     <height>91</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	background-color: rgba(0, 0, 0, 100);  /* 흰색 + 투명도 */
+	color: rgb(255, 255, 255);
+	font: 22pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>profileTextLabel</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+   <property name="margin">
+    <number>0</number>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="largeEvidenceLabel">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>30</y>
+     <width>141</width>
+     <height>141</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton{
+	background-color: rgb(47, 90, 104);
+	image: url(:/images/evidence_icon.png);
+	color: rgb(255, 254, 254);
+	border-radius: 10px;
+}</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="textLabel">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>550</y>
+     <width>921</width>
+     <height>141</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel{
+	background-color: rgb(0, 0, 0); 
+	color: rgb(255, 255, 255);
+	font: 24pt &quot;나눔고딕 ExtraBold&quot;;
+}</string>
+   </property>
+   <property name="text">
+    <string>textLabel</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+   <property name="margin">
+    <number>0</number>
+   </property>
+  </widget>
+  <zorder>textLabel</zorder>
+  <zorder>backgroundImage</zorder>
+  <zorder>doNotChange</zorder>
+  <zorder>backButton</zorder>
+  <zorder>textButton</zorder>
+  <zorder>micButton</zorder>
+  <zorder>profileImage</zorder>
+  <zorder>doNotChange_2</zorder>
+  <zorder>profileTextLabel</zorder>
+  <zorder>largeEvidenceLabel</zorder>
+  <zorder>smallEvidenceLabel</zorder>
+ </widget>
+ <resources>
+  <include location="assets/resource.qrc"/>
+ </resources>
+ <connections/>
+</ui>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>startWindow</class>
- <widget class="QDialog" name="startWindow">
+ <widget class="QWidget" name="startWindow">
   <property name="enabled">
    <bool>true</bool>
   </property>
@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -26,12 +26,9 @@
    <string>LogiCourt_AI</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QDialog{
+   <string notr="true">QWidget{
 	background-color: rgb(15, 39, 72);
 }</string>
-  </property>
-  <property name="modal">
-   <bool>false</bool>
   </property>
   <widget class="QPushButton" name="gameTextModeButton">
    <property name="geometry">

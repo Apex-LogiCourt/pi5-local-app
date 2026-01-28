@@ -72,7 +72,7 @@ def debate_input_node(state: GameWorkflowState) -> GameWorkflowState:
 
 def validate_input_node(state: GameWorkflowState) -> GameWorkflowState:
     """사용자 입력의 문맥 관련성 및 심문 요청 검증"""
-    from controller import CaseDataManager
+    from case_generation import CaseDataManager
     from interrogation.interrogator import it
 
     user_input = state.get("user_input", "")

@@ -97,13 +97,19 @@ class Interrogator:
     
     @classmethod
     def set_case_data(cls, case_data: CaseData) -> bool:
+        if case_data is None:
+            print("[Interrogator] case_data가 None입니다")
+            return False
+
         cls._case = case_data.case
         cls._profiles = case_data.profiles
-        cls._evidence = case_data.evidences
+        # 증거품이 아직 없을 수 있으므로 빈 리스트로 초기화
+        cls._evidence = case_data.evidences if case_data.evidences else []
         return True
 
     @classmethod
-    def build_ask_chain(cls, question: str, profile: Profile):
+    def build_ask_chain(cls, question: str, profile : Profile):
+        # 프로필 키 생성
         profile_key = f"{profile.name}_{profile.type}"
         
         # 해당 인물과의 대화 히스토리가 없으면 초기화 (최초 1회만)
