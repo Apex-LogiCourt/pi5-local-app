@@ -76,7 +76,8 @@ TITLE_FONT_PATH = "/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf" #실제 
 def make_epd_image(evidence: Evidence, font_size=20, line_spacing=6):
     image_path = evidence.picture
     text = evidence.description[0]
-    save_path = evidence.name + ".bmp"
+    #save_path = evidence.name + ".bmp"
+    save_path = "/home/user/Desktop/demo2026/pi5-local-app/data/evidence_resource/" + evidence.name + ".bmp"
     
     # 400*300의 캔버스 생성
     canvas = Image.new("1", (400, 300), 1)
@@ -94,8 +95,11 @@ def make_epd_image(evidence: Evidence, font_size=20, line_spacing=6):
     draw.text((title_x, title_y), title_text, font=title_font, fill=0)
 
     # 캔버스 좌상단에 증거품 이미지 삽입
-    img = Image.open(image_path).convert("1")
-    img = img.resize((150, 150))
+    try:
+        img = Image.open(image_path).convert("1")
+        img = img.resize((150, 150))
+    except:
+        img = Image.new("1", (150, 150), 1);
     canvas.paste(img, (0, 30)) 
 
     # 텍스트 처리 시작

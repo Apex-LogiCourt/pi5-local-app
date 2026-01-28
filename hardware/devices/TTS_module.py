@@ -8,7 +8,8 @@ import soundfile as sf
 import asyncio
 
 PI5_INPUT_DEVICE_INDEX = 0 #pi에서 사용
-DEFAULT_PATH = "data/audio_temp/"
+#DEFAULT_PATH = "data/audio_temp/"
+DEFAULT_PATH = "/home/user/Desktop/demo2026/pi5-local-app/data/audio_temp/"
 is_recording = False
 is_playing = False
 

@@ -182,8 +182,9 @@ def create_image_by_ai(name: str):
     new_name = name.replace(" ", "-")
 
     prompt_name = get_evidence_name_for_prompt(name)
-    save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + ".png"
-
+    #save_path = "data/evidence_resource/" + formatted_date + "-" + new_name + ".png"
+    save_path = "/home/user/Desktop/demo2026/pi5-local-app/data/evidence_resource/" + formatted_date + "-" + new_name + ".png"
+    
     import replicate
     client = replicate.Client(api_token=key)
     model = "stability-ai/stable-diffusion-3.5-large"
