@@ -66,16 +66,17 @@ class InterrogationWindow(QDialog):
         lbl = self.profileTextLabel
         lbl.setWordWrap(True)                           # 줄바꿈 켜기
         lbl.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        lbl.setText(f"[{self.type}]: {message}")
+        
+        lbl_text = f"[{self.type}]: {message}"
+        lbl.setText(lbl_text)
 
         # 텍스트 길어지면 줄바꿈 하는 코드를 추가함
         fm = lbl.fontMetrics()
         max_width = lbl.contentsRect().width()          
-
+        
         rect = fm.boundingRect(0, 0, max_width, 1000,
-                            Qt.TextWordWrap, message)
-
-        lbl.setFixedHeight(rect.height() + 10)   
+                            Qt.TextWordWrap, lbl_text)
+        lbl.setFixedHeight(rect.height() + 10)
 
         
     def set_main_text(self, text):
