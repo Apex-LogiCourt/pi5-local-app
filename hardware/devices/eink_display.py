@@ -99,7 +99,9 @@ def make_epd_image(evidence: Evidence, font_size=20, line_spacing=6):
         img = Image.open(image_path).convert("1")
         img = img.resize((150, 150))
     except:
-        img = Image.new("1", (150, 150), 1);
+        loading_img_path = "/home/user/Desktop/demo2026/pi5-local-app/data/evidence_resource/loading.png"
+        img = Image.open(loading_img_path).convert("1")
+        img = img.resize((150, 150))
     canvas.paste(img, (0, 30)) 
 
     # 텍스트 처리 시작

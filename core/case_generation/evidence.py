@@ -232,7 +232,7 @@ def create_image_by_ai(name: str):
     save_path = "/home/user/Desktop/demo2026/pi5-local-app/data/evidence_resource/" + formatted_date + "-" + new_name + ".png"
 
     # 기존 파일이 있으면 재사용
-    if os.path.exists(save_path):
+    if os.path.exists(save_path): #파일명에 date가 들어가서 파일명도 수정하면 좋을 듯
         print(f"[{name}] 기존 이미지 파일 재사용: {save_path}")
         return save_path
 
@@ -275,10 +275,10 @@ def create_image_by_ai(name: str):
                 import traceback
                 traceback.print_exc()
                 # 기본 placeholder 이미지 경로 반환
-                return "core/assets/evidence_icon.png"
+                return "/home/user/Desktop/demo2026/pi5-local-app/core/assets/evidence_icon.png"
     
     # JSON 로그 파일에 메타데이터 저장
-    log_json_path = "data/evidence_resource/evidence_log.json"
+    log_json_path = "/home/user/Desktop/demo2026/pi5-local-app/data/evidence_resource/evidence_log.json"
     evidence_data = {
         "timestamp": timestamp,
         "original_name": name,
